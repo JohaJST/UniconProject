@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ test.name }} — Результаты{% endblock %}
+{% block header %}
+<style>
+    .result-page {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 16px;
+        font-family: sans-serif;
+    }
+    .result-header {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 16px rgba(0,0,0,.08);
+        padding: 32px;
+        text-align: center;
+        margin-bottom: 28px;
+    }
+    .result-header .trophy {
+        font-size: 48px; margin-bottom: 12px;
+    }
+    .result-header h1 { margin: 0 0 6px; font-size: 22px; color: #1a1a2e; }
+    .result-header .subject { color: #888; font-size: 14px; margin-bottom: 20px; }
+    .stats {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+    .stat-box {
+        background: #f4f6f9;
+        border-radius: 10px;
+        padding: 14px 24px;
+        min-width: 110px;
+        text-align: center;
+    }
+    .stat-box .val { font-size: 28px; font-weight: 700; color: #3b2fd8; }
+    .stat-box .lbl { font-size: 12px; color: #777; margin-top: 2px; }
+
+    .questions-list { margin-top: 8px; }
+    .q-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        padding: 20px 24px;
+        margin-bottom: 16px;
+    }
+    .q-card .q-text { font-weight: 600; margin-bottom: 12px; color: #222; }
+    .q-card .variant {
+        padding: 8px 14px;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+    .variant.correct  { background: #e8f5e9; color: #2e7d32; font-weight: 600; }
+    .variant.incorrect { background: #fce4ec; color: #c62828; }
+    .variant.neutral  { background: #f5f5f5; color: #555; }
+
+    .back-row { text-align: center; margin-top: 32px; margin-bottom: 40px; }
+    .btn-back {
+        display: inline-block;
+        padding: 12px 32px;
+        background: #3b2fd8; color: #fff;
+        border-radius: 10px; font-size: 15px; font-weight: 600;
+    }
+    .btn-back:hover { background: #2f25b0; color: #fff; }
+</style>
+{% endblock %}
+{% block body %}
+<div class="result-page">
+
+    <div class="result-header">
+        <div class="trophy">🏆</div>
+        <h1>{{ test.name }}</h1>
+        <div class="subject">{{ test.subject.name }} &nbsp;·&nbsp; {{ result.created|date:"d.m.Y" }}</div>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="val">{{ result.foyiz }}%</div>
+                <div class="lbl">Процент</div>
+            </div>
+            <div class="stat-box">
+                <div class="val">{{ result.result }}</div>
+                <div class="lbl">Верных</div>
+            </div>
+            <div class="stat-box">
+                <div class="val">{{ result.totalQuestions }}</div>
+                <div class="lbl">Всего</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="questions-list">
+        {% for q in questions %}
+        <div class="q-card">
+            <div class="q-text">{{ forloop.counter }}. {{ q.text }}</div>
+            {% for v in variants %}
+                {% if v.question_id == q.id %}
+                    <div class="variant {% if v.is_answer %}correct{% else %}neutral{% endif %}">
+                        {% if v.is_answer %}✓{% else %}○{% endif %} {{ v.text }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="back-row">
+        <a href="{% url 'home' %}" class="btn-back">На главную</a>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %} {% block title %}Профиль{% endblock %} {% block header%} {% load static %}
+<link rel="stylesheet" href="{% static 'profile.css' %}" />
+{% endblock %} {% block body %}
+<div class="profile-page">
+    <!-- ── Hero / Avatar ── -->
+    <div class="profile-hero">
+        <div class="profile-avatar">{{ user.name|default:"?"|slice:":1" }}</div>
+        <div class="profile-hero-info">
+            <h1 class="profile-name">{{ user.full_name }}</h1>
+            <p class="profile-meta">
+                {% if user.classroom %}
+                    {{ user.classroom.name }}
+                {% endif %} 
+                {%if user.birthday %}
+                    {{ user.birthday }}
+                {%endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- ── Stats row ── -->
+    <div class="profile-stats">
+        <div class="stat-card">
+            <span class="stat-value">{{ results|length }}</span>
+            <span class="stat-label">Тестов пройдено</span>
+        </div>
+        <div class="stat-card accent">
+            <span class="stat-value">{{ average }}</span>
+            <span class="stat-label">Средний балл</span>
+        </div>
+    </div>
+
+    <!-- ── Results list ── -->
+    <div class="results-section">
+        <h2 class="section-title">История тестов</h2>
+
+        {% if results %}
+        <div class="results-list">
+            {% for result in results %}
+            <div class="result-item">
+                <div class="result-info">
+                    <span class="result-subject"
+                        >{{ result.test.subject.name }}</span
+                    >
+                    <span class="result-name">{{ result.test.name }}</span>
+                </div>
+                <div
+                    class="result-score {% if result.result >= 80 %}score-high{% elif result.result >= 50 %}score-mid{% else %}score-low{% endif %}"
+                >
+                    {{ result.result }}<span class="score-unit">%</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="results-empty">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="40"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.5"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108
+                 c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0
+                 c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75
+                 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15
+                 c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08
+                 C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875
+                 c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75
+                 c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25
+                 zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"
+                />
+            </svg>
+            <p>Вы ещё не прошли ни одного теста</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

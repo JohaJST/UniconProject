@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Тесты{% endblock %}
+
+{% block header %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+                colors: {
+                    slate: { 750: '#2a3441' }
+                }
+            }
+        }
+    }
+</script>
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<style>body { background: #f1f5f9 !important; color: #1e293b !important; }</style>
+<script>
+    window.COMPLETED_IDS = new Set([{% for id in completed_test_ids %}{{ id }},{% endfor %}]);
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 pb-16">
+
+    <!-- Page header -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Доступные тесты</h1>
+        <p class="text-slate-500 text-sm mt-1">{{ request.user.name }}, выберите тест для прохождения</p>
+    </div>
+
+    <!-- Test grid -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            {% for test in tests %}
+            <div data-test-id="{{ test.id }}"
+                 data-completed="{% if test.id in completed_test_ids %}true{% else %}false{% endif %}"
+                 class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4 hover:shadow-md transition-shadow">
+
+                <!-- Card top row -->
+                <div class="flex items-start justify-between gap-2">
+                    <span class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+                        {{ test.subject.name }}
+                    </span>
+                    {% if test.id in completed_test_ids %}
+                    <span data-badge class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">✓ Пройден</span>
+                    {% else %}
+                    <span data-badge class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">Новый</span>
+                    {% endif %}
+                </div>
+
+                <!-- Card title -->
+                <div class="flex-1">
+                    <h3 class="font-semibold text-slate-800 leading-snug">{{ test.name }}</h3>
+                    {% if test.desc %}
+                    <p class="text-slate-500 text-sm mt-1 line-clamp-2">{{ test.desc }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Card meta -->
+                <div class="flex items-center gap-3 text-xs text-slate-400">
+                    <span><i class="fa-solid fa-circle-question mr-1"></i>{{ test.question_count }} вопр.</span>
+                    <span><i class="fa-regular fa-calendar mr-1"></i>{{ test.created|date:"d.m.Y" }}</span>
+                </div>
+
+                <!-- Card action button -->
+                {% if test.id in completed_test_ids %}
+                <a href="{% url 'test' test_id=test.id %}" data-btn
+                   class="mt-auto w-full text-center py-2.5 rounded-xl border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors">
+                    Посмотреть результаты
+                </a>
+                {% else %}
+                <a href="{% url 'test' test_id=test.id %}" data-btn
+                   class="mt-auto w-full text-center py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">
+                    Начать тест →
+                </a>
+                {% endif %}
+            </div>
+
+            {% empty %}
+            <div class="col-span-full flex flex-col items-center justify-center py-16">
+                <i class="fa-solid fa-inbox text-4xl text-slate-300"></i>
+                <p class="text-slate-500 font-medium mt-3">Нет доступных тестов</p>
+                <p class="text-slate-400 text-sm mt-1">Обратитесь к преподавателю</p>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-test-id]').forEach(card => {
+        const testId = card.dataset.testId;
+        if (card.dataset.completed === 'true') return; // server says completed
+        try {
+            const state = JSON.parse(localStorage.getItem(`cyb_quiz_${testId}`));
+            if (!state || state.status !== 'in_progress') return;
+            const badge = card.querySelector('[data-badge]');
+            const btn   = card.querySelector('[data-btn]');
+            if (badge) {
+                badge.textContent = '↻ В процессе';
+                badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700';
+            }
+            if (btn) {
+                btn.textContent = 'Продолжить →';
+                btn.className = btn.className.replace('bg-indigo-600 hover:bg-indigo-500 text-white', 'bg-amber-500 hover:bg-amber-400 text-white');
+            }
+        } catch(e) {}
+    });
+});
+</script>
+{% endblock %}

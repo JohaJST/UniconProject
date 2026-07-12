@@ -1,0 +1,197 @@
+{% extends 'pages/dashboard/base.html' %} {% block title %}Новый
+пользователь{%endblock %} {% block page_title %}Новый пользователь{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Page heading -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Добавить пользователя</h1>
+        <a
+            href="{% url 'dashboard' %}"
+            class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1"
+        >
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад к панели
+        </a>
+    </div>
+
+    <!-- Error banner -->
+    {% if error %}
+    <div
+        class="bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl p-3 mb-6 flex items-center gap-3"
+    >
+        <i class="fa-solid fa-circle-exclamation shrink-0"></i>
+        <p class="text-sm">{{ error }}</p>
+    </div>
+    {% endif %} {% if success %}
+    <div
+        class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl p-3 mb-6 flex items-center gap-3"
+    >
+        <i class="fa-solid fa-circle-exclamation shrink-0"></i>
+        <p class="text-sm">{{ success }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Form card -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8">
+        <form method="post" action="{% url 'userform' %}">
+            {% csrf_token %}
+
+            <!-- 2-column grid for most fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                <!-- Имя (first_name) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_first_name"
+                    >
+                        Имя <span class="text-rose-400">*</span>
+                    </label>
+                    <input
+                        id="id_first_name"
+                        type="text"
+                        name="first_name"
+                        maxlength="255"
+                        placeholder="Имя..."
+                        required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    />
+                </div>
+
+                <!-- Фамилия (last_name) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_last_name"
+                    >
+                        Фамилия <span class="text-rose-400">*</span>
+                    </label>
+                    <input
+                        id="id_last_name"
+                        type="text"
+                        name="last_name"
+                        maxlength="255"
+                        placeholder="Фамилия..."
+                        required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    />
+                </div>
+
+                <!-- Дата рождения (birthday) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_birthday"
+                    >
+                        Дата рождения
+                    </label>
+                    <input
+                        id="id_birthday"
+                        type="date"
+                        name="birthday"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [color-scheme:dark]"
+                    />
+                </div>
+
+                <!-- Телефон (phone) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_phone"
+                    >
+                        Телефон
+                    </label>
+                    <input
+                        id="id_phone"
+                        type="number"
+                        name="phone"
+                        maxlength="255"
+                        placeholder="998901234567"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                </div>
+
+                <!-- Пароль (password) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_password"
+                    >
+                        Пароль <span class="text-rose-400">*</span>
+                    </label>
+                    <input
+                        id="id_password"
+                        type="password"
+                        name="password"
+                        maxlength="255"
+                        placeholder="••••••••"
+                        required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    />
+                </div>
+
+                <!-- Класс (classroom select) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_classroom"
+                    >
+                        Класс
+                    </label>
+                    <select
+                        id="id_classroom"
+                        name="classroom"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    >
+                        <option value="">-- Выберите класс --</option>
+                        {% for i in classrooms %}
+                        <option value="{{ i.id }}">{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Роль (role) — full width -->
+            <div class="mb-8">
+                <label
+                    class="text-sm font-medium text-slate-300 mb-1.5 block"
+                    for="id_role"
+                >
+                    Роль <span class="text-rose-400">*</span>
+                </label>
+                <select
+                    id="id_role"
+                    name="role"
+                    required
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                >
+                    <option value="4">Ученик</option>
+                    <option value="3">Учитель</option>
+                    <option value="2">Администратор</option>
+                    <option value="1">Суперадмин</option>
+                </select>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-700 mb-6"></div>
+
+            <!-- Submit + Cancel -->
+            <div class="flex items-center gap-3">
+                <button
+                    type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-flex items-center gap-2"
+                >
+                    <i class="fa-solid fa-user-check"></i>
+                    Сохранить
+                </button>
+                <a
+                    href="{% url 'dashboard' %}"
+                    class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl transition-colors text-sm inline-flex items-center gap-2"
+                >
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

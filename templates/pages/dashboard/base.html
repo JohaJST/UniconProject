@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Панель{% endblock %} — {{ APP_NAME }}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50:  '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                            950: '#1e1b4b',
+                        },
+                        slate: {
+                            750: '#2a3441',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6.5.1 -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <style>
+        /* Custom thin scrollbar */
+        ::-webkit-scrollbar            { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track      { background: transparent; }
+        ::-webkit-scrollbar-thumb      { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover{ background: #475569; }
+        *                              { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+        /* Sidebar slide transition */
+        #sidebar { transition: transform .28s cubic-bezier(.4,0,.2,1); }
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-slate-950 text-white font-sans antialiased overflow-hidden h-full">
+
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay"
+         onclick="toggleSidebar()"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 hidden lg:hidden"></div>
+
+    <div class="flex h-screen">
+
+        <!-- ─── Sidebar ──────────────────────────────────────────── -->
+        <aside id="sidebar"
+               class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 border-r border-slate-800
+                      flex flex-col -translate-x-full lg:translate-x-0">
+
+            <!-- Brand -->
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-slate-800 shrink-0">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-brain text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-white text-base tracking-tight truncate">{{ APP_NAME }}</span>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+
+                <!-- Overview -->
+                <a href="{% url 'dashboard' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-chart-pie w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Обзор</span>
+                </a>
+
+                <div class="my-2 border-t border-slate-800/80"></div>
+                <p class="px-3 pt-1 pb-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                    Данные
+                </p>
+
+                <a href="{% url 'dlist' tip='user' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-users w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Пользователи</span>
+                </a>
+
+                <a href="{% url 'dlist' tip='quiz' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-clipboard-list w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Тесты</span>
+                </a>
+
+                <a href="{% url 'dlist' tip='result' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-chart-bar w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Результаты</span>
+                </a>
+
+                <a href="{% url 'dlist' tip='classroom' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-school w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Классы</span>
+                </a>
+
+                <a href="{% url 'dlist' tip='subject' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-book w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Предметы</span>
+                </a>
+
+                <div class="my-2 border-t border-slate-800/80"></div>
+                <p class="px-3 pt-1 pb-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                    Создать
+                </p>
+
+                <a href="{% url 'action_no_pk' status='create' path='test' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-indigo-300 hover:text-indigo-200 hover:bg-indigo-600/20 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-indigo-400
+                               group-hover:text-indigo-300 transition-colors shrink-0"></i>
+                    <span>Создать тест</span>
+                </a>
+
+                <a href="{% url 'userform' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-indigo-300 hover:text-indigo-200 hover:bg-indigo-600/20 transition-all group">
+                    <i class="fa-solid fa-user-plus w-4 text-center text-indigo-400
+                               group-hover:text-indigo-300 transition-colors shrink-0"></i>
+                    <span>Добавить ученика</span>
+                </a>
+
+                <a href="{% url 'action_no_pk' status='create' path='classroom' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Добавить класс</span>
+                </a>
+
+                <a href="{% url 'action_no_pk' status='create' path='subject' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Добавить предмет</span>
+                </a>
+
+            </nav>
+
+            <!-- Bottom: user info + logout -->
+            <div class="p-3 border-t border-slate-800 shrink-0">
+                <div class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800 transition-all">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                        <span class="text-xs font-bold text-white">{{ request.user.name|first|upper }}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-white truncate">{{ request.user.name }}</p>
+                        <p class="text-xs text-slate-500 truncate">{{ request.user.username }}</p>
+                    </div>
+                    <a href="{% url 'logout' %}"
+                       title="Выйти"
+                       class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400
+                              hover:bg-rose-500/10 transition-all">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <!-- ─── End Sidebar ──────────────────────────────────────── -->
+
+        <!-- ─── Main Column ──────────────────────────────────────── -->
+        <div class="flex flex-col flex-1 min-w-0 lg:pl-64">
+
+            <!-- Top header -->
+            <header class="h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800
+                           flex items-center px-4 lg:px-6 gap-3 shrink-0 sticky top-0 z-10">
+
+                <!-- Hamburger (mobile only) -->
+                <button onclick="toggleSidebar()"
+                        class="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white
+                               hover:bg-slate-800 transition-all">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+
+                <!-- Page title (from child block) -->
+                <div class="flex-1 min-w-0">
+                    <span class="text-sm font-semibold text-slate-200 truncate">
+                        {% block page_title %}Панель управления{% endblock %}
+                    </span>
+                </div>
+
+                <!-- User avatar -->
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                    <span class="text-xs font-bold text-white">{{ request.user.name|first|upper }}</span>
+                </div>
+            </header>
+
+            <!-- Page content -->
+            <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+                {% block content %}{% endblock %}
+            </main>
+
+        </div>
+        <!-- ─── End Main Column ─────────────────────────────────── -->
+
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isOpen  = !sidebar.classList.contains('-translate-x-full');
+            if (isOpen) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

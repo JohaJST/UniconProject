@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Результаты{% endblock %}
+
+{% block header %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+            }
+        }
+    }
+</script>
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<style>body { background: #f1f5f9 !important; color: #1e293b !important; }</style>
+{% endblock %}
+
+{% block body %}
+<div class="min-h-[calc(100vh-60px)] bg-slate-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-3xl shadow-lg border border-slate-100 max-w-sm w-full p-8 text-center">
+
+        <!-- Icon -->
+        <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-2xl"></i>
+        </div>
+
+        <h1 class="text-2xl font-bold text-slate-800 mb-2">Тест завершён!</h1>
+        <p class="text-slate-500 text-sm mb-8">
+            {% if test %}{{ test.name }}{% else %}Результаты сохранены{% endif %}
+        </p>
+
+        <!-- Score from localStorage (filled by JS) -->
+        <div id="ls-score-section" class="hidden mb-6">
+            <div class="text-5xl font-bold mb-1" id="ls-score-pct">—</div>
+            <p class="text-slate-500 text-sm">правильных ответов</p>
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p id="ls-correct" class="text-xl font-bold text-emerald-600">—</p>
+                    <p class="text-xs text-slate-500">Верных</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3">
+                    <p id="ls-time" class="text-xl font-bold text-slate-700 font-mono">—</p>
+                    <p class="text-xs text-slate-500">Время</p>
+                </div>
+            </div>
+        </div>
+
+        <a href="{% url 'user_profile' %}"
+           class="w-full inline-block text-center bg-indigo-600 hover:bg-indigo-500
+                  text-white font-semibold py-3 rounded-2xl transition-all mb-3">
+            Мои результаты
+        </a>
+        <a href="{% url 'home' %}"
+           class="block text-sm text-slate-400 hover:text-slate-600 transition-colors">
+            На главную
+        </a>
+    </div>
+</div>
+
+<script>
+// Try to show score from localStorage
+(function() {
+    try {
+        // Search all quiz states in localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key.startsWith('cyb_quiz_')) continue;
+            const state = JSON.parse(localStorage.getItem(key));
+            if (state?.status === 'completed' && state.score != null) {
+                const pct = state.total > 0 ? Math.round(state.score / state.total * 100) : 0;
+                const el = document.getElementById('ls-score-section');
+                el.classList.remove('hidden');
+                const color = pct >= 90 ? '#10b981' : pct >= 70 ? '#4f46e5' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                document.getElementById('ls-score-pct').textContent = pct + '%';
+                document.getElementById('ls-score-pct').style.color = color;
+                document.getElementById('ls-correct').textContent = state.score + ' / ' + state.total;
+                if (state.elapsedSecs) {
+                    const m = String(Math.floor(state.elapsedSecs / 60)).padStart(2, '0');
+                    const s = String(state.elapsedSecs % 60).padStart(2, '0');
+                    document.getElementById('ls-time').textContent = m + ':' + s;
+                }
+                break;
+            }
+        }
+    } catch(e) {}
+})();
+</script>
+{% endblock %}

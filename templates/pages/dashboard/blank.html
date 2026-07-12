@@ -1,0 +1,333 @@
+
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <title>{{ APP_NAME }}</title>
+      
+      <!-- Favicon -->
+      <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}" />
+<link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+  <link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+  <link rel="stylesheet" href="{% static 'dist/css/adminlte.min.css' %}">
+      <link rel="stylesheet" href="{% static 'assets/css/backend-plugin.min.css' %}">
+      <link rel="stylesheet" href="{% static 'assets/css/backend.css' %}?v=1.0.0">
+  {% block header %}{% endblock %}
+  </head>
+  <body class=" color-light ">
+    <!-- loader Start -->
+    <div id="loading">
+          <div id="loading-center">
+          </div>
+    </div>
+    <!-- loader END -->
+    <!-- Wrapper Start -->
+    <div class="wrapper">
+      <div class="iq-sidebar  sidebar-default  ">
+          <div class="iq-sidebar-logo d-flex align-items-end justify-content-between">
+               <a href="{% url 'dashboard' %}" class="header-logo">
+                  <img src="{% static 'assets/images/logo.png' %}" class="img-fluid rounded-normal light-logo" alt="logo">
+                  <img src="{% static 'assets/images/logo-dark.png' %}" class="img-fluid rounded-normal d-none sidebar-light-img" alt="logo">
+                  <span style="font-size:17px;">{{ APP_NAME }}</span>
+              </a>
+              <div class="side-menu-bt-sidebar-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="text-light wrapper-menu" width="30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                  </div>
+          </div>
+          <div class="data-scrollbar" data-scroll="1">
+              <nav class="iq-sidebar-menu">
+                  <ul id="iq-sidebar-toggle" class="side-menu">
+                      <li class=" sidebar-layout">
+                          <a href="{% url 'dashboard' %}" class="svg-icon">
+                              <i class="">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                  </svg>
+                              </i>
+                              <span class="ml-2">Dashboard Home</span>
+                              <p class="mb-0 w-10 badge badge-pill badge-primary"></p>
+                          </a>
+                      </li>
+                      <li class="px-3 pt-3 pb-2">
+                          <span class="text-uppercase small font-weight-bold">Pages</span>
+                      </li>
+                      <li class="sidebar-layout">
+                          <a href="#app1" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                              <i>
+                                  <svg class="svg-icon" id="iq-form-1" width="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" style="stroke-dasharray: 74, 94; stroke-dashoffset: 0;"></path>
+                                  </svg>
+                              </i>
+                              <span class="ml-2">List</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active" width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                              </svg>
+                          </a>
+                          <ul id="app1" class="submenu collapse" data-parent="#iq-sidebar-toggle">                        
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'dlist' tip='user' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg class="svg-icon" id="iq-user-1-1" xmlns="http://www.w3.org/2000/svg"
+                                              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                          </svg>
+                                      </i><span class="">User</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'dlist' tip='result' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                          </svg>
+                                      </i><span class="">Result</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'dlist' tip='classroom' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+                                        </svg>
+
+                                      </i><span class="">Class Room</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'dlist' tip='subject' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                        </svg>
+
+                                      </i><span class="">Subject</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'dlist' tip='quiz' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                          </svg>
+                                      </i><span class="">Quiz</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'dlist' tip='variant' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                          </svg>
+                                      </i><span class="">Variant</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'dlist' tip='question' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                          </svg>
+                                      </i><span class="">Question</span>
+                                  </a>
+                              </li>
+                          </ul>
+                      </li>
+                      <li class="sidebar-layout">
+                          <a href="#app6" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                              <i>
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+
+                              </i>
+                              <span class="ml-2">Add</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active" width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                              </svg>
+                          </a>
+                          <ul id="app6" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'action_no_pk' status='create' path='test' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
+                                        </svg>
+
+                                      </i>
+                                      <span class="ml-2">Test</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url "action_no_pk" status="create" path="classroom" %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+                                        </svg>
+                                      </i>
+                                          <span class="ml-2">Class Room</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url "action_no_pk" status="create" path="subject" %}" class="svg-icon">
+                                      <i class="">
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                        </svg>
+                                      </i>
+                                          <span class="ml-2">Subject</span>
+                                  </a>
+                              </li>
+                              <li class=" sidebar-layout">
+                                  <a href="{% url 'userform' %}" class="svg-icon">
+                                      <i class="">
+                                          <svg class="svg-icon" id="iq-user-1-1" xmlns="http://www.w3.org/2000/svg"
+                                              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                          </svg>
+                                      </i>
+                                          <span class="ml-2">User</span>
+                                  </a>
+                              </li>
+                          </ul>
+                      </li>
+                  </ul>
+              </nav>
+              <div class="pt-5 pb-5"></div>
+          </div>
+      </div>
+       <div class="iq-top-navbar">
+          <div class="iq-navbar-custom">
+              <nav class="navbar navbar-expand-lg navbar-light p-0">
+                  <div class="side-menu-bt-sidebar">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="text-secondary wrapper-menu" width="30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                  </div>
+                  <div class="d-flex align-items-center">
+                      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"  aria-label="Toggle navigation">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="text-secondary" width="30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                          </svg>
+                      </button>
+                      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                          <ul class="navbar-nav ml-auto navbar-list align-items-center">
+                              <li class="nav-item nav-icon dropdown">
+                                  <a href="#" class="nav-item nav-icon dropdown-toggle pr-0 search-toggle">
+                                      <img src="{% static 'assets/images/user/1.jpg' %}" class="img-fluid avatar-rounded" alt="user">
+                                      <span class="mb-0 ml-2 user-name">{{ request.user.full_name }}</span>
+                                  </a>
+                                  <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+                                      <li class="dropdown-item d-flex svg-icon">
+                                          <svg class="svg-icon mr-0 text-secondary" id="h-01-p" width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                          </svg>
+                                          <a href="../app/user-profile.html">My Profile</a>
+                                      </li>
+                                      <li class="dropdown-item d-flex svg-icon">
+                                          <svg class="svg-icon mr-0 text-secondary" id="h-02-p" width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                          </svg>
+                                          <a href="../app/user-profile-edit.html">Edit Profile</a>
+                                      </li>
+                                      <li class="dropdown-item d-flex svg-icon">
+                                          <svg class="svg-icon mr-0 text-secondary" id="h-03-p" width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                          </svg>
+                                          <a href="../app/user-account-setting.html">Account Settings</a>
+                                      </li>
+                                      <li class="dropdown-item d-flex svg-icon">
+                                          <svg class="svg-icon mr-0 text-secondary" id="h-04-p" width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                          </svg>
+                                          <a href="../app/user-privacy-setting.html">Privacy Settings</a>
+                                      </li>
+                                      <li class="dropdown-item  d-flex svg-icon border-top">
+                                          <svg class="svg-icon mr-0 text-secondary" id="h-05-p" width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                          </svg>
+                                          <a href="../backend/auth-sign-in.html">Logout</a>
+                                      </li>
+                                  </ul>
+                              </li>
+                              <li class="dropdown-item  d-flex svg-icon border-top">
+                                  <svg class="svg-icon mr-0 text-secondary" id="h-05-p" width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                  </svg>
+                                  <a href="{% url 'logout' %}">Logout</a>
+                              </li>
+                          </ul>                     
+                      </div> 
+                  </div>
+              </nav>
+          </div>
+      </div>
+      <div class="content-page">
+      <div class="container-fluid">
+         <div class="row">
+            <div class="col-lg-12">
+                {% block content %} {% endblock %}
+            </div>
+         </div>
+      </div>
+      </div>
+    </div>
+    <!-- Wrapper End-->
+    <footer class="iq-footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                </div>
+                <div class="col-lg-6 text-right">
+                    <span class="mr-1">
+                        by <a target="_blank" href="https://t.me/joha_jst">Joha-JST</a> and <a target="_blank" href="https://t.me/imya_polzovatelya_2">Space Craft</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>    <!-- Backend Bundle JavaScript -->
+    <script src="{% static 'assets/js/backend-bundle.min.js' %}"></script>
+    <!-- Chart Custom JavaScript -->
+    <script src="{% static 'assets/js/customizer.js' %}"></script>
+    
+    <script src="{% static 'assets/js/sidebar.js' %}"></script>
+    
+    <!-- Flextree Javascript-->
+    <script src="{% static 'assets/js/flex-tree.min.js' %}"></script>
+    <script src="{% static 'assets/js/tree.js' %}"></script>
+    
+    <!-- Table Treeview JavaScript -->
+    <script src="{% static 'assets/js/table-treeview.js' %}"></script>
+    
+    <!-- SweetAlert JavaScript -->
+    <script src="{% static 'assets/js/sweetalert.js' %}"></script>
+    
+    <!-- Vectoe Map JavaScript -->
+    <script src="{% static 'assets/js/vector-map-custom.js' %}"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script src="{% static 'assets/js/chart-custom.js' %}"></script>
+    <script src="{% static 'assets/js/charts/01.js' %}"></script>
+    <script src="{% static 'assets/js/charts/02.js' %}"></script>
+    
+    <!-- slider JavaScript -->
+    <script src="{% static 'assets/js/slider.js' %}"></script>
+    
+    <!-- Emoji picker -->
+    <script src="{% static 'assets/vendor/emoji-picker-element/index.js' %}" type="module"></script>
+    
+    
+    <!-- app JavaScript -->
+    <script src="{% static 'assets/js/app.js' %}"></script>
+  </body>
+</html>

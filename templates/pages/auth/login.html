@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        {% load static %}
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Check Your Brain — Вход</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="{% static 'auth/style.css' %}" />
+    </head>
+    <body>
+        <div class="bg-grid" id="bgGrid"></div>
+
+        <main class="auth-wrapper">
+            <div class="auth-card">
+                <header class="auth-header">
+                    <img
+                        src="{% static 'auth/logo.png' %}"
+                        alt="Логотип"
+                        class="auth-logo"
+                    />
+                    <h1 class="auth-title">Check Your Brain</h1>
+                    <p class="auth-subtitle">Войдите в свою учётную запись</p>
+                </header>
+
+                {% if error %}
+                <div class="auth-alert" role="alert">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="post" class="auth-form">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label class="form-label" for="mainSelect">Класс</label>
+                        <div class="select-wrapper">
+                            <select
+                                required
+                                name="classroom"
+                                id="mainSelect"
+                                class="form-select"
+                                onchange="updateOptions()"
+                            >
+                                <option value="" disabled selected>
+                                    Выберите класс…
+                                </option>
+                                {% for i in c %}
+                                <option value="{{ i.id }}">{{ i.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="select-icon" aria-hidden="true">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="dependentSelect">Ученик</label>
+                        <div class="select-wrapper">
+                            <select
+                                required
+                                name="user"
+                                id="dependentSelect"
+                                class="form-select"
+                            >
+                                <option value="" disabled selected>
+                                    Сначала выберите класс…
+                                </option>
+                            </select>
+                            <span class="select-icon" aria-hidden="true">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-btn">
+                        Войти
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="18"
+                            height="18"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                            <polyline points="12 5 19 12 12 19" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <script>
+    /* ── Generate grid tiles ── */
+    (function () {
+      var grid = document.getElementById('bgGrid');
+      var CELL = 62;
+      var cols = Math.ceil(window.innerWidth  / CELL) + 1;
+      var rows = Math.ceil(window.innerHeight / CELL) + 1;
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < cols * rows; i++) {
+        frag.appendChild(document.createElement('span'));
+      }
+      grid.appendChild(frag);
+    })();
+
+    /* ── Cascade-select logic ── */
+    var optionsData = {
+      {% for i in c %}
+      "{{ i.id }}": [
+        {% for j in u %}
+          {% if j.classroom.id == i.id %}
+            { id: "{{ j.id }}", name: "{{ j.full_name }}" },
+          {% endif %}
+        {% endfor %}
+      ],
+      {% endfor %}
+    };
+
+    function updateOptions() {
+      var main = document.getElementById('mainSelect');
+      var dep  = document.getElementById('dependentSelect');
+
+      dep.innerHTML = '<option value="" disabled selected>Выберите ученика\u2026</option>';
+
+      var students = optionsData[main.value] || [];
+      students.forEach(function(student) {
+        var newOpt = new Option(student.name, student.id);
+        dep.add(newOpt);
+      });
+    }
+</script>
+    </body>
+</html>

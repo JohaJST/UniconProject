@@ -1,0 +1,398 @@
+{% extends 'pages/dashboard/base.html' %}
+
+{% block title %}
+    {% if action == "test" %}Создать тест{% elif action == "subject" %}Новый предмет{% else %}Новый класс{% endif %}
+{% endblock %}
+{% block page_title %}
+    {% if action == "test" %}Создать тест{% elif action == "subject" %}Новый предмет{% else %}Новый класс{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+    <!-- Page heading -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">
+            {% if action == "test" %}Создание теста
+            {% elif action == "subject" %}Добавить предмет
+            {% else %}Добавить класс
+            {% endif %}
+        </h1>
+        <a href="{% url 'dashboard' %}"
+           class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад к панели
+        </a>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8">
+
+        <!-- ══════════════════════════════════════════════
+             ACTION: test — Create Test form
+        ══════════════════════════════════════════════════ -->
+        {% if action == "test" %}
+        <form id="addQuestionForm" method="post" action="{% url 'create_test' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Test name -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="test-name">
+                    Название теста <span class="text-rose-400">*</span>
+                </label>
+                <input id="test-name"
+                       type="text"
+                       name="test_name"
+                       placeholder="Введите название теста..."
+                       required
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                              text-white placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors">
+            </div>
+
+            <!-- Subject select -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block">
+                    Предмет <span class="text-rose-400">*</span>
+                </label>
+                <select name="subject" required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                               text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                               focus:ring-indigo-500 transition-colors">
+                    <option value="">-- Выберите предмет --</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Classroom selects (dynamic) -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block">
+                    Классы
+                </label>
+                <div id="classrooms-test-container" class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <select name="classroom_1"
+                                class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                       text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                                       focus:ring-indigo-500 transition-colors">
+                            <option value="">-- Выберите класс --</option>
+                            {% for classroom in classrooms %}
+                            <option value="{{ classroom.id }}">{{ classroom.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <button type="button" onclick="addTestClassroom()"
+                        class="mt-2 inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600
+                               text-slate-300 px-3 py-1.5 rounded-lg transition-colors text-sm">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    Ещё класс
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-700 my-6"></div>
+
+            <!-- Questions -->
+            <div class="mb-4">
+                <label class="text-sm font-medium text-slate-300 mb-3 block">
+                    Вопросы
+                </label>
+                <div id="questionFields" class="space-y-3"></div>
+
+                <button type="button" onclick="addQuestionField()"
+                        class="mt-3 inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600
+                               text-slate-200 px-4 py-2.5 rounded-xl transition-colors text-sm font-medium">
+                    <i class="fa-solid fa-plus"></i>
+                    Добавить вопрос
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-700 my-6"></div>
+
+            <!-- Submit -->
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                               font-medium transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Сохранить тест
+                </button>
+                <a href="{% url 'dashboard' %}"
+                   class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                          transition-colors text-sm">
+                    Отмена
+                </a>
+            </div>
+        </form>
+
+        <!-- ══════════════════════════════════════════════
+             ACTION: subject — Create Subject form
+        ══════════════════════════════════════════════════ -->
+        {% elif action == "subject" %}
+        <form method="post" action="{% url 'action_no_pk' status='create' path='subject' %}">
+            {% csrf_token %}
+
+            <!-- Subject name -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="subject-name">
+                    Название предмета <span class="text-rose-400">*</span>
+                </label>
+                <input id="subject-name"
+                       type="text"
+                       name="subject_name"
+                       placeholder="Например: Математика..."
+                       required
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                              text-white placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors">
+            </div>
+
+            <!-- Classroom selects (dynamic) -->
+            <div class="mb-6">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block">
+                    Привязать к классам
+                </label>
+                <div id="classroomsField" class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <select name="classroom_0"
+                                class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                       text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                                       focus:ring-indigo-500 transition-colors">
+                            <option value="">-- Выберите класс --</option>
+                            {% for class in classrooms %}
+                            <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <button type="button" onclick="addClassRoom()"
+                        class="mt-2 inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600
+                               text-slate-300 px-3 py-1.5 rounded-lg transition-colors text-sm">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    Ещё класс
+                </button>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                               font-medium transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Сохранить
+                </button>
+                <a href="{% url 'dashboard' %}"
+                   class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                          transition-colors text-sm">
+                    Отмена
+                </a>
+            </div>
+        </form>
+
+        <!-- ══════════════════════════════════════════════
+             ACTION: classroom — Create Classroom form
+        ══════════════════════════════════════════════════ -->
+        {% elif action == "classroom" %}
+        <form method="post" action="{% url 'action_no_pk' status='create' path='classroom' %}">
+            {% csrf_token %}
+
+            <!-- Classroom name -->
+            <div class="mb-6">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="classroom-name">
+                    Название класса <span class="text-rose-400">*</span>
+                </label>
+                <input id="classroom-name"
+                       type="text"
+                       name="classroom_name"
+                       placeholder="Например: 9А..."
+                       required
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                              text-white placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors">
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                               font-medium transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Сохранить
+                </button>
+                <a href="{% url 'dashboard' %}"
+                   class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                          transition-colors text-sm">
+                    Отмена
+                </a>
+            </div>
+        </form>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    /* ─── Classroom selects for SUBJECT form ─── */
+    let classroomIdx = 1;
+
+    function addClassRoom() {
+        const container = document.getElementById('classroomsField');
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2';
+        div.innerHTML = `
+            <select name="classroom_${classroomIdx}"
+                    class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                           text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                           focus:ring-indigo-500 transition-colors">
+                <option value="">-- Выберите класс --</option>
+                {% for class in classrooms %}
+                <option value="{{ class.id }}">{{ class.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" onclick="this.parentElement.remove()"
+                    class="p-2.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
+                           rounded-xl transition-colors shrink-0">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+        container.appendChild(div);
+        classroomIdx++;
+    }
+
+    /* ─── Classroom selects for TEST form ─── */
+    let testClassroomIdx = 2;
+
+    function addTestClassroom() {
+        const container = document.getElementById('classrooms-test-container');
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2';
+        div.innerHTML = `
+            <select name="classroom_${testClassroomIdx}"
+                    class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                           text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                           focus:ring-indigo-500 transition-colors">
+                <option value="">-- Выберите класс --</option>
+                {% for classroom in classrooms %}
+                <option value="{{ classroom.id }}">{{ classroom.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" onclick="this.parentElement.remove()"
+                    class="p-2.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
+                           rounded-xl transition-colors shrink-0">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+        container.appendChild(div);
+        testClassroomIdx++;
+    }
+
+    /* ─── Questions & Variants for TEST form ─── */
+    let questionCounter = 1;
+    const variantCounters = {};
+
+    function addQuestionField() {
+        const container = document.getElementById('questionFields');
+        const qId = questionCounter;
+
+        const div = document.createElement('div');
+        div.className = 'bg-slate-900 rounded-xl border border-slate-700 p-4';
+        div.id = `question-block-${qId}`;
+        div.innerHTML = `
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-sm font-semibold text-slate-300">
+                    <i class="fa-solid fa-circle-question text-indigo-400 mr-1.5"></i>
+                    Вопрос ${qId}
+                </span>
+                <button type="button" onclick="removeQuestion(${qId})"
+                        class="text-slate-500 hover:text-rose-400 transition-colors p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <textarea name="question_${qId}"
+                          rows="2"
+                          placeholder="Текст вопроса..."
+                          class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5
+                                 text-white placeholder-slate-500 text-sm resize-none
+                                 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                 transition-colors"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="text-xs font-medium text-slate-500 mb-1 block">Изображение (необязательно)</label>
+                <input type="file" name="question_${qId}_image" accept="image/*"
+                       class="w-full text-xs text-slate-400 bg-slate-800 border border-slate-600
+                              rounded-xl px-3 py-2
+                              file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0
+                              file:bg-indigo-600 file:text-white file:text-xs file:font-medium
+                              file:cursor-pointer cursor-pointer">
+            </div>
+
+            <div id="variantFields_${qId}" class="space-y-2 mb-2"></div>
+
+            <button type="button" onclick="addVariantField(${qId})"
+                    class="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600
+                           text-slate-300 px-3 py-1.5 rounded-lg transition-colors text-xs">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                Добавить вариант
+            </button>
+        `;
+        container.appendChild(div);
+
+        /* Add 2 default variants automatically */
+        questionCounter++;
+        variantCounters[qId] = 0;
+        addVariantField(qId);
+        addVariantField(qId);
+    }
+
+    function addVariantField(questionId) {
+        if (!variantCounters[questionId]) variantCounters[questionId] = 0;
+        const vContainer = document.getElementById(`variantFields_${questionId}`);
+        if (!vContainer) return;
+
+        const vCount = vContainer.childElementCount + 1;
+        variantCounters[questionId] = vCount;
+
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2';
+        div.innerHTML = `
+            <label class="flex items-center gap-2 shrink-0 cursor-pointer">
+                <input type="checkbox"
+                       name="answer_${questionId}_${vCount}"
+                       value="1"
+                       class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
+                              focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
+                <span class="text-xs text-slate-500 whitespace-nowrap">Верный</span>
+            </label>
+            <input type="text"
+                   name="variant_${questionId}_${vCount}"
+                   placeholder="Вариант ответа..."
+                   class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2
+                          text-white text-sm placeholder-slate-500
+                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                          transition-colors">
+            <button type="button" onclick="this.parentElement.remove()"
+                    class="text-slate-500 hover:text-rose-400 transition-colors p-1 shrink-0">
+                <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+        `;
+        vContainer.appendChild(div);
+    }
+
+    function removeQuestion(id) {
+        const el = document.getElementById(`question-block-${id}`);
+        if (el) el.remove();
+    }
+</script>
+{% endblock %}
