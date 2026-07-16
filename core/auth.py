@@ -31,50 +31,50 @@ def sign_in(requests):
     return render(requests, 'pages/auth/login.html', ctx)
 
 
-def regis(request):
-    c = ClassRooms.objects.all()
-    if not request.user.is_anonymous:
-        return redirect('home')
-    if request.POST:
-        data = request.POST
-        # print(data)
-        nott = "username" if "username" not in data\
-            else "name" if "name" not in data\
-            else "sinf" if "sinf" not in data else ""
+# def regis(request):
+#     c = ClassRooms.objects.all()
+#     if not request.user.is_anonymous:
+#         return redirect('home')
+#     if request.POST:
+#         data = request.POST
+#         # print(data)
+#         nott = "username" if "username" not in data\
+#             else "name" if "name" not in data\
+#             else "sinf" if "sinf" not in data else ""
 
-        if nott:
-            return render(request, "pages/auth/regis.html", {
-                "error": f"{nott} datada bo'lishi kere",
-                "sinf": c
-            })
+#         if nott:
+#             return render(request, "pages/auth/regis.html", {
+#                 "error": f"{nott} datada bo'lishi kere",
+#                 "sinf": c
+#             })
 
-        user = User.objects.filter(username=data["username"]).first()
+#         user = User.objects.filter(username=data["username"]).first()
 
-        if user:
-            return render(request, "pages/auth/regis.html", {
-                "error": "Bu username band",
-                "sinf": c
-            })
+#         if user:
+#             return render(request, "pages/auth/regis.html", {
+#                 "error": "Bu username band",
+#                 "sinf": c
+#             })
 
-        if data["pass"] != data["pass-conf"]:
-            return render(request, "pages/auth/regis.html", {
-                "error": "Parol bir biri bilan mos emas",
-                "sinf": c
-            })
+#         if data["pass"] != data["pass-conf"]:
+#             return render(request, "pages/auth/regis.html", {
+#                 "error": "Parol bir biri bilan mos emas",
+#                 "sinf": c
+#             })
 
-        sinf = ClassRooms.objects.filter(name=data["sinf"]).first()
+#         sinf = ClassRooms.objects.filter(name=data["sinf"]).first()
 
-        if not sinf:
-            return render(request, "pages/auth/regis.html", {
-                "error": "Sinf topilmadi",
-                "sinf": c
-            })
+#         if not sinf:
+#             return render(request, "pages/auth/regis.html", {
+#                 "error": "Sinf topilmadi",
+#                 "sinf": c
+#             })
 
-        user_new = User.objects.create_user(username=request.POST.get('username'), name=request.POST.get('name'))
-        authenticate(user_new)
-        return redirect('home')
+#         user_new = User.objects.create_user(username=request.POST.get('username'), name=request.POST.get('name'))
+#         authenticate(user_new)
+#         return redirect('home')
 
-    return render(request, "pages/auth/regis.html", {"sinf": c})
+#     return render(request, "pages/auth/regis.html", {"sinf": c})
 
 # def otp(request):
 #     if not request.session.get("otp_token"):

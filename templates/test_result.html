@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{ test.name }} — Результаты{% endblock %}
+{% block title %}{{ result.test.name }} — Результаты{% endblock %}
 {% block header %}
 <style>
     .result-page {
@@ -72,9 +72,9 @@
 
     <div class="result-header">
         <div class="trophy">🏆</div>
-        <h1>{{ test.name }}</h1>
-        <div class="subject">{{ test.subject.name }} &nbsp;·&nbsp; {{ result.created|date:"d.m.Y" }}</div>
-        <div class="stats">
+        <h1>{{ result.test.name }}</h1>
+        <div class="subject">{{ result.test.subject.name }} &nbsp;·&nbsp; {{ result.created|date:"d.m.Y" }}</div>
+        <div class="stats"> 
             <div class="stat-box">
                 <div class="val">{{ result.foyiz }}%</div>
                 <div class="lbl">Процент</div>
@@ -90,23 +90,23 @@
         </div>
     </div>
 
-    <div class="questions-list">
-        {% for q in questions %}
+    <!--<div class="questions-list">
+        {# for q in questions #}
         <div class="q-card">
             <div class="q-text">{{ forloop.counter }}. {{ q.text }}</div>
-            {% for v in variants %}
-                {% if v.question_id == q.id %}
+            {# for v in variants #}
+                {# if v.question_id == q.id #}
                     <div class="variant {% if v.is_answer %}correct{% else %}neutral{% endif %}">
-                        {% if v.is_answer %}✓{% else %}○{% endif %} {{ v.text }}
+                        {# if v.is_answer #}✓{# else #}○{# endif #} {{ v.text }}
                     </div>
-                {% endif %}
-            {% endfor %}
+                {# endif #}
+            {# endfor #}
         </div>
-        {% endfor %}
-    </div>
+        {# endfor #}
+    </div>-->
 
     <div class="back-row">
-        <a href="{% url 'home' %}" class="btn-back">На главную</a>
+        <a href="{% url 'home' %}" class="btn-back" style="text-decoration: none;">На главную</a>
     </div>
 
 </div>

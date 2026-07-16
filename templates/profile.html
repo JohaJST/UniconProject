@@ -7,14 +7,31 @@
         <div class="profile-avatar">{{ user.name|default:"?"|slice:":1" }}</div>
         <div class="profile-hero-info">
             <h1 class="profile-name">{{ user.full_name }}</h1>
-            <p class="profile-meta">
+            <div style="space-y-1">
                 {% if user.classroom %}
-                    {{ user.classroom.name }}
-                {% endif %} 
-                {%if user.birthday %}
-                    {{ user.birthday }}
+                    <p class="profile-meta">
+                        Класс/Группа: {{ user.classroom.name }}
+                    </p>
+                {% endif %}
+                
+                {% if user.birthday %}
+                    <p class="profile-meta">
+                        День рождения: {{ user.birthday }}
+                    </p>
                 {%endif %}
-            </p>
+
+                {% if user.phone %}
+                    <p class="profile-meta">
+                        Номер телефона: +{{ user.phone }}
+                    </p>
+                {% endif %}
+                
+                {% if user.lang %}
+                    <p class="profile-meta">
+                        Язык: {{ user.lang }}
+                    </p>
+                {%endif %}
+            </div>
         </div>
     </div>
 
@@ -25,8 +42,8 @@
             <span class="stat-label">Тестов пройдено</span>
         </div>
         <div class="stat-card accent">
-            <span class="stat-value">{{ average }}</span>
-            <span class="stat-label">Средний балл</span>
+            <span class="stat-value">{{ average }} %</span>
+            <span class="stat-label">Средний процент</span>
         </div>
     </div>
 
@@ -39,15 +56,14 @@
             {% for result in results %}
             <div class="result-item">
                 <div class="result-info">
-                    <span class="result-subject"
-                        >{{ result.test.subject.name }}</span
-                    >
+                    <span class="result-subject">
+                        {{ result.test.subject.name }}
+                    </span>
                     <span class="result-name">{{ result.test.name }}</span>
                 </div>
                 <div
-                    class="result-score {% if result.result >= 80 %}score-high{% elif result.result >= 50 %}score-mid{% else %}score-low{% endif %}"
-                >
-                    {{ result.result }}<span class="score-unit">%</span>
+                    class="result-score {% if result.foyiz >= 80 %}score-high{% elif result.foyiz >= 50 %}score-mid{% else %}score-low{% endif %}">
+                    {{ result.foyiz }}<span class="score-unit">%</span>
                 </div>
             </div>
             {% endfor %}

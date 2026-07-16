@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {% load static %}
-        <title>{% block title %}{% endblock %} — Check Your Brain</title>
+        <title>{% block title %}{% endblock %} — {{ APP_NAME }}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
@@ -200,17 +200,17 @@
     <body>
         <nav class="navbar">
             <a href="{% url 'home' %}" class="nav-brand">
-                <span class="nav-brand-text">Check Your Brain</span>
+                <span class="nav-brand-text">{{ APP_NAME }}</span>
             </a>
 
             <span class="nav-divider"></span>
 
             <div class="nav-links">
-                <a href="{% url 'home' %}" class="nav-link">Предметы</a>
+                <a href="{% url 'home' %}" class="nav-link">Тесты</a>
                 {% if user.is_admin %}
-                <a href="{% url 'dashboard' %}" class="nav-link admin"
-                    >Панель управления</a
-                >
+                <a href="{% url 'dashboard' %}" class="nav-link admin">
+                    Панель управления
+                </a>
                 {% endif %}
             </div>
 

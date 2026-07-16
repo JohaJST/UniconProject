@@ -70,7 +70,7 @@
 
                 <!-- Card action button -->
                 {% if test.id in completed_test_ids %}
-                <a href="{% url 'test' test_id=test.id %}" data-btn
+                <a href="{% url 'test_result' test_id=test.id %}" data-btn
                    class="mt-auto w-full text-center py-2.5 rounded-xl border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors">
                     Посмотреть результаты
                 </a>

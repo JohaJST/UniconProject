@@ -51,7 +51,7 @@ def user_profile(request):
         .order_by('-created')
     )
     # Avg корректно игнорирует NULL-значения.
-    average = results.aggregate(avg=Avg('result'))['avg']
+    average = results.aggregate(avg=Avg('foyiz'))['avg']
 
     ctx = {
         "user": request.user,
