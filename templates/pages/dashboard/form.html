@@ -52,6 +52,7 @@
                         name="first_name"
                         maxlength="255"
                         placeholder="Имя..."
+                        value="{{ user_data.first_name }}"
                         required
                         class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
@@ -71,6 +72,7 @@
                         name="last_name"
                         maxlength="255"
                         placeholder="Фамилия..."
+                        value="{{ user_data.last_name }}"
                         required
                         class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
@@ -88,6 +90,7 @@
                         id="id_birthday"
                         type="date"
                         name="birthday"
+                        value="{{ user_data.birthday }}"
                         class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [color-scheme:dark]"
                     />
                 </div>
@@ -105,7 +108,8 @@
                         type="number"
                         name="phone"
                         maxlength="255"
-                        placeholder="998901234567"
+                        placeholder="998997774488"
+                        value="{{ user_data.phone }}"
                         class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                 </div>
@@ -124,6 +128,7 @@
                         name="password"
                         maxlength="255"
                         placeholder="••••••••"
+                        value="{{ user_data.password }}"
                         required
                         class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
@@ -144,14 +149,15 @@
                     >
                         <option value="">-- Выберите класс --</option>
                         {% for i in classrooms %}
-                        <option value="{{ i.id }}">{{ i.name }}</option>
+                            <option value="{{ i.id }}"
+                                {% if user_data.classroom|slugify == i.id|slugify %}selected{% endif %}
+                            >{{ i.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-            </div>
 
             <!-- Роль (role) — full width -->
-            <div class="mb-8">
+            <div>
                 <label
                     class="text-sm font-medium text-slate-300 mb-1.5 block"
                     for="id_role"
@@ -161,16 +167,50 @@
                 <select
                     id="id_role"
                     name="role"
+                    aria-selected="{{ user_data.role }}"
                     required
                     class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 >
-                    <option value="4">Ученик</option>
-                    <option value="3">Учитель</option>
-                    <option value="2">Администратор</option>
-                    <option value="1">Суперадмин</option>
+                    <option value="4"
+                        {% if user_data.role == "4" %}selected{% endif %}
+                    >Ученик</option>
+                    <option value="3"
+                        {% if user_data.role == "3" %}selected{% endif %}
+                    >Учитель</option>
+                    <option value="2"
+                        {% if user_data.role == "2" %}selected{% endif %}
+                    >Администратор</option>
+                    <option value="1"
+                        {% if user_data.role == "1" %}selected{% endif %}
+                    >Суперадмин</option>
                 </select>
             </div>
 
+            <div>
+                <label
+                    class="text-sm font-medium text-slate-300 mb-1.5 block"
+                    for="id_lang"
+                >
+                    Язык <span class="text-rose-400"></span>
+                </label>
+                <select
+                    id="id_lang"
+                    name="lang"
+                    required
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                >
+                    <option class="rounded-xl" value="uz"
+                        {% if user_data.lang == "uz" %}selected{% endif %}
+                    >Узбекский</option>
+                    <option class="rounded-xl" value="ru"
+                        {% if user_data.lang == "ru" %}selected{% endif %}
+                    >Русский</option>
+                    <option class="rounded-xl" value="en"
+                        {% if user_data.lang == "en" %}selected{% endif %}
+                    >Английский</option>
+                </select>
+            </div>
+        </div>
             <!-- Divider -->
             <div class="border-t border-slate-700 mb-6"></div>
 

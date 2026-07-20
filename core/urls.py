@@ -1,10 +1,11 @@
 from django.urls import path
 
+from .about import about, self, self_check
 from core.auth import sign_in, sign_out
 from core.quiz import (
     create_test,
     index,
-    new_test,
+    # new_test,
     required,
     test,
     test_answer,
@@ -15,14 +16,17 @@ from core.quiz import (
 from .dashboard import action, dlist, form, home, lock
 
 urlpatterns = [
-    path("", index, name="home"),
+    path("", about, name="about"),
+    path("self/", self, name="self"),
+    path("self/check/", self_check, name="self_check"),
+    path("test/", index, name="home"),
     path("login/", sign_in, name="login"),
     path("logout/", sign_out, name="logout"),
     path("user/", user_profile, name="user_profile"),
     path("test/<int:test_id>/", test, name="test"),
     path("test/<int:test_id>/result/", test_result, name="test_result"),  # ← NEW
     path("test/answer/", test_answer, name="test_answer"),
-    path("test/new/", new_test, name="new_test"),
+    # path("test/new/", new_test, name="new_test"),
     path("test/create/", create_test, name="create_test"),
     path("dashboard/", home, name="dashboard"),
     path("dashboard/list/<str:tip>/", dlist, name="dlist"),

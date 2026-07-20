@@ -10,7 +10,7 @@ from django.http import JsonResponse
 
 from methodism import dictfetchone
 
-from core.models import Test, Question, Variant, Result
+from core.models import Test, Question, Variant, Result, TestClassRoom
 
 
 @login_required(login_url="login")
@@ -86,7 +86,13 @@ def test(request, test_id):
             "redirect_url": redirect_url
         })
     # ── GET: load test page ───────────────────────────────────────────────
-
+    
+    if request.user.birthday is None or request.user.phone is None:
+        return redirect("required")
+        
+    if Result.objects.filter(test_id=test_id, user=request.user).exists():
+        return redirect(reverse("test_result", kwargs={"test_id": test_id}))
+    
     try:
         test = (
                     Test.objects
@@ -97,6 +103,13 @@ def test(request, test_id):
     except Test.DoesNotExist:
         return redirect("home")
 
+    test_classroom = TestClassRoom.objects.filter(test=test, classroom=request.user.classroom).first()
+    if not test_classroom:
+        return redirect("home")
+    
+    if not test.is_start:
+        return render(request, "loading.html")
+        
     questions_list = []
     for v_test in test.variantas.all():
         for question in v_test.questions.all():

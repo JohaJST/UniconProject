@@ -1,4 +1,5 @@
 from contextlib import closing
+from turtle import st
 
 from django.contrib.auth.decorators import login_required
 from django.db import connection
@@ -39,7 +40,7 @@ def action(request, status, path, pk=None):
         elif status == "create":
             if path == "test":
                 if request.method == "GET":
-                    is_subject = request.GET.get("is_subject")
+                    # is_subject = request.GET.get("is_subject")
                     classrooms = ClassRooms.objects.all()
                     subjects = Subject.objects.all()
                     return render(
@@ -68,13 +69,16 @@ def action(request, status, path, pk=None):
                     subject.save()
                     classroom_id = 0
                     while f"classroom_{classroom_id}" in request.POST:
-                        clsb = ClassRoomsSubjects.objects.create(
+                        clsb = ClassRoomsSubjects.objects.get_or_create(
                             classroom_id=ClassRooms.objects.get(
                                 id=request.POST.get(f"classroom_{classroom_id}")
                             ).id,
                             subject_id=subject.id,
                         )
-                        clsb.save()
+                        try:
+                            clsb.save()
+                        except:
+                            pass
                         classroom_id += 1
                     return redirect("dlist", tip=path)
             elif path == "classroom":
@@ -119,6 +123,10 @@ def action(request, status, path, pk=None):
                 return redirect("dlist", tip=path)
             else:
                 return redirect("dlist", tip=path)
+        elif status == "edit":
+            pass    
+        elif status == "view":
+            pass
         else:
             return redirect("dlist", tip=path)
     else:
@@ -136,19 +144,18 @@ def form(req):
                     phone=data.get("phone"),
                     username=None,
                     password=data.get("password"),
-                    birthday=data["birthday"]
-                    if data["birthday"] is not None and data["birthday"] != ""
-                    else None,
+                    birthday=data.get("birthday"),
                     name=data["first_name"],
                     last_name=data["last_name"],
                     classroom_id=int(data["classroom"]),
                     role=int(data["role"]),
+                    lang=data.get("lang")
                 )
             except:
                 return render(
                     req,
                     "pages/dashboard/form.html",
-                    {"classrooms": c, "error": "Проверьте данные"},
+                    {"classrooms": c, "error": "Проверьте данные", "user_data": data},
                 )
             return render(
                 req,

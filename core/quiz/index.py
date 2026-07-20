@@ -23,7 +23,6 @@ def index(request, pk=None):
         Test.objects
         .filter(
             test_classrooms__classroom=request.user.classroom,
-            is_start=True,
         )
         .select_related('subject')
         .annotate(question_count=Count('variantas__questions', distinct=True))
@@ -42,6 +41,9 @@ def index(request, pk=None):
 
 @login_required(login_url="login")
 def user_profile(request):
+    if request.user.birthday is None or request.user.phone is None:
+        return redirect("required")
+
     """Профиль пользователя с историей результатов и средним баллом."""
     # Фильтруем на уровне БД вместо перебора всех записей в Python.
     results = (

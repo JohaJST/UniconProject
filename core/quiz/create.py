@@ -12,12 +12,12 @@ from core.models import (
 )
 
 
-@login_required(login_url="login")
-def new_test(request):
-    return render(request, "pages/dashboard/new.html", {
-        "classrooms": ClassRooms.objects.all(),
-        "subjects": Subject.objects.all(),
-    })
+# @login_required(login_url="login")
+# def new_test(request):
+#     return render(request, "pages/dashboard/new.html", {
+#         "classrooms": ClassRooms.objects.all(),
+#         "subjects": Subject.objects.all(),
+#     })
 
 
 @login_required(login_url="login")
@@ -48,6 +48,7 @@ def create_test(request):
     while f'question_{q_idx}' in request.POST:
         question = Question.objects.create(
             text=request.POST[f'question_{q_idx}'],
+            img=request.POST.get(f'question_{q_idx}_image') if f'question_{q_idx}_image' in request.POST else None,
             varianta=test_varianta,
         )
         v_idx = 1
