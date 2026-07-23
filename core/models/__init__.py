@@ -9,3 +9,10 @@ from .test import (
     TestVarianta,
     Variant,
 )
+from .about import (
+    Partners,
+    About,
+    Codurses,
+    Teachers,
+    New
+)
