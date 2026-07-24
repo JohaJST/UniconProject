@@ -1,0 +1,290 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #0a0f1e;
+    --grid-cell: #1a2540;
+    --grid-hover: #4e75ad;
+    --accent: #4e75ad;
+    --accent-light: #6b93cc;
+    --card-bg: #16213e;
+    --card-border: rgba(78, 117, 173, 0.45);
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --input-bg: rgba(255, 255, 255, 0.06);
+    --input-border: rgba(78, 117, 173, 0.35);
+    --focus-ring: rgba(78, 117, 173, 0.3);
+    --error-bg: rgba(239, 68, 68, 0.12);
+    --radius-sm: 8px;
+    --radius-lg: 22px;
+    --shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur: 0.25s;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* ───────────────────────────────
+   Animated grid background
+   Использует ::before как в оригинале —
+   волна проходит ЗА плитками, плитки сверху
+─────────────────────────────── */
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    background: var(--bg); /* цвет зазора между плитками */
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Анимированная волна — позади span-ов */
+.bg-grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(var(--bg), rgba(78, 117, 173, 0.55), var(--bg));
+    animation: wave 5s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+}
+
+@keyframes wave {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+/* Плитки — над волной */
+.bg-grid span {
+    display: block;
+    width: 60px;
+    height: 60px;
+    flex: 0 0 60px;
+    background: var(--grid-cell);
+    position: relative;
+    z-index: 1;
+    transition: background 1.5s var(--ease);
+}
+
+.bg-grid span:hover {
+    background: var(--grid-hover);
+    transition: background 0s;
+}
+
+/* ───────────────────────────────
+   Auth wrapper + card
+─────────────────────────────── */
+.auth-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px;
+    padding: 1.25rem;
+}
+
+.auth-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 2.75rem 2.5rem;
+    box-shadow: var(--shadow);
+}
+
+/* ───────────────────────────────
+   Header
+─────────────────────────────── */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.25rem;
+}
+
+.auth-logo {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 6px 18px rgba(78, 117, 173, 0.5));
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.auth-title {
+    font-size: 1.625rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    margin-bottom: 0.375rem;
+}
+
+.auth-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* ───────────────────────────────
+   Alert
+─────────────────────────────── */
+.auth-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    background: var(--error-bg);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-sm);
+    color: #fca5a5;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* ───────────────────────────────
+   Form
+─────────────────────────────── */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ───────────────────────────────
+   Select
+─────────────────────────────── */
+.select-wrapper {
+    position: relative;
+}
+
+.form-select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    padding: 0.8125rem 2.5rem 0.8125rem 1rem;
+    cursor: pointer;
+    outline: none;
+    transition:
+        border-color var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease),
+        background var(--dur) var(--ease);
+}
+
+.form-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+    background: rgba(78, 117, 173, 0.08);
+}
+
+.form-select option {
+    background: #1e293b;
+    color: var(--text);
+}
+
+.select-icon {
+    position: absolute;
+    right: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    transition: color var(--dur) var(--ease);
+}
+
+.select-wrapper:focus-within .select-icon {
+    color: var(--accent-light);
+}
+
+/* ───────────────────────────────
+   Button
+─────────────────────────────── */
+.auth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.9375rem 1.5rem;
+    margin-top: 0.25rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(78, 117, 173, 0.4);
+    transition:
+        background var(--dur) var(--ease),
+        transform var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease);
+}
+
+.auth-btn:hover {
+    background: var(--accent-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(78, 117, 173, 0.55);
+}
+
+.auth-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(78, 117, 173, 0.3);
+}
+
+/* ───────────────────────────────
+   Responsive
+─────────────────────────────── */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 2rem 1.375rem;
+    }
+
+    .auth-title {
+        font-size: 1.375rem;
+    }
+}
