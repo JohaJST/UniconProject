@@ -12,7 +12,7 @@ from .test import (
 from .about import (
     Partners,
     About,
-    Codurses,
+    Courses,
     Teachers,
-    New
+    News,
 )

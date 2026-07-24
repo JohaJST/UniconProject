@@ -182,3 +182,5 @@ cython_debug/
 
 static/
 templates/private/  
+core/migrations/
+templates/t/

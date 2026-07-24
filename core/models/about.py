@@ -1,8 +1,3 @@
-from email.policy import default
-from logging import info
-from os import name
-from xxlimited import new
-
 from django.db import models
 
 
@@ -28,7 +23,7 @@ class About(models.Model):
     def __str__(self):
         return f"{self.id} // About info"
 
-class courses(models.Model):
+class Courses(models.Model):
     title = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     desc = models.TextField()
