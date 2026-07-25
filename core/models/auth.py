@@ -51,6 +51,11 @@ class User(AbstractBaseUser):
     Роли хранятся в одном поле ``role`` (см. :class:`Role`).
     Свойства ``is_admin``, ``is_staff``, ``is_superuser`` вычисляются
     на лету — весь существующий код шаблонов и вьюшек работает без изменений.
+
+    ВАЖНО: поля ``in_dashboard`` и ``interval`` удалены из модели — состояние
+    доступа к дашборду и sliding-window сессии теперь хранятся в Redis
+    (см. ключи ``user:{user_id}:dashboard_auth`` и ``user:{user_id}:active_device``
+    в Shared Context), а не в SQL-базе.
     """
 
     # ── Личные данные ─────────────────────────────────────
@@ -78,16 +83,10 @@ class User(AbstractBaseUser):
     )
 
     # ── Служебные флаги ───────────────────────────────────
+    # in_dashboard и interval удалены (см. docstring выше) — сессии дашборда
+    # больше не зависят от SQL-базы данных.
     just = models.BooleanField(default=False)
-    in_dashboard = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    interval = models.DateTimeField(
-        auto_now_add=True,
-        auto_now=False,
-        null=True,
-        blank=True,
-        editable=True,
-    )
 
     # ── Временные метки ───────────────────────────────────
     created = models.DateField(

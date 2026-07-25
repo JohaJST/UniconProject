@@ -184,3 +184,4 @@ templates/private/
 core/migrations/
 templates/t/
 static/nouse
+.idea/

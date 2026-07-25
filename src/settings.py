@@ -47,14 +47,26 @@ INSTALLED_APPS = [
     "import_export",
 ]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# MIDDLEWARE
+# Добавлены кастомные мидлвари JWT-аутентификации:
+#   - JWTAuthenticationMiddleware ставится сразу после CsrfViewMiddleware,
+#     т.к. должна отработать до AuthenticationMiddleware и проверок CSRF на вьюхах,
+#     но после того, как CSRF-мидлварь уже готова обработать запрос.
+#   - DashboardSecurityMiddleware ставится в самый конец цепочки, т.к. она
+#     проверяет доступ к дашборду уже после того, как пользователь определён
+#     всеми предыдущими мидлварями (сессия, аутентификация, JWT).
+# ─────────────────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "core.auth_jwt.middleware.JWTAuthenticationMiddleware",  # JWT-аутентификация (новое)
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.auth_jwt.middleware.DashboardSecurityMiddleware",  # защита дашборда (новое, в конце цепочки)
 ]
 
 ROOT_URLCONF = "src.urls"
@@ -176,3 +188,35 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 RANGE = os.getenv("RANGE", 0)
 
 TOKEN = os.getenv("TOKEN", 0)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JWT / Cookie-аутентификация
+# Названия и TTL кук фиксированы в Shared Context и не должны меняться,
+# т.к. на них завязаны middleware, Redis-ключи и логика контроллеров логина/рефреша.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Имена cookie для access и refresh токенов
+JWT_ACCESS_COOKIE_NAME = "access_token"
+JWT_REFRESH_COOKIE_NAME = "refresh_token"
+
+# Время жизни токенов в секундах (TTL)
+JWT_ACCESS_TOKEN_TTL = 900        # 15 минут
+JWT_REFRESH_TOKEN_TTL = 604800    # 7 дней
+
+# Общие флаги безопасности для обеих кук (access и refresh)
+JWT_COOKIE_HTTPONLY = True
+JWT_COOKIE_SECURE = True
+JWT_COOKIE_SAMESITE = "Lax"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CSRF
+# CSRF_COOKIE_HTTPONLY=False обязателен: фронтенд должен читать csrftoken
+# из cookie через JS и передавать его в заголовке запроса.
+# CSRF_COOKIE_SECURE и CSRF_COOKIE_SAMESITE выставлены так же строго, как и
+# флаги JWT-кук (Secure=True, SameSite=Lax), для единой политики безопасности кук.
+# Сама проверка CSRF выполняется стандартным CsrfViewMiddleware — переопределять
+# его не нужно.
+# ─────────────────────────────────────────────────────────────────────────────
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "Lax"
