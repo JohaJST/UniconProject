@@ -5,8 +5,9 @@ core/auth_jwt/tokens.py
 
 Payload access-токена:
     {
-        "user_id":   int,
+        "sub":       int,   # ID пользователя (стандартный JWT-claim "subject")
         "device_id": str,
+        "jti":       str,   # уникальный ID именно этого access-токена
         "type":      "access",
         "iat":       <timestamp>,
         "exp":       <timestamp>,   # settings.JWT_ACCESS_TOKEN_TTL (900s)
@@ -14,18 +15,21 @@ Payload access-токена:
 
 Payload refresh-токена:
     {
-        "user_id":   int,
+        "sub":       int,
         "device_id": str,
         "family_id": str,           # см. Redis-ключ rt_family:{family_id}
-        "jti":       str,           # уникальный ID именно этого токена
+        "jti":       str,           # уникальный ID именно этого refresh-токена
         "type":      "refresh",
         "iat":       <timestamp>,
         "exp":       <timestamp>,   # settings.JWT_REFRESH_TOKEN_TTL (604800s)
     }
 
-``jti`` refresh-токена нужен сервисному слою (Redis, промпт 5) для хранения
-хэша "текущего" токена внутри ``rt_family:{family_id}`` и обнаружения
-повторного использования уже заротированного токена (reuse detection).
+ХОТФИКС: ключ пользователя переименован user_id -> sub (стандартное имя
+JWT-claim'а), а claim ``jti`` теперь генерируется для ОБОИХ токенов, а не
+только для refresh — это нужно, чтобы AuthRedisService.revoke_token /
+is_token_revoked могли атомарно отзывать конкретный access-токен точно так
+же, как и refresh (например, при logout с одного устройства или при
+обнаружении DeviceMismatch в middleware).
 """
 from __future__ import annotations
 
@@ -51,7 +55,8 @@ def generate_tokens(user_id: int, device_id: str, family_id: str) -> dict:
     """
     Создаёт пару access/refresh токенов для одной сессии логина.
 
-    :param user_id:   ID пользователя (core.models.User.id)
+    :param user_id:   ID пользователя (core.models.User.id) — кладётся в
+                       payload под стандартным claim'ом "sub"
     :param device_id: идентификатор устройства — сверяется middleware
                        с Redis-ключом ``user:{user_id}:active_device``
     :param family_id:  идентификатор "семьи" refresh-токенов; один и тот же
@@ -64,8 +69,11 @@ def generate_tokens(user_id: int, device_id: str, family_id: str) -> dict:
 
     # ── Access-токен ────────────────────────────────────────────────────
     access_payload = {
-        "user_id": user_id,
+        "sub": user_id,
         "device_id": device_id,
+        # jti — уникальный ID именно этого access-токена, нужен для
+        # точечного отзыва (token:revoked:{jti}) без ожидания истечения TTL.
+        "jti": uuid.uuid4().hex,
         "type": "access",
         "iat": now,
         "exp": now + datetime.timedelta(seconds=settings.JWT_ACCESS_TOKEN_TTL),
@@ -74,7 +82,7 @@ def generate_tokens(user_id: int, device_id: str, family_id: str) -> dict:
 
     # ── Refresh-токен ───────────────────────────────────────────────────
     refresh_payload = {
-        "user_id": user_id,
+        "sub": user_id,
         "device_id": device_id,
         "family_id": family_id,
         # jti — уникальный идентификатор именно этого refresh-токена,

@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count
@@ -6,6 +7,8 @@ from django.shortcuts import redirect, render
 
 from core.models import ClassRooms, Result, Subject, Test, User
 from core.models.auth import Role
+from core.auth_jwt.exceptions import RateLimitError
+from core.auth_jwt.services import AuthRedisService
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -28,6 +31,11 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
     resolves the *first* matching pattern (``dashboard_classroom``), so the
     integer arrives as ``subject_id`` in both cases.  The "user" branch
     therefore normalises via ``_classroom_id`` below.
+
+    NOTE: этот view пока читает request.user.in_dashboard — это поле было
+    удалено из модели User в Промпте 2. Данный файл трогает только lock()
+    по текущему ТЗ; замена этой проверки на AuthRedisService.is_dashboard_authorized
+    для home() запланирована отдельным шагом (Промпт 10, вместе с ролями).
     """
     if not request.user.in_dashboard:
         return redirect("lock")
@@ -182,15 +190,40 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
 
 @login_required(login_url="login")
 def lock(request):
-    """Render the dashboard password gate (GET) or verify it (POST)."""
-    if request.user.role == 4:
-        return redirect("home")
+    """
+    Render the dashboard password gate (GET) or verify it (POST).
 
+    ПЕРЕПИСАНО на AuthRedisService: доступ к дашборду больше не хранится
+    в SQL (User.in_dashboard удалён в Промпте 2), а живёт в Redis-ключе
+    user:{user_id}:dashboard_auth с TTL 600s (sliding window, продлевается
+    в DashboardSecurityMiddleware на каждый запрос к защищённому пути).
+
+    Старая проверка ролей (редирект студентов на "home") здесь убрана —
+    переносится в middleware в Промпте 10.
+    """
     if request.method == "POST":
-        in_dash = request.user.check_password(request.POST.get("pass", ""))
-        request.user.in_dashboard = in_dash
-        request.user.save(update_fields=["in_dashboard"])
-        return redirect("dashboard") if in_dash else redirect("lock")
+        ip_raw = request.META.get("REMOTE_ADDR", "")
+        # В Redis храним не сырой IP, а его хэш — так же, как ua_hash в
+        # active_device (core/auth.py: sign_in) — и это совпадает с
+        # нейммингом ключа lock:ip:{ip_hash}:...
+        ip_hash = hashlib.sha256(ip_raw.encode("utf-8")).hexdigest()
+
+        try:
+            AuthRedisService.check_lock_bruteforce(request.user.id, ip_hash)
+        except RateLimitError:
+            return render(request, "pages/dashboard/pass.html", {
+                "error": "Слишком много попыток. Попробуйте позже.",
+            })
+
+        if request.user.check_password(request.POST.get("pass", "")):
+            AuthRedisService.clear_login_attempts(request.user.id)
+            # Никаких user.save() — состояние доступа к дашборду только в Redis.
+            AuthRedisService.authorize_dashboard(request.user.id)
+            return redirect("dashboard")
+
+        return render(request, "pages/dashboard/pass.html", {
+            "error": "Неверный пароль",
+        })
 
     return render(request, "pages/dashboard/pass.html")
 

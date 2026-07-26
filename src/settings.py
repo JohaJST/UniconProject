@@ -49,24 +49,35 @@ INSTALLED_APPS = [
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MIDDLEWARE
-# Добавлены кастомные мидлвари JWT-аутентификации:
-#   - JWTAuthenticationMiddleware ставится сразу после CsrfViewMiddleware,
-#     т.к. должна отработать до AuthenticationMiddleware и проверок CSRF на вьюхах,
-#     но после того, как CSRF-мидлварь уже готова обработать запрос.
-#   - DashboardSecurityMiddleware ставится в самый конец цепочки, т.к. она
-#     проверяет доступ к дашборду уже после того, как пользователь определён
-#     всеми предыдущими мидлварями (сессия, аутентификация, JWT).
+# ИСПРАВЛЕНО: JWTAuthenticationMiddleware перемещена СТРОГО ПОСЛЕ
+# django.contrib.auth.middleware.AuthenticationMiddleware.
+#
+# Причина: AuthenticationMiddleware безусловно перезаписывает request.user
+# через SimpleLazyObject на основе Django-сессии. Раз мы больше не вызываем
+# django.contrib.auth.login() (см. core/auth.py — JWT вместо сессий),
+# запрос без сессии всегда получал бы request.user = AnonymousUser,
+# и если бы AuthenticationMiddleware стояла ПОСЛЕ нашей JWT-мидлвари, она бы
+# затирала уже корректно проставленного JWT-пользователя обратно на анонима.
+#
+# Теперь порядок такой: сперва AuthenticationMiddleware ставит AnonymousUser
+# (т.к. сессии нет), а затем JWTAuthenticationMiddleware перезаписывает
+# request.user на реального пользователя по access_token — её результат
+# в цепочке последний и уже ничем не перетирается.
+#
+# DashboardSecurityMiddleware по-прежнему в самом конце цепочки — она
+# работает уже после того, как JWT-мидлварь гарантированно проставила
+# валидного request.user.
 # ─────────────────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "core.auth_jwt.middleware.JWTAuthenticationMiddleware",  # JWT-аутентификация (новое)
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.auth_jwt.middleware.JWTAuthenticationMiddleware",  # JWT-аутентификация — теперь ПОСЛЕ AuthenticationMiddleware
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "core.auth_jwt.middleware.DashboardSecurityMiddleware",  # защита дашборда (новое, в конце цепочки)
+    "core.auth_jwt.middleware.DashboardSecurityMiddleware",  # защита дашборда, в конце цепочки
 ]
 
 ROOT_URLCONF = "src.urls"
