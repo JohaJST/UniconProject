@@ -69,7 +69,7 @@ def generate_tokens(user_id: int, device_id: str, family_id: str) -> dict:
 
     # ── Access-токен ────────────────────────────────────────────────────
     access_payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "device_id": device_id,
         # jti — уникальный ID именно этого access-токена, нужен для
         # точечного отзыва (token:revoked:{jti}) без ожидания истечения TTL.
@@ -82,7 +82,7 @@ def generate_tokens(user_id: int, device_id: str, family_id: str) -> dict:
 
     # ── Refresh-токен ───────────────────────────────────────────────────
     refresh_payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "device_id": device_id,
         "family_id": family_id,
         # jti — уникальный идентификатор именно этого refresh-токена,

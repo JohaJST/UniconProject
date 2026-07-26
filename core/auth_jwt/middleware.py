@@ -61,7 +61,7 @@ class JWTAuthenticationMiddleware:
 
         # ── 5. Успех — проставляем пользователя и пропускаем дальше ──────
         try:
-            request.user = User.objects.get(id=payload["sub"])
+            request.user = User.objects.get(id=int(payload["sub"]))
         except User.DoesNotExist:
             return self._clear_cookies_and_redirect_login()
 
