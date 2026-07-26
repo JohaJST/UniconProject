@@ -216,7 +216,7 @@ JWT_REFRESH_TOKEN_TTL = 604800    # 7 дней
 
 # Общие флаги безопасности для обеих кук (access и refresh)
 JWT_COOKIE_HTTPONLY = True
-JWT_COOKIE_SECURE = True
+JWT_COOKIE_SECURE = not DEBUG
 JWT_COOKIE_SAMESITE = "Lax"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -229,5 +229,5 @@ JWT_COOKIE_SAMESITE = "Lax"
 # его не нужно.
 # ─────────────────────────────────────────────────────────────────────────────
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SAMESITE = "Lax"
