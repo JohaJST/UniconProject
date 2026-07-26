@@ -1,5 +1,6 @@
 from django.urls import path
 
+from core.auth import refresh_token_view
 from .about import about, self, self_check
 from core.auth import sign_in, sign_out
 from core.quiz import (
@@ -37,4 +38,5 @@ urlpatterns = [
     path("required/", required, name="required"),
     path("lock/", lock, name="lock"),
     path("locked/", lock, name="locked"),
+    path("token/refresh/", refresh_token_view, name="token_refresh")
 ]

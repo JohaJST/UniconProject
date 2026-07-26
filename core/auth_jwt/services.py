@@ -67,6 +67,27 @@ class AuthRedisService:
         )
 
     @staticmethod
+    def touch_active_session(user_id: int, timeout: int = 604800) -> None:
+        """
+        Продлевает TTL ключа user:{user_id}:active_device в Redis.
+
+        Вызывается из refresh_token_view при КАЖДОЙ успешной ротации
+        refresh-токена. Без этого вызова set_active_session() ставит TTL
+        только один раз — при логине — и активная сессия умирает ровно
+        через 7 дней, даже если пользователь непрерывно продлевает токены.
+
+        cache.touch() продлевает TTL существующего ключа, не трогая
+        значение (device_id/ua_hash/ip_subnet остаются как есть).
+        Если ключа уже нет (истёк / logout / kick_user) — touch() тихо
+        вернёт False, и это ожидаемо: validate_session() и так вернёт
+        False на следующей проверке, создавать ключ заново здесь не нужно.
+        """
+        cache.touch(
+            AuthRedisService._active_device_key(user_id),
+            timeout=timeout,
+        )
+
+    @staticmethod
     def validate_session(user_id: int, device_id: str) -> bool:
         """
         Сверяет device_id из предъявленного access/refresh-токена с тем,

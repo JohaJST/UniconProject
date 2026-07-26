@@ -37,8 +37,6 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
     по текущему ТЗ; замена этой проверки на AuthRedisService.is_dashboard_authorized
     для home() запланирована отдельным шагом (Промпт 10, вместе с ролями).
     """
-    if not request.user.in_dashboard:
-        return redirect("lock")
 
     # ── Period filter ─────────────────────────────────────────────────────────
     try:

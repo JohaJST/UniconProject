@@ -1,9 +1,8 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 
 from core.models import ClassRooms, Question, Result, Subject, Test, User, Variant
 
-# Словарь вместо цепочки if-elif: добавление нового типа — одна строка.
 _QUERYSETS = {
     "subject":   lambda: Subject.objects.all(),
     "classroom": lambda: ClassRooms.objects.all(),
@@ -12,7 +11,7 @@ _QUERYSETS = {
     "quiz":      lambda: Test.objects.select_related('subject').order_by('-created'),
     "variant":   lambda: Variant.objects.select_related('question').all(),
     "question":  lambda: Question.objects.select_related('varianta__test').all(),
-}       
+}
 
 _DISPLAY_NAMES = {
     "subject":   "Subject",
@@ -27,9 +26,8 @@ _DISPLAY_NAMES = {
 
 @login_required(login_url="login")
 def dlist(request, tip=None):
-    if not request.user.in_dashboard:
-        return redirect('lock')
-
+    # Проверка доступа к дашборду теперь в DashboardSecurityMiddleware —
+    # guard "if not request.user.in_dashboard" удалён.
     if tip == "new":
         return render(request, 'pages/dashboard/new.html', {
             "subjects": Subject.objects.all(),
