@@ -68,10 +68,12 @@ def sign_in(requests):
         )
 
         tokens = generate_tokens(user_id=user.id, device_id=device_id, family_id=family_id)
-
+        initial_refresh_hash = hashlib.sha256(tokens["refresh_token"].encode("utf-8")).hexdigest()
+        AuthRedisService.rotate_refresh_family(family_id, initial_refresh_hash)
+        
         AuthRedisService.clear_login_attempts(user.id)
-
         # Админов — сразу на форму пароля дашборда, остальных — на главную.
+        # 
         response = redirect("lock") if user.is_admin else redirect("home")
 
         response.set_cookie(

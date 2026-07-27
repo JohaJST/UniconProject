@@ -323,3 +323,26 @@ class AuthRedisService:
     def clear_login_attempts(user_id: int) -> None:
         """Сбрасывает счётчик неуспешных попыток юзера — вызывать при успешном логине."""
         cache.delete(AuthRedisService._user_attempts_key(user_id))
+
+    # ── Refresh rotation lock (защита от гонки при параллельных запросах) ──
+        # Ключ: rt_family:{family_id}:lock -> "1" (короткий TTL)
+    
+    @staticmethod
+    def _refresh_lock_key(family_id: str) -> str:
+        return f"rt_family:{family_id}:lock"
+
+    @staticmethod
+    def acquire_refresh_lock(family_id: str, timeout: int = 5) -> bool:
+        """
+        Атомарно ставит короткоживущий лок на ротацию refresh-семьи.
+        True — лок получен, можно проводить ротацию.
+        False — кто-то уже ротирует эту же семью прямо сейчас (типичный
+        случай — несколько параллельных запросов браузера с одним и тем
+        же ещё не обновлённым refresh_token) — это НЕ повод считать
+        это атакой.
+        """
+        return cache.add(AuthRedisService._refresh_lock_key(family_id), "1", timeout=timeout)
+
+    @staticmethod
+    def release_refresh_lock(family_id: str) -> None:
+        cache.delete(AuthRedisService._refresh_lock_key(family_id))

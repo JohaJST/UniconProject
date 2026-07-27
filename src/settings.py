@@ -211,7 +211,7 @@ JWT_ACCESS_COOKIE_NAME = "access_token"
 JWT_REFRESH_COOKIE_NAME = "refresh_token"
 
 # Время жизни токенов в секундах (TTL)
-JWT_ACCESS_TOKEN_TTL = 30        # 15 минут
+JWT_ACCESS_TOKEN_TTL = 900        # 15 минут
 JWT_REFRESH_TOKEN_TTL = 604800    # 7 дней
 
 # Общие флаги безопасности для обеих кук (access и refresh)
