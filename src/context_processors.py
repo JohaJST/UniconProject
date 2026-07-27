@@ -1,6 +1,5 @@
 from django.conf import settings
 
-from core.admin import userJust
 
 # Функция interval(request) удалена: слежение за таймаутом сессии дашборда
 # (поле User.interval) больше не нужно — эта логика переезжает в Redis
@@ -9,5 +8,4 @@ from core.admin import userJust
 
 
 def APP_NAME(request):
-    userJust()
     return {"APP_NAME": settings.APP_NAME}

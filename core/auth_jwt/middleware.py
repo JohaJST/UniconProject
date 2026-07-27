@@ -22,10 +22,10 @@ from core.auth_jwt.tokens import decode_token
 
 # Публичные пути, не требующие аутентификации. Логин обязателен в списке —
 # иначе получим бесконечный редирект login -> login -> ...
-_IGNORED_EXACT_PATHS = {"/login/", "/about/", "/self/", "/self/check/"}
+_IGNORED_EXACT_PATHS = {"/login/", "/", "/self/", "/self/check/"}
 _IGNORED_PREFIXES = ("/JustAdmin/",)
 
-
+    
 class JWTAuthenticationMiddleware:
     """Стандартный Django middleware (init/call-стиль)."""
 

