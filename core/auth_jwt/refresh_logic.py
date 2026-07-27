@@ -14,7 +14,7 @@ from typing import Optional
 
 from django.conf import settings
 
-from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
+from core.auth_jwt.exceptions import TokenExpired, TokenInvalid, RefreshRace
 from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token, generate_tokens
 
@@ -49,31 +49,20 @@ def attempt_token_refresh(refresh_token: str) -> Optional[dict]:
         AuthRedisService.kick_user(user_id)
         return None
 
+
     if presented_hash != family.get("current_token_hash"):
-        # Хэш не совпал. Прежде чем считать это атакой — даём шанс
-        # гонке: возможно, параллельный запрос ротировал семью долями
-        # секунды раньше. Короткая пауза + повторное чтение.
         time.sleep(0.2)
         family = AuthRedisService.get_family(family_id)
         if family is None or family.get("compromised", False) or presented_hash != family.get("current_token_hash"):
-            # Хэш всё ещё не совпадает после паузы — это уже настоящий
-            # reuse (украденный/повторно использованный старый токен).
             AuthRedisService.mark_family_compromised(family_id)
             AuthRedisService.kick_user(user_id)
             return None
-        # Иначе: конкурентный запрос уже успешно ротировал семью — наш
-        # текущий запрос просто "опоздал". Возвращаем None БЕЗ kick_user:
-        # клиент получит текущий ответ без новых кук, но у него уже есть
-        # актуальные куки от того запроса, который выиграл гонку.
-        return None
+        # Гонка выиграна параллельным запросом — не атака.
+        raise RefreshRace(payload)
 
-    # Наш хэш актуален — берём лок перед ротацией, чтобы параллельный
-    # запрос с тем же токеном не проскочил и не создал вторую ротацию
-    # той же семьи одновременно.
     if not AuthRedisService.acquire_refresh_lock(family_id):
-        # Кто-то другой уже ротирует прямо сейчас — ждём и просто не
-        # ротируем повторно сами.
-        return None
+        # Кто-то другой ротирует прямо сейчас — тоже не атака.
+        raise RefreshRace(payload)
 
     try:
         AuthRedisService.touch_active_session(user_id, timeout=settings.JWT_REFRESH_TOKEN_TTL)

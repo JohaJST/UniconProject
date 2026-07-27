@@ -18,7 +18,7 @@ from django.urls import reverse
 
 from core.models import User
 from core.models.auth import Role
-from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
+from core.auth_jwt.exceptions import TokenExpired, TokenInvalid, RefreshRace
 from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token
 from core.auth_jwt.refresh_logic import attempt_token_refresh
@@ -44,7 +44,6 @@ class JWTAuthenticationMiddleware:
         try:
             payload = decode_token(access_token, token_type="access")
         except TokenExpired:
-            # ── Тихое обновление: НЕ редиректим, а рефрешим прямо тут ──
             refresh_token = request.COOKIES.get(settings.JWT_REFRESH_COOKIE_NAME)
             if not refresh_token:
                 return self._clear_cookies_and_redirect_login()
@@ -53,9 +52,21 @@ class JWTAuthenticationMiddleware:
                 new_tokens = attempt_token_refresh(refresh_token)
             except (TokenExpired, TokenInvalid):
                 return self._clear_cookies_and_redirect_login()
+            except RefreshRace as race:
+                # Не атака: параллельный запрос уже (или вот-вот) обновил
+                # токены. Сессия валидна — продолжаем текущий запрос,
+                # новых кук не выставляем (их уже выставил "победивший" запрос).
+                p = race.payload
+                if not AuthRedisService.validate_session(p["sub"], p["device_id"]):
+                    return self._clear_cookies_and_redirect_login()
+                try:
+                    request.user = User.objects.get(id=int(p["sub"]))
+                except User.DoesNotExist:
+                    return self._clear_cookies_and_redirect_login()
+                return self.get_response(request)
 
             if new_tokens is None:
-                # Reuse-attack — kick_user уже отработал внутри attempt_token_refresh
+                # Настоящий reuse-attack — kick_user отработал внутри attempt_token_refresh.
                 return self._clear_cookies_and_redirect_login()
 
             payload = decode_token(new_tokens["access_token"], token_type="access")
