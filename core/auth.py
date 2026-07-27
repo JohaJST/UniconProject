@@ -19,7 +19,7 @@ from core.models import ClassRooms, User
 from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
 from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token, generate_tokens
-
+from core.auth_jwt.refresh_logic import attempt_token_refresh
 
 def _redirect_to_login_clearing_cookies():
     """Общий хелпер: редирект на login с удалением обеих JWT-кук."""
@@ -109,57 +109,24 @@ def refresh_token_view(request):
         return _redirect_to_login_clearing_cookies()
 
     try:
-        payload = decode_token(refresh_token, token_type="refresh")
+        new_tokens = attempt_token_refresh(refresh_token)
     except (TokenExpired, TokenInvalid):
         return _redirect_to_login_clearing_cookies()
 
-    user_id = payload.get("sub")
-    device_id = payload.get("device_id")
-    family_id = payload.get("family_id")
-
-    family = AuthRedisService.get_family(family_id)
-    current_hash = family.get("current_token_hash") if family else None
-    is_compromised = family.get("compromised", False) if family else True
-
-    presented_hash = hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()
-
-    if is_compromised or presented_hash != current_hash:
-        # Reuse Attack (или семья потеряна/протухла в Redis) — убиваем
-        # всю сессию пользователя, а не только эту семью.
-        AuthRedisService.mark_family_compromised(family_id)
-        AuthRedisService.kick_user(user_id)
+    if new_tokens is None:
         return _redirect_to_login_clearing_cookies()
 
-    # ── Всё совпало — сессия легитимна ────────────────────────────────────
-    # Продлеваем TTL active_device ещё на JWT_REFRESH_TOKEN_TTL: без этого
-    # вызова пользователь вылетал бы ровно через 7 дней после первого входа,
-    # даже оставаясь активным (set_active_session ставится только при логине).
-    AuthRedisService.touch_active_session(user_id, timeout=settings.JWT_REFRESH_TOKEN_TTL)
-
-    # ── Ротация: новая пара токенов, старый device_id/family_id ──────────
-    new_tokens = generate_tokens(user_id=user_id, device_id=device_id, family_id=family_id)
-    new_refresh_hash = hashlib.sha256(new_tokens["refresh_token"].encode("utf-8")).hexdigest()
-    AuthRedisService.rotate_refresh_family(family_id, new_refresh_hash)
-
     response = redirect(request.GET.get('next', 'home'))
-
     response.set_cookie(
-        settings.JWT_ACCESS_COOKIE_NAME,
-        new_tokens["access_token"],
-        max_age=settings.JWT_ACCESS_TOKEN_TTL,
-        httponly=settings.JWT_COOKIE_HTTPONLY,
-        secure=settings.JWT_COOKIE_SECURE,
-        samesite=settings.JWT_COOKIE_SAMESITE,
+        settings.JWT_ACCESS_COOKIE_NAME, new_tokens["access_token"],
+        max_age=settings.JWT_ACCESS_TOKEN_TTL, httponly=settings.JWT_COOKIE_HTTPONLY,
+        secure=settings.JWT_COOKIE_SECURE, samesite=settings.JWT_COOKIE_SAMESITE,
     )
     response.set_cookie(
-        settings.JWT_REFRESH_COOKIE_NAME,
-        new_tokens["refresh_token"],
-        max_age=settings.JWT_REFRESH_TOKEN_TTL,
-        httponly=settings.JWT_COOKIE_HTTPONLY,
-        secure=settings.JWT_COOKIE_SECURE,
-        samesite=settings.JWT_COOKIE_SAMESITE,
+        settings.JWT_REFRESH_COOKIE_NAME, new_tokens["refresh_token"],
+        max_age=settings.JWT_REFRESH_TOKEN_TTL, httponly=settings.JWT_COOKIE_HTTPONLY,
+        secure=settings.JWT_COOKIE_SECURE, samesite=settings.JWT_COOKIE_SAMESITE,
     )
-
     return response
 
 

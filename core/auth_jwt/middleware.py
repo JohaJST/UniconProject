@@ -8,6 +8,8 @@ DashboardSecurityMiddleware — RBAC + sliding-window таймаут дашбо�
 Стоит в конце цепочки (после JWTAuthenticationMiddleware), т.к. ему нужен
 уже гарантированно проставленный request.user.
 """
+
+
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -19,62 +21,89 @@ from core.models.auth import Role
 from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
 from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token
+from core.auth_jwt.refresh_logic import attempt_token_refresh
 
-# Публичные пути, не требующие аутентификации. Логин обязателен в списке —
-# иначе получим бесконечный редирект login -> login -> ...
-_IGNORED_EXACT_PATHS = {"/login/", "/", "/self/", "/self/check/"}
+_IGNORED_EXACT_PATHS = {"/login/", "/", "/about/", "/self/", "/self/check/"}
 _IGNORED_PREFIXES = ("/JustAdmin/",)
 
-    
-class JWTAuthenticationMiddleware:
-    """Стандартный Django middleware (init/call-стиль)."""
 
+class JWTAuthenticationMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # ── 1. Публичные пути — пропускаем без каких-либо проверок ──────
         if request.path.startswith(_IGNORED_PREFIXES) or request.path in _IGNORED_EXACT_PATHS:
             return self.get_response(request)
 
-        # ── 2. Читаем access_token из cookie ─────────────────────────────
         access_token = request.COOKIES.get(settings.JWT_ACCESS_COOKIE_NAME)
         if not access_token:
             return self._clear_cookies_and_redirect_login()
 
-        # ── 3. Декодируем токен и обрабатываем ошибки ────────────────────
+        new_tokens = None  # заполнится, если понадобилась тихая ротация
+
         try:
             payload = decode_token(access_token, token_type="access")
         except TokenExpired:
-            refresh_url = reverse("token_refresh")
-            query = urlencode({"next": request.path})
-            return redirect(f"{refresh_url}?{query}")
+            # ── Тихое обновление: НЕ редиректим, а рефрешим прямо тут ──
+            refresh_token = request.COOKIES.get(settings.JWT_REFRESH_COOKIE_NAME)
+            if not refresh_token:
+                return self._clear_cookies_and_redirect_login()
+
+            try:
+                new_tokens = attempt_token_refresh(refresh_token)
+            except (TokenExpired, TokenInvalid):
+                return self._clear_cookies_and_redirect_login()
+
+            if new_tokens is None:
+                # Reuse-attack — kick_user уже отработал внутри attempt_token_refresh
+                return self._clear_cookies_and_redirect_login()
+
+            payload = decode_token(new_tokens["access_token"], token_type="access")
         except TokenInvalid:
             return self._clear_cookies_and_redirect_login()
 
-        # ── 4. Проверки состояния в Redis ─────────────────────────────────
         if AuthRedisService.is_token_revoked(payload["jti"]):
             return self._clear_cookies_and_redirect_login()
 
         if not AuthRedisService.validate_session(payload["sub"], payload["device_id"]):
             return self._clear_cookies_and_redirect_login()
 
-        # ── 5. Успех — проставляем пользователя и пропускаем дальше ──────
         try:
             request.user = User.objects.get(id=int(payload["sub"]))
         except User.DoesNotExist:
             return self._clear_cookies_and_redirect_login()
 
-        return self.get_response(request)
+        # ── Продолжаем ИСХОДНЫЙ запрос (GET или POST) без прерывания ────
+        response = self.get_response(request)
+
+        # Если токены были тихо обновлены — прикладываем новые cookie
+        # к уже готовому ответу текущего запроса.
+        if new_tokens is not None:
+            response.set_cookie(
+                settings.JWT_ACCESS_COOKIE_NAME,
+                new_tokens["access_token"],
+                max_age=settings.JWT_ACCESS_TOKEN_TTL,
+                httponly=settings.JWT_COOKIE_HTTPONLY,
+                secure=settings.JWT_COOKIE_SECURE,
+                samesite=settings.JWT_COOKIE_SAMESITE,
+            )
+            response.set_cookie(
+                settings.JWT_REFRESH_COOKIE_NAME,
+                new_tokens["refresh_token"],
+                max_age=settings.JWT_REFRESH_TOKEN_TTL,
+                httponly=settings.JWT_COOKIE_HTTPONLY,
+                secure=settings.JWT_COOKIE_SECURE,
+                samesite=settings.JWT_COOKIE_SAMESITE,
+            )
+
+        return response
 
     @staticmethod
     def _clear_cookies_and_redirect_login():
-        """Редирект на login с удалением access_token и refresh_token кук."""
         response = redirect("login")
         response.delete_cookie(settings.JWT_ACCESS_COOKIE_NAME)
         response.delete_cookie(settings.JWT_REFRESH_COOKIE_NAME)
         return response
-
 
 class DashboardSecurityMiddleware:
     """
