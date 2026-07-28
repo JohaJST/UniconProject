@@ -185,3 +185,4 @@ core/migrations/
 templates/t/
 static/nouse
 .idea/
+/media/

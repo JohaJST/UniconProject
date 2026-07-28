@@ -32,6 +32,9 @@ class Courses(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = 'Courses'
+
 class Teachers(models.Model):
     fio = models.CharField(max_length=255)
     photo = models.ImageField(upload_to='teachers/')

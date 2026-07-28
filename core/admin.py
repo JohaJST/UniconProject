@@ -1,9 +1,5 @@
-from contextlib import closing
-
 from django.contrib import admin
-from django.db import connection
 from import_export.admin import ImportExportModelAdmin
-from methodism import dictfetchone
 
 from core.models import (
     ClassRooms,
@@ -18,6 +14,11 @@ from core.models import (
     TG_User,
     User,
     Variant,
+    Partners,
+    About,
+    Courses,
+    Teachers,
+    News,
 )
 
 from .resource import (
@@ -33,6 +34,11 @@ from .resource import (
     TG_UserResource,
     UserResource,
     VariantResource,
+    PartnersResource,
+    AboutResource,
+    CoursesResource,
+    TeachersResource,
+    NewsResource,
 )
 
 
@@ -83,6 +89,25 @@ class OldAdmin(ImportExportModelAdmin):
 class ResultAdmin(ImportExportModelAdmin):
     resource_class = ResultResource
 
+class PartnersAdmin(ImportExportModelAdmin):
+    resource_class = PartnersResource
+
+
+class AboutAdmin(ImportExportModelAdmin):
+    resource_class = AboutResource
+
+
+class CoursesAdmin(ImportExportModelAdmin):
+    resource_class = CoursesResource
+
+
+class TeachersAdmin(ImportExportModelAdmin):
+    resource_class = TeachersResource
+
+
+class NewsAdmin(ImportExportModelAdmin):
+    resource_class = NewsResource
+
 
 admin.site.register(User, UserAdmin)
 admin.site.register(TG_User, TgUserAdmin)
@@ -96,5 +121,10 @@ admin.site.register(Variant, VariantAdmin)
 admin.site.register(Result, ResultAdmin)
 admin.site.register(OldResult, OldAdmin)
 admin.site.register(ClassRoomsSubjects, ClassRoomSubjectAdmin)
+admin.site.register(Partners, PartnersAdmin)
+admin.site.register(About, AboutAdmin)
+admin.site.register(Courses, CoursesAdmin)
+admin.site.register(Teachers, TeachersAdmin)
+admin.site.register(News, NewsAdmin)
 
 

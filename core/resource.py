@@ -13,6 +13,11 @@ from .models import (
     TG_User,
     User,
     Variant,
+    Partners,
+    About,
+    Courses,
+    Teachers,
+    News,
 )
 
 
@@ -72,3 +77,27 @@ class TestClassRoomResource(resources.ModelResource):
 class SUbjectResource(resources.ModelResource):
     class Meta:
         model = Subject
+
+
+class PartnersResource(resources.ModelResource):
+    class Meta:
+        model = Partners
+
+class AboutResource(resources.ModelResource):
+    class Meta:
+        model = About
+
+
+class CoursesResource(resources.ModelResource):
+    class Meta:
+        model = Courses
+
+
+class TeachersResource(resources.ModelResource):
+    class Meta:
+        model = Teachers
+
+
+class NewsResource(resources.ModelResource):
+    class Meta:
+        model = News
