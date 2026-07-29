@@ -1,0 +1,62 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-29 19:36+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+#: .\templates\base.html:32
+msgid "Тесты"
+msgstr "Testlar"
+
+#: .\templates\base.html:35
+msgid "Панель управления"
+msgstr "Boshqaruv paneli"
+
+#: .\templates\base.html:64
+msgid "Профиль"
+msgstr "Profil"
+
+#: .\templates\base.html:68
+msgid "Выйти"
+msgstr "Chiqish"
+
+#: .\templates\pages\auth\login.html:54
+msgid "Класс"
+msgstr "Sinf"
+
+#: .\templates\pages\auth\login.html:64
+msgid "Выберите класс"
+msgstr "Sinfni tanlang"
+
+#: .\templates\pages\auth\login.html:87
+msgid "Ученик"
+msgstr "O'quvchi"
+
+#: .\templates\pages\auth\login.html:96
+msgid "Сначала выберите класс"
+msgstr "Sinfni tanlang"
+
+#: .\templates\pages\auth\login.html:116
+msgid "Войти"
+msgstr "Kirish"
+
+#: .\templates\pages\auth\login.html:165
+msgid "Выберите ученика"
+msgstr "O'quvchini tanlang"
+
+#: .\templates\pages\auth\login.html:165
+msgid "Войдите в свою учётную запись"
+msgstr "Hisobingizga kiring"

@@ -2,6 +2,7 @@
 <html lang="ru">
     <head>
         {% load static %}
+        {% load i18n %}
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Check Your Brain — Вход</title>
@@ -23,8 +24,8 @@
                         alt="Логотип"
                         class="auth-logo"
                     />
-                    <h1 class="auth-title">Check Your Brain</h1>
-                    <p class="auth-subtitle">Войдите в свою учётную запись</p>
+                    <h1 class="auth-title">{{ APP_NAME }}</h1>
+                    <p class="auth-subtitle">{% trans "Войдите в свою учётную запись" %}</p>
                 </header>
 
                 {% if error %}
@@ -50,7 +51,7 @@
                     {% csrf_token %}
 
                     <div class="form-group">
-                        <label class="form-label" for="mainSelect">Класс</label>
+                        <label class="form-label" for="mainSelect">{% trans "Класс" %}</label>
                         <div class="select-wrapper">
                             <select
                                 required
@@ -60,7 +61,7 @@
                                 onchange="updateOptions()"
                             >
                                 <option value="" disabled selected>
-                                    Выберите класс…
+                                    {% trans "Выберите класс" %}…
                                 </option>
                                 {% for i in c %}
                                 <option value="{{ i.id }}">{{ i.name }}</option>
@@ -83,7 +84,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="dependentSelect">Ученик</label>
+                        <label class="form-label" for="dependentSelect">{% trans "Ученик" %}</label>
                         <div class="select-wrapper">
                             <select
                                 required
@@ -92,7 +93,7 @@
                                 class="form-select"
                             >
                                 <option value="" disabled selected>
-                                    Сначала выберите класс…
+                                    {% trans "Сначала выберите класс" %}…
                                 </option>
                             </select>
                             <span class="select-icon" aria-hidden="true">
@@ -112,7 +113,7 @@
                     </div>
 
                     <button type="submit" class="auth-btn">
-                        Войти
+                        {% trans "Войти" %}
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="18"
@@ -161,7 +162,7 @@
       var main = document.getElementById('mainSelect');
       var dep  = document.getElementById('dependentSelect');
 
-      dep.innerHTML = '<option value="" disabled selected>Выберите ученика\u2026</option>';
+      dep.innerHTML = '<option value="" disabled selected>{% trans "Выберите ученика" %}\u2026</option>';
 
       var students = optionsData[main.value] || [];
       students.forEach(function(student) {

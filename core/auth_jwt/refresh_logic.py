@@ -5,6 +5,15 @@ core/auth_jwt/refresh_logic.py
   - JWTAuthenticationMiddleware — для "тихого" обновления истёкшего
     access-токена без прерывания текущего запроса (GET/POST);
   - refresh_token_view (core/auth.py) — как явный fallback-эндпоинт.
+
+ВАЖНО (фикс): presented_hash != current_token_hash сам по себе НЕ означает
+атаку. Он возникает КАЖДЫЙ РАЗ, когда параллельный запрос (вторая вкладка,
+автосейв + навигация, повторный fetch) уже успел завершить ротацию раньше
+нас — тогда current_token_hash навсегда меняется, и наш sleep+recheck
+никогда не совпадёт заново. Поэтому перед тем, как объявлять compromise,
+проверяем grace-окно: если presented_hash — это токен, который только что
+(последние _REFRESH_GRACE_SECONDS) был легитимно заменён этой же семьёй,
+это гонка, а не reuse-attack.
 """
 from __future__ import annotations
 
@@ -26,9 +35,11 @@ def attempt_token_refresh(refresh_token: str) -> Optional[dict]:
     :raises TokenExpired: refresh-токен истёк — вызывающий код должен
         разлогинить пользователя (дальше продлевать нечего).
     :raises TokenInvalid: токен повреждён/неверного типа.
+    :raises RefreshRace: presented-токен только что был легитимно заменён
+        параллельным запросом той же сессии — НЕ атака, сессия валидна.
     :return: dict с новыми access_token/refresh_token при успехе,
-             None — если обнаружен reuse-attack (сессия убита через kick_user,
-             вызывающий код должен разлогинить пользователя).
+             None — если обнаружен реальный reuse-attack (сессия убита
+             через kick_user, вызывающий код должен разлогинить пользователя).
     """
     payload = decode_token(refresh_token, token_type="refresh")  # может бросить TokenExpired/TokenInvalid
 
@@ -39,8 +50,8 @@ def attempt_token_refresh(refresh_token: str) -> Optional[dict]:
 
     family = AuthRedisService.get_family(family_id)
 
-    # Семьи нет вообще — после фикса №1 такого быть не должно на живой
-    # сессии; если всё же случилось — это точно повод разлогинить.
+    # Семьи нет вообще — на живой сессии такого быть не должно; если
+    # случилось — это повод разлогинить.
     if family is None:
         AuthRedisService.kick_user(user_id)
         return None
@@ -49,16 +60,28 @@ def attempt_token_refresh(refresh_token: str) -> Optional[dict]:
         AuthRedisService.kick_user(user_id)
         return None
 
-
     if presented_hash != family.get("current_token_hash"):
+        # 1. Быстрая проверка: этот именно хеш уже легитимно заменён
+        #    (grace-окно после чужой ротации) → точно гонка, не атака.
+        if AuthRedisService.is_within_grace(family_id, presented_hash):
+            raise RefreshRace(payload)
+
+        # 2. Даём небольшой шанс — вдруг ротация другого запроса идёт
+        #    прямо сейчас и ещё не записалась.
         time.sleep(0.2)
         family = AuthRedisService.get_family(family_id)
-        if family is None or family.get("compromised", False) or presented_hash != family.get("current_token_hash"):
+
+        if family and presented_hash == family.get("current_token_hash"):
+            # Другой запрос ещё не закоммитил — на самом деле мы совпали.
+            pass  # провалится ниже в обычный acquire_refresh_lock путь
+        elif family and AuthRedisService.is_within_grace(family_id, presented_hash):
+            raise RefreshRace(payload)
+        else:
+            # Хеш не совпадает ни с текущим, ни с недавно замененным —
+            # это реальный reuse старого, давно неактуального токена.
             AuthRedisService.mark_family_compromised(family_id)
             AuthRedisService.kick_user(user_id)
             return None
-        # Гонка выиграна параллельным запросом — не атака.
-        raise RefreshRace(payload)
 
     if not AuthRedisService.acquire_refresh_lock(family_id):
         # Кто-то другой ротирует прямо сейчас — тоже не атака.
@@ -68,7 +91,7 @@ def attempt_token_refresh(refresh_token: str) -> Optional[dict]:
         AuthRedisService.touch_active_session(user_id, timeout=settings.JWT_REFRESH_TOKEN_TTL)
         new_tokens = generate_tokens(user_id=user_id, device_id=device_id, family_id=family_id)
         new_refresh_hash = hashlib.sha256(new_tokens["refresh_token"].encode("utf-8")).hexdigest()
-        AuthRedisService.rotate_refresh_family(family_id, new_refresh_hash)
+        AuthRedisService.rotate_refresh_family(family_id, new_refresh_hash, previous_token_hash=presented_hash)
         return new_tokens
     finally:
         AuthRedisService.release_refresh_lock(family_id)

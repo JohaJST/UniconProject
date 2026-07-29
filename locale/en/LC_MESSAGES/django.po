@@ -1,0 +1,63 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-29 19:36+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: .\templates\base.html:32
+msgid "Тесты"
+msgstr "Tests"
+
+#: .\templates\base.html:35
+msgid "Панель управления"
+msgstr "The Control panel"
+
+#: .\templates\base.html:64
+msgid "Профиль"
+msgstr "Profile"
+
+#: .\templates\base.html:68
+msgid "Выйти"
+msgstr "Logout"
+
+#: .\templates\pages\auth\login.html:54
+msgid "Класс"
+msgstr "Class"
+
+#: .\templates\pages\auth\login.html:64
+msgid "Выберите класс"
+msgstr "Select Class"
+
+#: .\templates\pages\auth\login.html:87
+msgid "Ученик"
+msgstr "Student"
+
+#: .\templates\pages\auth\login.html:96
+msgid "Сначала выберите класс"
+msgstr "Select Class first"
+
+#: .\templates\pages\auth\login.html:116
+msgid "Войти"
+msgstr "Login"
+
+#: .\templates\pages\auth\login.html:165
+msgid "Выберите ученика"
+msgstr "Select Student"
+
+#: .\templates\pages\auth\login.html:165
+msgid "Войдите в свою учётную запись"
+msgstr "Log in to your account"
+

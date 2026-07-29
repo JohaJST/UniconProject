@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 
 from core.auth import refresh_token_view
 from .about import about, self, self_check
@@ -6,7 +6,6 @@ from core.auth import sign_in, sign_out
 from core.quiz import (
     create_test,
     index,
-    # new_test,
     required,
     test,
     test_answer,
@@ -16,18 +15,24 @@ from core.quiz import (
 
 from .dashboard import action, dlist, form, home, lock
 
-urlpatterns = [
+# ── Пути, которые должны попадать под языковой префикс (/uz/..., /en/...) ──
+# Оборачиваются в i18n_patterns() в src/urls.py (корневом URLConf).
+i18n_urlpatterns = [
     path("", about, name="about"),
     path("self/", self, name="self"),
     path("self/check/", self_check, name="self_check"),
-    path("test/", index, name="home"),
     path("login/", sign_in, name="login"),
+    path("i18n/", include("django.conf.urls.i18n")),
+]
+
+# ── Обычные пути — без изменений имён/порядка ───────────────────────────────
+urlpatterns = [
+    path("test/", index, name="home"),
     path("logout/", sign_out, name="logout"),
     path("user/", user_profile, name="user_profile"),
     path("test/<int:test_id>/", test, name="test"),
-    path("test/<int:test_id>/result/", test_result, name="test_result"),  # ← NEW
+    path("test/<int:test_id>/result/", test_result, name="test_result"),
     path("test/answer/", test_answer, name="test_answer"),
-    # path("test/new/", new_test, name="new_test"),
     path("test/create/", create_test, name="create_test"),
     path("dashboard/", home, name="dashboard"),
     path("dashboard/list/<str:tip>/", dlist, name="dlist"),
@@ -38,5 +43,5 @@ urlpatterns = [
     path("required/", required, name="required"),
     path("lock/", lock, name="lock"),
     path("locked/", lock, name="locked"),
-    path("token/refresh/", refresh_token_view, name="token_refresh")
+    path("token/refresh/", refresh_token_view, name="token_refresh"),
 ]

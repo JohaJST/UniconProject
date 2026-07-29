@@ -166,8 +166,8 @@ class AuthRedisService:
         продлевая TTL, пока пользователь активен — здесь же фиксируется только
         факт установки ключа с TTL 600s.
         """
-        cache.set(AuthRedisService._dashboard_auth_key(user_id), "1", timeout=600)
-
+        cache.set(AuthRedisService._dashboard_auth_key(user_id), "1", timeout=900)  # было 600
+        
     @staticmethod
     def is_dashboard_authorized(user_id: int) -> bool:
         """True, если ключ dashboard_auth ещё не истёк (пользователь в дашборде)."""
@@ -176,19 +176,26 @@ class AuthRedisService:
     # ── Refresh token families (ротация + reuse-detection) ──────────────
     # Ключ: rt_family:{family_id} -> JSON {"current_token_hash", "compromised"}
 
+    _REFRESH_GRACE_SECONDS = 15
+    
     @staticmethod
     def _family_key(family_id: str) -> str:
         return f"rt_family:{family_id}"
 
     @staticmethod
-    def rotate_refresh_family(family_id: str, new_token_hash: str) -> None:
+    def _family_grace_key(family_id: str, token_hash: str) -> str:
+        return f"rt_family:{family_id}:grace:{token_hash}"
+
+    @staticmethod
+    def rotate_refresh_family(family_id: str, new_token_hash: str, previous_token_hash: str | None = None) -> None:
         """
         Фиксирует новый "текущий" refresh-токен для семейства при ротации.
 
-        Полностью перезаписывает запись: старый current_token_hash больше
-        нигде не хранится, поэтому его повторное предъявление контроллер
-        рефреша (уровень 4) должен трактовать как компрометацию семьи
-        (см. mark_family_compromised).
+        :param previous_token_hash: хеш токена, который заменяется этой ротацией
+            (presented_hash запроса, который вызвал ротацию). Кладём его в
+            короткоживущий grace-ключ: если ДРУГОЙ параллельный запрос всё ещё
+            держит этот же старый токен и предъявит его в ближайшие секунды —
+            это не атака, а гонка (см. attempt_token_refresh).
         """
         payload = {
             "current_token_hash": new_token_hash,
@@ -196,14 +203,26 @@ class AuthRedisService:
         }
         cache.set(AuthRedisService._family_key(family_id), json.dumps(payload), timeout=604800)
 
+        if previous_token_hash:
+            cache.set(
+                AuthRedisService._family_grace_key(family_id, previous_token_hash),
+                "1",
+                timeout=AuthRedisService._REFRESH_GRACE_SECONDS,
+            )
+
+    @staticmethod
+    def is_within_grace(family_id: str, token_hash: str) -> bool:
+        """True, если presented_hash — это токен, который был заменён ротацией
+        совсем недавно (в пределах grace-окна). Значит, запрос легитимный,
+        просто немного опоздал за победившим параллельным запросом."""
+        return cache.get(AuthRedisService._family_grace_key(family_id, token_hash)) is not None
+
     @staticmethod
     def mark_family_compromised(family_id: str) -> None:
         """
         Помечает семейство refresh-токенов как скомпрометированное
-        (обнаружено повторное использование старого токена — reuse attack).
-
-        Существующий current_token_hash сохраняется как есть (для аудита),
-        меняется только флаг compromised; TTL продлевается заново на 604800s.
+        (обнаружено повторное использование СТАРОГО токена вне grace-окна —
+        реальный reuse attack).
         """
         raw = cache.get(AuthRedisService._family_key(family_id))
         try:
@@ -218,13 +237,6 @@ class AuthRedisService:
 
     @staticmethod
     def get_family(family_id: str) -> Optional[dict]:
-        """
-        Возвращает распарсенный JSON из rt_family:{family_id}.
-
-        :return: {"current_token_hash": str, "compromised": bool} либо None,
-            если запись не найдена в Redis (ключ истёк или никогда не
-            создавался) или содержит повреждённые данные.
-        """
         raw = cache.get(AuthRedisService._family_key(family_id))
         if raw is None:
             return None
@@ -233,7 +245,7 @@ class AuthRedisService:
             return json.loads(raw)
         except (TypeError, ValueError):
             return None
-
+            
     # ── Global kick (полный сброс сессии пользователя) ───────────────────
     # Используется, например, при обнаружении reuse-attack на refresh-токен
     # в refresh_token_view (core/auth.py): пользователя нужно выкинуть

@@ -9,6 +9,7 @@ DashboardSecurityMiddleware — RBAC + sliding-window таймаут дашбо�
 уже гарантированно проставленный request.user.
 """
 
+import re
 
 from urllib.parse import urlencode
 
@@ -24,7 +25,9 @@ from core.auth_jwt.tokens import decode_token
 from core.auth_jwt.refresh_logic import attempt_token_refresh
 
 _IGNORED_EXACT_PATHS = {"/login/", "/", "/about/", "/self/", "/self/check/"}
-_IGNORED_PREFIXES = ("/JustAdmin/",)
+_IGNORED_PREFIXES = ("/JustAdmin/", "/i18n/")
+
+_LANGUAGE_PREFIX_RE = re.compile(r"^/(uz|ru|en)(/.*)?$")
 
 
 class JWTAuthenticationMiddleware:
@@ -32,14 +35,22 @@ class JWTAuthenticationMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith(_IGNORED_PREFIXES) or request.path in _IGNORED_EXACT_PATHS:
+        _path = _strip_language_prefix(request.path)
+        is_ignored = _path.startswith(_IGNORED_PREFIXES) or _path in _IGNORED_EXACT_PATHS
+
+        if is_ignored:
+            # Публичная страница (about/self/login и т.п.): доступ разрешён
+            # в любом случае, но если есть валидный access_token — подставляем
+            # request.user, чтобы navbar в base.html показывал авторизованное
+            # состояние (аватар/ФИО/Выйти), а не всегда "Войти".
+            self._try_soft_authenticate(request)
             return self.get_response(request)
 
         access_token = request.COOKIES.get(settings.JWT_ACCESS_COOKIE_NAME)
         if not access_token:
             return self._clear_cookies_and_redirect_login()
 
-        new_tokens = None  # заполнится, если понадобилась тихая ротация
+        new_tokens = None
 
         try:
             payload = decode_token(access_token, token_type="access")
@@ -53,9 +64,6 @@ class JWTAuthenticationMiddleware:
             except (TokenExpired, TokenInvalid):
                 return self._clear_cookies_and_redirect_login()
             except RefreshRace as race:
-                # Не атака: параллельный запрос уже (или вот-вот) обновил
-                # токены. Сессия валидна — продолжаем текущий запрос,
-                # новых кук не выставляем (их уже выставил "победивший" запрос).
                 p = race.payload
                 if not AuthRedisService.validate_session(p["sub"], p["device_id"]):
                     return self._clear_cookies_and_redirect_login()
@@ -66,7 +74,6 @@ class JWTAuthenticationMiddleware:
                 return self.get_response(request)
 
             if new_tokens is None:
-                # Настоящий reuse-attack — kick_user отработал внутри attempt_token_refresh.
                 return self._clear_cookies_and_redirect_login()
 
             payload = decode_token(new_tokens["access_token"], token_type="access")
@@ -84,11 +91,8 @@ class JWTAuthenticationMiddleware:
         except User.DoesNotExist:
             return self._clear_cookies_and_redirect_login()
 
-        # ── Продолжаем ИСХОДНЫЙ запрос (GET или POST) без прерывания ────
         response = self.get_response(request)
 
-        # Если токены были тихо обновлены — прикладываем новые cookie
-        # к уже готовому ответу текущего запроса.
         if new_tokens is not None:
             response.set_cookie(
                 settings.JWT_ACCESS_COOKIE_NAME,
@@ -110,12 +114,41 @@ class JWTAuthenticationMiddleware:
         return response
 
     @staticmethod
+    def _try_soft_authenticate(request):
+        """
+        Best-effort аутентификация для публичных страниц: если есть валидный
+        access_token — подставляем request.user. Никаких редиректов и попыток
+        тихого рефреша здесь нет — страница обязана остаться доступной
+        в любом случае (валиден токен или нет, есть он или нет).
+        """
+        access_token = request.COOKIES.get(settings.JWT_ACCESS_COOKIE_NAME)
+        if not access_token:
+            return
+
+        try:
+            payload = decode_token(access_token, token_type="access")
+        except (TokenExpired, TokenInvalid):
+            return
+
+        if AuthRedisService.is_token_revoked(payload["jti"]):
+            return
+
+        if not AuthRedisService.validate_session(payload["sub"], payload["device_id"]):
+            return
+
+        try:
+            request.user = User.objects.get(id=int(payload["sub"]))
+        except User.DoesNotExist:
+            return
+
+    @staticmethod
     def _clear_cookies_and_redirect_login():
         response = redirect("login")
         response.delete_cookie(settings.JWT_ACCESS_COOKIE_NAME)
         response.delete_cookie(settings.JWT_REFRESH_COOKIE_NAME)
         return response
 
+        
 class DashboardSecurityMiddleware:
     """
     Защита панели администратора (дашборд + связанные CRUD-пути:
@@ -159,3 +192,17 @@ class DashboardSecurityMiddleware:
         AuthRedisService.authorize_dashboard(user.id)
 
         return self.get_response(request)
+
+def _strip_language_prefix(path: str) -> str:
+    """
+    "/uz/about/"  -> "/about/"
+    "/ru/"        -> "/"
+    "/en"         -> "/"
+    "/about/"     -> "/about/"      (без префикса — не трогаем)
+    "/dashboard/" -> "/dashboard/"  (не под i18n_patterns — не трогаем)
+    """
+    match = _LANGUAGE_PREFIX_RE.match(path)
+    if not match:
+        return path
+    rest = match.group(2)
+    return rest if rest else "/"

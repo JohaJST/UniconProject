@@ -14,16 +14,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+from core import urls as core_urls
 
 urlpatterns = [
     path('JustAdmin/', admin.site.urls),
-    path("", include('core.urls')),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
+
+# ── Языковые пути (about/self/login/i18n) — с опциональным префиксом ───────
+urlpatterns += i18n_patterns(
+    *core_urls.i18n_urlpatterns,
+    prefix_default_language=False,
+)
+
+# ── Остальные пути — без префикса, как и раньше ─────────────────────────────
+urlpatterns += [
+    path("", include(core_urls.urlpatterns)),
+]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
