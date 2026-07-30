@@ -14,6 +14,7 @@
         <link rel="stylesheet" href="{% static 'auth/style.css' %}" />
     </head>
     <body>
+        {% trans "Выберите ученика" as select_student_placeholder %}
         <div class="bg-grid" id="bgGrid"></div>
 
         <main class="auth-wrapper">
@@ -151,7 +152,7 @@
       "{{ i.id }}": [
         {% for j in u %}
           {% if j.classroom.id == i.id %}
-            { id: "{{ j.id }}", name: "{{ j.full_name }}" },
+            { id: "{{ j.id }}", name: "{{ j.full_name|escapejs }}" },
           {% endif %}
         {% endfor %}
       ],
@@ -162,8 +163,8 @@
       var main = document.getElementById('mainSelect');
       var dep  = document.getElementById('dependentSelect');
 
-      dep.innerHTML = '<option value="" disabled selected>{% trans "Выберите ученика" %}\u2026</option>';
-
+      dep.innerHTML = '<option value="" disabled selected>{{ select_student_placeholder|escapejs }}\u2026</option>';
+      
       var students = optionsData[main.value] || [];
       students.forEach(function(student) {
         var newOpt = new Option(student.name, student.id);
