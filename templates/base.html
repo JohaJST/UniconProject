@@ -72,8 +72,18 @@
                     <span class="nav-avatar">{{ user.name|default:"?"|slice:":1" }}</span>
                     <span class="nav-user-name">{{ user.full_name }}</span>
                 </a>
+
+                <form action="{% url 'change_language' %}" method="post" class="nav-lang-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <select name="lang" class="nav-lang-select" onchange="this.form.submit()">
+                        <option value="uz" {% if user.lang == 'uz' %}selected{% endif %}>UZ</option>
+                        <option value="ru" {% if user.lang == 'ru' %}selected{% endif %}>RU</option>
+                        <option value="en" {% if user.lang == 'en' %}selected{% endif %}>EN</option>
+                    </select>
+                </form>
+
                 <a href="{% url 'logout' %}" class="nav-logout">{% trans "Выйти" %}</a>
-            
                 {% endif %}
             </div>
         </nav>

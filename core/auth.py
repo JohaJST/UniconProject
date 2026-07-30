@@ -21,6 +21,10 @@ from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token, generate_tokens
 from core.auth_jwt.refresh_logic import attempt_token_refresh
 
+from django.contrib.auth.decorators import login_required
+from django.utils import translation
+from django.utils.http import url_has_allowed_host_and_scheme
+
 def _redirect_to_login_clearing_cookies():
     """Общий хелпер: редирект на login с удалением обеих JWT-кук."""
     response = redirect("login")
@@ -28,6 +32,24 @@ def _redirect_to_login_clearing_cookies():
     response.delete_cookie(settings.JWT_REFRESH_COOKIE_NAME)
     return response
 
+def _set_language_cookie(response, lang):
+    """
+    Единая точка простановки cookie django_language.
+
+    Используется и при логине (sign_in), и при ручной смене языка
+    (change_account_language). TTL совпадает с refresh-токеном: кука языка
+    не должна переживать сессию, но перезаписывается только тогда, когда
+    значение реально меняется (см. _sync_language_cookie в middleware —
+    именно там решается "нужно ли трогать куку" при тихой ротации токенов).
+    """
+    response.set_cookie(
+        settings.LANGUAGE_COOKIE_NAME,
+        lang or "uz",
+        max_age=settings.JWT_REFRESH_TOKEN_TTL,
+        httponly=False,
+        secure=settings.JWT_COOKIE_SECURE,
+        samesite=settings.JWT_COOKIE_SAMESITE,
+    )
 
 def sign_in(requests):
     if not requests.user.is_anonymous:
@@ -92,6 +114,13 @@ def sign_in(requests):
             secure=settings.JWT_COOKIE_SECURE,
             samesite=settings.JWT_COOKIE_SAMESITE,
         )
+
+        # Кука языка + активация перевода для текущего запроса — сразу
+        # после выпуска JWT-токенов, чтобы редирект/navbar уже отражали
+        # актуальный lang пользователя.
+        translation.activate(user.lang or "uz")
+        _set_language_cookie(response, user.lang)
+
 
         return response
 
@@ -163,3 +192,36 @@ def sign_out(request):
             AuthRedisService.clear_active_session(user_id)
 
     return _redirect_to_login_clearing_cookies()
+
+
+@login_required(login_url="login")
+def change_account_language(request):
+    """
+    Ручная смена языка аккаунта (форма в navbar, templates/base.html).
+
+    Валидирует значение по choices поля User.lang, сохраняет в БД и
+    обновляет cookie django_language. Невалидное значение — тихий редирект
+    назад без изменений, без 500.
+    """
+    if request.method != "POST":
+        return redirect("home")
+
+    lang = request.POST.get("lang")
+    valid_langs = dict(User._meta.get_field("lang").choices or [])
+
+    next_url = request.POST.get("next")
+    if not next_url or not url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        next_url = "home"
+
+    if lang not in valid_langs:
+        return redirect(next_url)
+
+    request.user.lang = lang
+    request.user.save(update_fields=["lang"])
+    translation.activate(lang)
+
+    response = redirect(next_url)
+    _set_language_cookie(response, lang)
+    return response

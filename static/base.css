@@ -212,3 +212,21 @@ body {
     background: var(--accent-light);
     color: #fff;
 }
+
+.nav-lang-form { display: flex; align-items: center; height: 100%; }
+.nav-lang-select {
+    background: var(--nav-bg, #14141c);
+    color: inherit;
+    border: 1px solid var(--accent, #4f46e5);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    max-height: 60px;
+    cursor: pointer;
+}
+.nav-lang-select:focus {
+    outline: none;
+    border-color: var(--accent, #4f46e5);
+}

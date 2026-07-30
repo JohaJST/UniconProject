@@ -29,6 +29,29 @@ _IGNORED_PREFIXES = ("/JustAdmin/", "/i18n/")
 
 _LANGUAGE_PREFIX_RE = re.compile(r"^/(uz|ru|en)(/.*)?$")
 
+def _sync_language_cookie(request, response, user):
+    """
+    Непрерывная ресинхронизация cookie django_language с User.lang.
+
+    Нужна на случай, если lang поменяли в обход change_account_language
+    (например, через /JustAdmin/) уже во время активной сессии: следующий
+    же запрос к защищённому пути должен подтянуть актуальное значение.
+    Кука перезаписывается ТОЛЬКО если значения разошлись — чтобы не
+    пересоздавать её на каждой тихой ротации access/refresh токенов.
+    """
+    desired = user.lang or "uz"
+    current = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+    if current == desired:
+        return
+
+    response.set_cookie(
+        settings.LANGUAGE_COOKIE_NAME,
+        desired,
+        max_age=settings.JWT_REFRESH_TOKEN_TTL,
+        httponly=False,
+        secure=settings.JWT_COOKIE_SECURE,
+        samesite=settings.JWT_COOKIE_SAMESITE,
+    )
 
 class JWTAuthenticationMiddleware:
     def __init__(self, get_response):
@@ -71,7 +94,9 @@ class JWTAuthenticationMiddleware:
                     request.user = User.objects.get(id=int(p["sub"]))
                 except User.DoesNotExist:
                     return self._clear_cookies_and_redirect_login()
-                return self.get_response(request)
+                response = self.get_response(request)
+                _sync_language_cookie(request, response, request.user)
+                return response
 
             if new_tokens is None:
                 return self._clear_cookies_and_redirect_login()
@@ -111,8 +136,9 @@ class JWTAuthenticationMiddleware:
                 samesite=settings.JWT_COOKIE_SAMESITE,
             )
 
-        return response
+        _sync_language_cookie(request, response, request.user)
 
+        return response
     @staticmethod
     def _try_soft_authenticate(request):
         """

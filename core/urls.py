@@ -2,7 +2,7 @@ from django.urls import path, include
 
 from core.auth import refresh_token_view
 from .about import about, self, self_check
-from core.auth import sign_in, sign_out
+from core.auth import change_account_language, sign_in, sign_out
 from core.quiz import (
     create_test,
     index,
@@ -44,4 +44,5 @@ urlpatterns = [
     path("lock/", lock, name="lock"),
     path("locked/", lock, name="locked"),
     path("token/refresh/", refresh_token_view, name="token_refresh"),
+    path("account/language/", change_account_language, name="change_language"),
 ]
