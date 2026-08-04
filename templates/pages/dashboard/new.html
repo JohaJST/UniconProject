@@ -7,6 +7,19 @@
     {% if action == "test" %}Создать тест{% elif action == "subject" %}Новый предмет{% else %}Новый класс{% endif %}
 {% endblock %}
 
+{% block head %}
+<style>
+    /* Плавное раскрытие блока перевода вопроса: hidden снимается в JS,
+       max-height/opacity анимируются через rAF сразу после этого. */
+    .translation-tabs {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 280ms ease-out, opacity 280ms ease-out;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-2xl mx-auto">
 
@@ -37,9 +50,18 @@
 
             <!-- Test name -->
             <div class="mb-5">
-                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="test-name">
-                    Название теста <span class="text-rose-400">*</span>
-                </label>
+                <div class="flex items-center justify-between gap-3 mb-1.5">
+                    <label class="text-sm font-medium text-slate-300 block" for="test-name">
+                        Название теста <span class="text-rose-400">*</span>
+                    </label>
+                    <button type="button" id="aiTranslateBtn" onclick="translateAll()"
+                            class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500
+                                   text-white px-3 py-1.5 rounded-xl text-xs font-medium
+                                   transition-colors shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                        <span id="aiTranslateBtnText">Перевести через AI</span>
+                    </button>
+                </div>
                 <input id="test-name"
                        type="text"
                        name="test_name"
@@ -49,6 +71,10 @@
                               text-white placeholder-slate-500
                               focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
                               transition-colors">
+                <!-- Скрытые переводы названия — всегда в DOM, чтобы обычный
+                     submit без клика по AI отправлял пустые строки. -->
+                <input type="hidden" name="test_name_ru" id="test-name-ru" value="">
+                <input type="hidden" name="test_name_en" id="test-name-en" value="">
             </div>
 
             <!-- Subject select -->
@@ -241,6 +267,24 @@
 
 {% block scripts %}
 <script>
+    const AI_URL = "{% url 'ai_translate' %}";
+
+    /* ─── CSRF-хелпер (1-в-1 из new_test_page.html) ─── */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     /* ─── Classroom selects for SUBJECT form ─── */
     let classroomIdx = 1;
 
@@ -304,7 +348,8 @@
         const qId = questionCounter;
 
         const div = document.createElement('div');
-        div.className = 'bg-slate-900 rounded-xl border border-slate-700 p-4';
+        // class "question-card" — по нему translateAll() ищет все карточки вопросов.
+        div.className = 'question-card bg-slate-900 rounded-xl border border-slate-700 p-4';
         div.id = `question-block-${qId}`;
         div.innerHTML = `
             <div class="flex items-center justify-between mb-3">
@@ -320,6 +365,7 @@
 
             <div class="mb-3">
                 <textarea name="question_${qId}"
+                          data-role="question-main"
                           rows="2"
                           placeholder="Текст вопроса..."
                           class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5
@@ -336,6 +382,35 @@
                               file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0
                               file:bg-indigo-600 file:text-white file:text-xs file:font-medium
                               file:cursor-pointer cursor-pointer">
+            </div>
+
+            <!-- ── AI-перевод вопроса: скрыт до первого успешного перевода ── -->
+            <div id="translationTabs_${qId}"
+                 class="translation-tabs hidden border border-slate-700 rounded-xl p-3 mb-3 bg-slate-800/50">
+                <div id="missingNote_${qId}" class="hidden text-xs text-amber-400 mb-2 items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    AI не смог перевести — впишите вручную
+                </div>
+                <div class="space-y-2">
+                    <div>
+                        <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">RU</span>
+                        <textarea name="question_${qId}_ru" id="question_${qId}_ru"
+                                  rows="2" placeholder="Текст вопроса на русском..."
+                                  class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                         text-white placeholder-slate-500 text-sm resize-none
+                                         focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                         transition-colors"></textarea>
+                    </div>
+                    <div>
+                        <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">EN</span>
+                        <textarea name="question_${qId}_en" id="question_${qId}_en"
+                                  rows="2" placeholder="Question text in English..."
+                                  class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                         text-white placeholder-slate-500 text-sm resize-none
+                                         focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                         transition-colors"></textarea>
+                    </div>
+                </div>
             </div>
 
             <div id="variantFields_${qId}" class="space-y-2 mb-2"></div>
@@ -393,6 +468,193 @@
     function removeQuestion(id) {
         const el = document.getElementById(`question-block-${id}`);
         if (el) el.remove();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       AI-перевод: тосты, раскрытие блока перевода, сам запрос
+    ═══════════════════════════════════════════════════════════ */
+
+    function getToastContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    function showToast(message, type = 'error') {
+        const container = getToastContainer();
+        const toast = document.createElement('div');
+        const colors = type === 'success'
+            ? 'bg-emerald-600 border-emerald-500'
+            : 'bg-rose-600 border-rose-500';
+        toast.className = `${colors} text-white text-sm font-medium px-4 py-3 rounded-xl
+                            shadow-xl border max-w-xs
+                            translate-x-4 opacity-0 transition-all duration-300 ease-out`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        // Двойной rAF: даём браузеру отрисовать стартовое состояние
+        // перед тем, как включать transition.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-4', 'opacity-0');
+            });
+        });
+
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-4');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    function revealTranslationTabs(qId, isMissing) {
+        const block = document.getElementById(`translationTabs_${qId}`);
+        if (!block) return;
+
+        block.classList.remove('hidden');
+        // Сбрасываем в свёрнутое состояние на случай повторного клика —
+        // затем на следующем кадре плавно раскрываем.
+        block.style.maxHeight = '0px';
+        block.style.opacity = '0';
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                block.style.maxHeight = '500px';
+                block.style.opacity = '1';
+            });
+        });
+
+        const note = document.getElementById(`missingNote_${qId}`);
+        if (note) {
+            if (isMissing) {
+                note.classList.remove('hidden');
+                note.classList.add('flex');
+                block.classList.add('border-amber-500');
+                block.classList.remove('border-slate-700');
+            } else {
+                note.classList.add('hidden');
+                note.classList.remove('flex');
+                block.classList.remove('border-amber-500');
+                block.classList.add('border-slate-700');
+            }
+        }
+    }
+
+    function applyTranslation(id, ru, en, isMissing) {
+        if (id === 'test_name') {
+            document.getElementById('test-name-ru').value = ru || '';
+            document.getElementById('test-name-en').value = en || '';
+            return;
+        }
+
+        const match = id.match(/^question_(\d+)$/);
+        if (!match) return; // посторонний id — игнорируем на всякий случай
+
+        const qId = match[1];
+        const ruField = document.getElementById(`question_${qId}_ru`);
+        const enField = document.getElementById(`question_${qId}_en`);
+        if (!ruField || !enField) return; // вопрос мог быть удалён между запросом и ответом
+
+        ruField.value = ru || '';
+        enField.value = en || '';
+        revealTranslationTabs(qId, isMissing);
+    }
+
+    async function translateAll() {
+        const btn = document.getElementById('aiTranslateBtn');
+
+        // ── Сбор items: пересканируем DOM при каждом вызове ────────────
+        const items = [];
+
+        const testNameInput = document.getElementById('test-name');
+        if (testNameInput && testNameInput.value.trim()) {
+            items.push({ id: 'test_name', text: testNameInput.value.trim() });
+        }
+
+        document.querySelectorAll('#questionFields .question-card').forEach(card => {
+            const textarea = card.querySelector('textarea[data-role="question-main"]');
+            if (!textarea) return;
+            const text = textarea.value.trim();
+            if (!text) return;
+            items.push({ id: textarea.name, text });
+        });
+
+        if (items.length === 0) {
+            alert('Сначала заполните название и хотя бы один вопрос');
+            return;
+        }
+
+        // ── UI: дизейблим кнопку, показываем спиннер ────────────────────
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+        btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <span>Перевод...</span>
+        `;
+
+        const resetBtn = () => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            btn.innerHTML = originalHtml;
+        };
+
+        try {
+            const res = await fetch(AI_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ items })
+            });
+
+            // КРИТИЧНО: если сессия дашборда истекла, DashboardSecurityMiddleware
+            // отдаёт редирект на /lock/ (HTML), а не JSON. res.json() на HTML
+            // упадёт с "Unexpected token <" — перехватываем это заранее.
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                showToast('Сессия обновилась, перезагрузите страницу и повторите', 'error');
+                resetBtn();
+                return;
+            }
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                let msg = 'Не удалось перевести, впишите вручную';
+                if (res.status === 429) msg = 'Подождите немного';
+                else if (res.status === 502) msg = 'AI сервис временно недоступен';
+                showToast(msg, 'error');
+                resetBtn();
+                return;
+            }
+
+            // ── Успех: раскладываем переводы по полям ───────────────────
+            const missingSet = new Set(data.missing || []);
+            (data.translations || []).forEach(t => {
+                applyTranslation(t.id, t.ru, t.en, missingSet.has(t.id));
+            });
+
+            showToast('Перевод готов', 'success');
+            resetBtn();
+
+        } catch (e) {
+            if (e instanceof TypeError) {
+                // fetch кидает TypeError при недоступности сети
+                showToast('Проблема соединения, попробуйте ещё раз', 'error');
+            } else {
+                showToast('Не удалось перевести, впишите вручную', 'error');
+            }
+            resetBtn();
+        }
     }
 </script>
 {% endblock %}

@@ -78,7 +78,8 @@ def _call_ai(items: list[dict], model: str, thinking: bool) -> dict:
     # thinking=True форсирует reasoning-модель, даже если фронтенд прислал
     # deepseek-chat — это осознанный выбор: thinking mode не имеет смысла
     # без reasoner-модели.
-    effective_model = "deepseek-reasoner" if thinking else model
+    # effective_model = "deepseek-reasoner" if thinking else model
+    effective_model = "deepseek-v4-pro"
 
     payload = {
         "model": effective_model,
@@ -89,6 +90,7 @@ def _call_ai(items: list[dict], model: str, thinking: bool) -> dict:
                 "content": json.dumps({"items": items}, ensure_ascii=False),
             },
         ],
+        "temperature": 0.2,
         "max_tokens": 4096,
         "stream": False,
     }
@@ -107,11 +109,15 @@ def _call_ai(items: list[dict], model: str, thinking: bool) -> dict:
         resp.raise_for_status()
         data = resp.json()
     except requests.RequestException as exc:
+        print(api_key)
+        # print(1)
+        # print(resp)
         raise AIProviderError("ai_unavailable") from exc
 
     try:
         raw_text = data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError, AttributeError, TypeError) as exc:
+        # print(2)
         raise AIProviderError("invalid_ai_response") from exc
 
     cleaned = _FENCE_RE.sub("", raw_text).strip()
@@ -119,9 +125,11 @@ def _call_ai(items: list[dict], model: str, thinking: bool) -> dict:
     try:
         parsed = json.loads(cleaned)
     except json.JSONDecodeError as exc:
+        # print(3)
         raise AIProviderError("invalid_ai_response") from exc
 
     if not isinstance(parsed, dict):
+        # print(4)
         raise AIProviderError("invalid_ai_response")
 
     return parsed
@@ -186,9 +194,12 @@ def ai_translate(request):
     try:
         ai_response = _call_ai(clean_items, model=model, thinking=thinking)
     except AIProviderError as exc:
+        # print(5)
         code = str(exc) if str(exc) in ("ai_unavailable", "invalid_ai_response") else "ai_unavailable"
+        # print(6)
         return JsonResponse({"error": code}, status=502)
 
+    print(ai_response)
     # ── whitelist + сборка ответа (без изменений) ───────────────────────
     raw_translations = ai_response.get("translations")
     if not isinstance(raw_translations, list):

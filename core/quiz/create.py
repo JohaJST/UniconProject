@@ -26,8 +26,9 @@ def create_test(request):
         return redirect("dashboard")
 
     subject = Subject.objects.get(id=request.POST.get('subject'))
+    print(request.POST)
     test = Test.objects.create(
-        name=request.POST.get('test_name'),
+        name_uz=request.POST.get('test_name'),
         subject=subject,
     )
     
@@ -59,7 +60,7 @@ def create_test(request):
     q_idx = 1
     while f'question_{q_idx}' in request.POST:
         question = Question.objects.create(
-            text=request.POST[f'question_{q_idx}'],
+            text_uz=request.POST[f'question_{q_idx}'],
             img=request.POST.get(f'question_{q_idx}_image') if f'question_{q_idx}_image' in request.POST else None,
             varianta=test_varianta,
         )
@@ -77,7 +78,7 @@ def create_test(request):
         v_idx = 1
         while f'variant_{q_idx}_{v_idx}' in request.POST:
             variant = Variant.objects.create(
-                text=request.POST[f'variant_{q_idx}_{v_idx}'],
+                text_uz=request.POST[f'variant_{q_idx}_{v_idx}'],
                 is_answer=f'answer_{q_idx}_{v_idx}' in request.POST,
                 question=question,
             )
