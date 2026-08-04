@@ -1,1 +1,1 @@
-from .random import random_list
+from .random import random_list, initials

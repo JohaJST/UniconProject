@@ -306,6 +306,7 @@ html { scroll-behavior: smooth; }
     background: linear-gradient(135deg,var(--navy),var(--blue-600));
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 12px rgba(15,23,42,.2);
+    overflow: hidden; /* ДОБАВЛЕНО: иначе фото преподавателя вылезает за круг */
 }
 .t-card__ava span { font-size: 1.15rem; font-weight: 800; color: #fff; }
 .t-card h4 { font-size: .9rem; font-weight: 700; color: var(--navy); margin-bottom: .15rem; }

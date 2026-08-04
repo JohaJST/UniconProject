@@ -120,7 +120,7 @@ class TeachersResource(resources.ModelResource):
     class Meta:
         model = Teachers
         fields = (
-            'id', 'phone', 'photo',
+            'id', 'phone', 'photo', 'fio',
             'position_uz', 'position_ru', 'position_en',
         )
         

@@ -10,10 +10,14 @@ access_token cookie (см. core/auth_jwt/middleware.py).
 import hashlib
 import time
 import uuid
-
 import jwt
+
 from django.conf import settings
 from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from django.utils import translation
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.urls import translate_url
 
 from core.models import ClassRooms, User
 from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
@@ -21,9 +25,7 @@ from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token, generate_tokens
 from core.auth_jwt.refresh_logic import attempt_token_refresh
 
-from django.contrib.auth.decorators import login_required
-from django.utils import translation
-from django.utils.http import url_has_allowed_host_and_scheme
+
 
 def _redirect_to_login_clearing_cookies():
     """Общий хелпер: редирект на login с удалением обеих JWT-кук."""
@@ -202,6 +204,12 @@ def change_account_language(request):
     Валидирует значение по choices поля User.lang, сохраняет в БД и
     обновляет cookie django_language. Невалидное значение — тихий редирект
     назад без изменений, без 500.
+    ХОТФИКС (Этап 4): next_url теперь прогоняется через translate_url(),
+        чтобы редирект указывал на страницу С НОВЫМ языковым префиксом
+        (/uz/about/ -> /ru/about/), а не оставался на старом. Без этого
+        переключение языка с уже-префиксной страницы визуально не срабатывало:
+        LocaleMiddleware видит явный префикс в URL, и он приоритетнее только
+        что выставленной cookie.
     """
     if request.method != "POST":
         return redirect("home")
@@ -221,6 +229,8 @@ def change_account_language(request):
     request.user.lang = lang
     request.user.save(update_fields=["lang"])
     translation.activate(lang)
+
+    next_url = translate_url(next_url, lang)
 
     response = redirect(next_url)
     _set_language_cookie(response, lang)
