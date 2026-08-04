@@ -48,11 +48,17 @@ class OldResulrResource(resources.ModelResource):
 class QuestionResource(resources.ModelResource):
     class Meta:
         model = Question
+        fields = ('id', 'text_uz', 'text_ru', 'text_en', 'img', 'varianta', 'created',)
 
 class TestResource(resources.ModelResource):
     class Meta:
         model = Test
-
+        fields = (
+            'id', 'name_uz', 'name_ru', 'name_en',
+            'desc_uz', 'desc_ru', 'desc_en',
+            'subject', 'is_start', 'created',
+        )
+        
 
 class TestVariantaResource(resources.ModelResource):
     class Meta:
@@ -62,6 +68,7 @@ class TestVariantaResource(resources.ModelResource):
 class VariantResource(resources.ModelResource):
     class Meta:
         model = Variant
+        fields = ('id', 'text_uz', 'text_ru', 'text_en', 'is_answer', 'question',)
 
 
 class ClassRoomsSubjectsResource(resources.ModelResource):
@@ -77,7 +84,7 @@ class TestClassRoomResource(resources.ModelResource):
 class SUbjectResource(resources.ModelResource):
     class Meta:
         model = Subject
-
+        fields = ('id', 'name_uz', 'name_ru', 'name_en', 'created', 'updated',)
 
 class PartnersResource(resources.ModelResource):
     class Meta:
@@ -86,18 +93,44 @@ class PartnersResource(resources.ModelResource):
 class AboutResource(resources.ModelResource):
     class Meta:
         model = About
-
+        fields = (
+            "id", "info_uz", "info_ru", "info_en",
+            "tg", "title_uz", "title_ru", "title_en",
+            "insta", "desc_uz", "desc_ru", "desc_en",
+            "fb", "goals_info_uz", "goals_info_ru", "goals_info_en",
+            "location", "news_info_uz", "news_info_ru", "news_info_en",
+            "phone", "teachers_info_uz", "teachers_info_ru", "teachers_info_en",
+            "email", "courses_info_uz", "courses_info_ru", "courses_info_en",
+            "partners", "partners_info_uz", "partners_info_ru", "partners_info_en",
+            "working_hours_uz", "working_hours_ru", "working_hours_en",
+            "footer_info_uz", "footer_info_ru", "footer_info_en",
+        )
 
 class CoursesResource(resources.ModelResource):
     class Meta:
         model = Courses
-
+        fields = (
+            'id', 'title_uz', 'title_ru', 'title_en',
+            'desc_uz', 'desc_ru', 'desc_en', 'photo',
+            'name_uz', 'name_ru', 'name_en',
+        )
+        
 
 class TeachersResource(resources.ModelResource):
     class Meta:
         model = Teachers
-
+        fields = (
+            'id', 'phone', 'photo',
+            'position_uz', 'position_ru', 'position_en',
+        )
+        
 
 class NewsResource(resources.ModelResource):
     class Meta:
         model = News
+        fields = (
+            'id', 'title_uz', 'title_ru', 'title_en',
+            'desc_uz', 'desc_ru', 'desc_en', 'photo',
+            'date',
+        )
+        

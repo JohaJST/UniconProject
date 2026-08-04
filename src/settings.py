@@ -37,6 +37,7 @@ APP_NAME = "Unicon Project"
 # Application definition
 
 INSTALLED_APPS = [
+    "modeltranslation",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -189,6 +190,16 @@ TIME_ZONE = "Asia/Tashkent"
 USE_I18N = True
 
 USE_TZ = False
+    
+# ─────────────────────────────────────────────────────────────────────────────
+# django-modeltranslation
+# uz — базовый язык: текущий контент в БД преимущественно на узбекском/
+# смешанный, поэтому именно в *_uz бэкофиллим старые значения (см.
+# data-миграцию 00XX_backfill_translations.py).
+# ─────────────────────────────────────────────────────────────────────────────
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'uz'
+MODELTRANSLATION_LANGUAGES = ('uz', 'ru', 'en')
+MODELTRANSLATION_FALLBACK_LANGUAGES = {'default': ('uz',)}
 
 
 # Static files (CSS, JavaScript, Images)

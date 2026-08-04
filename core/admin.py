@@ -1,5 +1,6 @@
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
+from modeltranslation.admin import TranslationAdmin
 
 from core.models import (
     ClassRooms,
@@ -58,11 +59,11 @@ class TgUserAdmin(ImportExportModelAdmin):
     resource_class = TG_UserResource
 
 
-class VariantAdmin(ImportExportModelAdmin):
+class VariantAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = VariantResource
 
 
-class TestAdmin(ImportExportModelAdmin):
+class TestAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = TestResource
 
 
@@ -70,11 +71,11 @@ class TestVariantaAdmin(ImportExportModelAdmin):
     resource_class = TestVariantaResource
 
 
-class QuestionAdmin(ImportExportModelAdmin):
+class QuestionAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = QuestionResource
 
 
-class SubjectAdmin(ImportExportModelAdmin):
+class SubjectAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = SUbjectResource
 
 
@@ -93,19 +94,19 @@ class PartnersAdmin(ImportExportModelAdmin):
     resource_class = PartnersResource
 
 
-class AboutAdmin(ImportExportModelAdmin):
+class AboutAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = AboutResource
 
 
-class CoursesAdmin(ImportExportModelAdmin):
+class CoursesAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = CoursesResource
 
 
-class TeachersAdmin(ImportExportModelAdmin):
+class TeachersAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = TeachersResource
 
 
-class NewsAdmin(ImportExportModelAdmin):
+class NewsAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = NewsResource
 
 

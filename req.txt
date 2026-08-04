@@ -27,3 +27,5 @@ telebot==0.0.5
 # --- Новые зависимости для архитектуры JWT + Redis ---
 PyJWT>=2.8.0
 redis>=5.0.0
+
+django-modeltranslation
