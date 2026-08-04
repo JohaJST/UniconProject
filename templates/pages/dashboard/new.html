@@ -9,7 +9,7 @@
 
 {% block head %}
 <style>
-    /* Плавное раскрытие блока перевода вопроса: hidden снимается в JS,
+    /* Плавное раскрытие блока перевода: hidden снимается в JS,
        max-height/opacity анимируются через rAF сразу после этого. */
     .translation-tabs {
         max-height: 0;
@@ -77,6 +77,23 @@
                 <input type="hidden" name="test_name_en" id="test-name-en" value="">
             </div>
 
+            <!-- Test description -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="test-desc">
+                    Описание теста
+                </label>
+                <textarea id="test-desc"
+                          name="test_desc"
+                          rows="2"
+                          placeholder="Краткое описание теста (необязательно)..."
+                          class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                 text-white placeholder-slate-500 resize-none
+                                 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                 transition-colors"></textarea>
+                <input type="hidden" name="test_desc_ru" id="test-desc-ru" value="">
+                <input type="hidden" name="test_desc_en" id="test-desc-en" value="">
+            </div>
+
             <!-- Subject select -->
             <div class="mb-5">
                 <label class="text-sm font-medium text-slate-300 mb-1.5 block">
@@ -140,13 +157,13 @@
             <!-- Divider -->
             <div class="border-t border-slate-700 my-6"></div>
 
-            <!-- Submit -->
+            <!-- Submit: открывает предпросмотр, реальный submit — из модалки -->
             <div class="flex items-center gap-3">
-                <button type="submit"
+                <button type="button" onclick="openPreview()"
                         class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
                                font-medium transition-colors inline-flex items-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                    Сохранить тест
+                    <i class="fa-solid fa-eye"></i>
+                    Проверить и сохранить
                 </button>
                 <a href="{% url 'dashboard' %}"
                    class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
@@ -155,6 +172,41 @@
                 </a>
             </div>
         </form>
+
+        <!-- ══════════════════════════════════════════════
+             Preview modal — показывает админу все 3 языка
+             перед реальным сохранением
+        ══════════════════════════════════════════════════ -->
+        <div id="previewModal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closePreview()"></div>
+            <div class="relative bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl
+                        max-h-[85vh] flex flex-col shadow-2xl">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700 shrink-0">
+                    <h3 class="text-lg font-bold text-white">
+                        <i class="fa-solid fa-eye text-indigo-400 mr-1.5"></i>
+                        Проверка перед сохранением
+                    </h3>
+                    <button type="button" onclick="closePreview()"
+                            class="text-slate-500 hover:text-white transition-colors p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div id="previewBody" class="px-6 py-5 overflow-y-auto"></div>
+                <div class="flex items-center gap-3 px-6 py-4 border-t border-slate-700 shrink-0">
+                    <button type="button" onclick="confirmAndSave()"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                                   font-medium transition-colors inline-flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Подтвердить и сохранить
+                    </button>
+                    <button type="button" onclick="closePreview()"
+                            class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                                   transition-colors text-sm">
+                        Вернуться к редактированию
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- ══════════════════════════════════════════════
              ACTION: subject — Create Subject form
@@ -431,6 +483,7 @@
         addVariantField(qId);
     }
 
+    /* ── Варианты ответов теперь тоже переводятся через AI ── */
     function addVariantField(questionId) {
         if (!variantCounters[questionId]) variantCounters[questionId] = 0;
         const vContainer = document.getElementById(`variantFields_${questionId}`);
@@ -439,30 +492,58 @@
         const vCount = vContainer.childElementCount + 1;
         variantCounters[questionId] = vCount;
 
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2';
-        div.innerHTML = `
-            <label class="flex items-center gap-2 shrink-0 cursor-pointer">
-                <input type="checkbox"
-                       name="answer_${questionId}_${vCount}"
-                       value="1"
-                       class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
-                              focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
-                <span class="text-xs text-slate-500 whitespace-nowrap">Верный</span>
-            </label>
-            <input type="text"
-                   name="variant_${questionId}_${vCount}"
-                   placeholder="Вариант ответа..."
-                   class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2
-                          text-white text-sm placeholder-slate-500
-                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                          transition-colors">
-            <button type="button" onclick="this.parentElement.remove()"
-                    class="text-slate-500 hover:text-rose-400 transition-colors p-1 shrink-0">
-                <i class="fa-solid fa-xmark text-xs"></i>
-            </button>
+        const wrap = document.createElement('div');
+        wrap.setAttribute('data-variant-row', '');
+        wrap.className = 'bg-slate-800/40 rounded-lg p-2';
+        wrap.innerHTML = `
+            <div class="flex items-center gap-2">
+                <label class="flex items-center gap-2 shrink-0 cursor-pointer">
+                    <input type="checkbox"
+                           name="answer_${questionId}_${vCount}"
+                           value="1"
+                           class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
+                                  focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
+                    <span class="text-xs text-slate-500 whitespace-nowrap">Верный</span>
+                </label>
+                <input type="text"
+                       name="variant_${questionId}_${vCount}"
+                       data-role="variant-main"
+                       placeholder="Вариант ответа..."
+                       class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2
+                              text-white text-sm placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors">
+                <button type="button" onclick="this.closest('[data-variant-row]').remove()"
+                        class="text-slate-500 hover:text-rose-400 transition-colors p-1 shrink-0">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <div id="translationTabsVariant_${questionId}_${vCount}"
+                 class="translation-tabs hidden mt-2 ml-1 pl-3 border-l-2 border-slate-700 space-y-1.5">
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">RU</span>
+                    <input type="text" name="variant_${questionId}_${vCount}_ru"
+                           id="variant_${questionId}_${vCount}_ru"
+                           placeholder="Перевод на русский..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                                  text-white text-xs placeholder-slate-500
+                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                  transition-colors">
+                </div>
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">EN</span>
+                    <input type="text" name="variant_${questionId}_${vCount}_en"
+                           id="variant_${questionId}_${vCount}_en"
+                           placeholder="Translation in English..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                                  text-white text-xs placeholder-slate-500
+                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                  transition-colors">
+                </div>
+            </div>
         `;
-        vContainer.appendChild(div);
+        vContainer.appendChild(wrap);
     }
 
     function removeQuestion(id) {
@@ -471,7 +552,7 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
-       AI-перевод: тосты, раскрытие блока перевода, сам запрос
+       AI-перевод: тосты, раскрытие блоков перевода, сам запрос
     ═══════════════════════════════════════════════════════════ */
 
     function getToastContainer() {
@@ -497,8 +578,6 @@
         toast.textContent = message;
         container.appendChild(toast);
 
-        // Двойной rAF: даём браузеру отрисовать стартовое состояние
-        // перед тем, как включать transition.
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-x-4', 'opacity-0');
@@ -511,13 +590,16 @@
         }, 4000);
     }
 
-    function revealTranslationTabs(qId, isMissing) {
-        const block = document.getElementById(`translationTabs_${qId}`);
+    /**
+     * Раскрывает блок перевода. noteId передаётся только для вопросов
+     * (у них есть отдельная подпись "AI не смог перевести"); для вариантов
+     * noteId=null — подсветка рамкой самого блока.
+     */
+    function revealTranslationTabs(blockId, noteId, isMissing) {
+        const block = document.getElementById(blockId);
         if (!block) return;
 
         block.classList.remove('hidden');
-        // Сбрасываем в свёрнутое состояние на случай повторного клика —
-        // затем на следующем кадре плавно раскрываем.
         block.style.maxHeight = '0px';
         block.style.opacity = '0';
 
@@ -528,19 +610,26 @@
             });
         });
 
-        const note = document.getElementById(`missingNote_${qId}`);
-        if (note) {
-            if (isMissing) {
-                note.classList.remove('hidden');
-                note.classList.add('flex');
-                block.classList.add('border-amber-500');
-                block.classList.remove('border-slate-700');
-            } else {
-                note.classList.add('hidden');
-                note.classList.remove('flex');
-                block.classList.remove('border-amber-500');
-                block.classList.add('border-slate-700');
+        if (noteId) {
+            const note = document.getElementById(noteId);
+            if (note) {
+                if (isMissing) {
+                    note.classList.remove('hidden');
+                    note.classList.add('flex');
+                    block.classList.add('border-amber-500');
+                    block.classList.remove('border-slate-700');
+                } else {
+                    note.classList.add('hidden');
+                    note.classList.remove('flex');
+                    block.classList.remove('border-amber-500');
+                    block.classList.add('border-slate-700');
+                }
             }
+        } else if (isMissing) {
+            block.classList.add('border-amber-500');
+            block.classList.remove('border-slate-700');
+        } else {
+            block.classList.remove('border-amber-500');
         }
     }
 
@@ -551,17 +640,36 @@
             return;
         }
 
-        const match = id.match(/^question_(\d+)$/);
-        if (!match) return; // посторонний id — игнорируем на всякий случай
+        if (id === 'test_desc') {
+            document.getElementById('test-desc-ru').value = ru || '';
+            document.getElementById('test-desc-en').value = en || '';
+            return;
+        }
 
-        const qId = match[1];
-        const ruField = document.getElementById(`question_${qId}_ru`);
-        const enField = document.getElementById(`question_${qId}_en`);
-        if (!ruField || !enField) return; // вопрос мог быть удалён между запросом и ответом
+        const qMatch = id.match(/^question_(\d+)$/);
+        if (qMatch) {
+            const qId = qMatch[1];
+            const ruField = document.getElementById(`question_${qId}_ru`);
+            const enField = document.getElementById(`question_${qId}_en`);
+            if (!ruField || !enField) return; // вопрос мог быть удалён между запросом и ответом
+            ruField.value = ru || '';
+            enField.value = en || '';
+            revealTranslationTabs(`translationTabs_${qId}`, `missingNote_${qId}`, isMissing);
+            return;
+        }
 
-        ruField.value = ru || '';
-        enField.value = en || '';
-        revealTranslationTabs(qId, isMissing);
+        const vMatch = id.match(/^variant_(\d+)_(\d+)$/);
+        if (vMatch) {
+            const [, qId, vId] = vMatch;
+            const ruField = document.getElementById(`variant_${qId}_${vId}_ru`);
+            const enField = document.getElementById(`variant_${qId}_${vId}_en`);
+            if (!ruField || !enField) return; // вариант мог быть удалён
+            ruField.value = ru || '';
+            enField.value = en || '';
+            revealTranslationTabs(`translationTabsVariant_${qId}_${vId}`, null, isMissing);
+            return;
+        }
+        // посторонний id — игнорируем на всякий случай
     }
 
     async function translateAll() {
@@ -575,12 +683,22 @@
             items.push({ id: 'test_name', text: testNameInput.value.trim() });
         }
 
+        const testDescInput = document.getElementById('test-desc');
+        if (testDescInput && testDescInput.value.trim()) {
+            items.push({ id: 'test_desc', text: testDescInput.value.trim() });
+        }
+
         document.querySelectorAll('#questionFields .question-card').forEach(card => {
             const textarea = card.querySelector('textarea[data-role="question-main"]');
-            if (!textarea) return;
-            const text = textarea.value.trim();
-            if (!text) return;
-            items.push({ id: textarea.name, text });
+            if (textarea && textarea.value.trim()) {
+                items.push({ id: textarea.name, text: textarea.value.trim() });
+            }
+
+            card.querySelectorAll('input[data-role="variant-main"]').forEach(input => {
+                if (input.value.trim()) {
+                    items.push({ id: input.name, text: input.value.trim() });
+                }
+            });
         });
 
         if (items.length === 0) {
@@ -616,9 +734,6 @@
                 body: JSON.stringify({ items })
             });
 
-            // КРИТИЧНО: если сессия дашборда истекла, DashboardSecurityMiddleware
-            // отдаёт редирект на /lock/ (HTML), а не JSON. res.json() на HTML
-            // упадёт с "Unexpected token <" — перехватываем это заранее.
             const contentType = res.headers.get('content-type') || '';
             if (!contentType.includes('application/json')) {
                 showToast('Сессия обновилась, перезагрузите страницу и повторите', 'error');
@@ -637,7 +752,6 @@
                 return;
             }
 
-            // ── Успех: раскладываем переводы по полям ───────────────────
             const missingSet = new Set(data.missing || []);
             (data.translations || []).forEach(t => {
                 applyTranslation(t.id, t.ru, t.en, missingSet.has(t.id));
@@ -648,13 +762,165 @@
 
         } catch (e) {
             if (e instanceof TypeError) {
-                // fetch кидает TypeError при недоступности сети
                 showToast('Проблема соединения, попробуйте ещё раз', 'error');
             } else {
                 showToast('Не удалось перевести, впишите вручную', 'error');
             }
             resetBtn();
         }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Предпросмотр перед сохранением
+    ═══════════════════════════════════════════════════════════ */
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str ?? '';
+        return div.innerHTML;
+    }
+
+    function langBlock(labelText, value) {
+        const has = value && value.trim();
+        return `
+            <div class="flex gap-2 items-start">
+                <span class="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-700 px-2 py-0.5 rounded-full mt-0.5">${labelText}</span>
+                <span class="text-sm ${has ? 'text-white' : 'text-slate-500 italic'}">${has ? escapeHtml(value) : 'нет перевода'}</span>
+            </div>
+        `;
+    }
+
+    function renderPreview() {
+        const body = document.getElementById('previewBody');
+
+        const subjectSelect = document.querySelector('select[name="subject"]');
+        const subjectName = subjectSelect && subjectSelect.selectedOptions.length
+            ? subjectSelect.selectedOptions[0].textContent.trim()
+            : '—';
+
+        const name_uz = document.getElementById('test-name').value.trim();
+        const name_ru = document.getElementById('test-name-ru').value;
+        const name_en = document.getElementById('test-name-en').value;
+
+        const desc_uz = document.getElementById('test-desc').value.trim();
+        const desc_ru = document.getElementById('test-desc-ru').value;
+        const desc_en = document.getElementById('test-desc-en').value;
+
+        let html = `
+            <div class="mb-6 pb-5 border-b border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Предмет</p>
+                <p class="text-sm text-white">${escapeHtml(subjectName)}</p>
+            </div>
+
+            <div class="mb-6 pb-5 border-b border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Название теста</p>
+                <div class="space-y-1.5">
+                    ${langBlock('UZ', name_uz)}
+                    ${langBlock('RU', name_ru)}
+                    ${langBlock('EN', name_en)}
+                </div>
+            </div>
+
+            <div class="mb-6 pb-5 border-b border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Описание теста</p>
+                <div class="space-y-1.5">
+                    ${langBlock('UZ', desc_uz)}
+                    ${langBlock('RU', desc_ru)}
+                    ${langBlock('EN', desc_en)}
+                </div>
+            </div>
+        `;
+
+        const cards = document.querySelectorAll('#questionFields .question-card');
+        if (cards.length === 0) {
+            html += `<p class="text-sm text-slate-500 italic">Вопросы не добавлены</p>`;
+        }
+
+        cards.forEach((card, qi) => {
+            const textarea = card.querySelector('textarea[data-role="question-main"]');
+            const q_uz = textarea ? textarea.value.trim() : '';
+            const qMatch = textarea ? textarea.name.match(/^question_(\d+)$/) : null;
+            const qId = qMatch ? qMatch[1] : null;
+
+            const ruField = qId ? document.getElementById(`question_${qId}_ru`) : null;
+            const enField = qId ? document.getElementById(`question_${qId}_en`) : null;
+
+            const fileInput = card.querySelector('input[type="file"]');
+            const hasImage = fileInput && fileInput.files && fileInput.files.length > 0;
+
+            html += `
+                <div class="mb-5 pb-5 border-b border-slate-700">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Вопрос ${qi + 1}</p>
+                        ${hasImage ? `<span class="text-[10px] text-indigo-400 inline-flex items-center gap-1"><i class="fa-solid fa-image"></i> ${escapeHtml(fileInput.files[0].name)}</span>` : ''}
+                    </div>
+                    <div class="space-y-1.5 mb-3">
+                        ${langBlock('UZ', q_uz)}
+                        ${langBlock('RU', ruField ? ruField.value : '')}
+                        ${langBlock('EN', enField ? enField.value : '')}
+                    </div>
+            `;
+
+            const vContainer = qId ? document.getElementById(`variantFields_${qId}`) : null;
+            const variantDivs = vContainer ? Array.from(vContainer.children) : [];
+
+            if (variantDivs.length === 0) {
+                html += `<p class="text-xs text-slate-500 italic pl-2">Варианты не добавлены</p>`;
+            } else {
+                html += `<div class="space-y-2 pl-2">`;
+                variantDivs.forEach((row) => {
+                    const mainInput = row.querySelector('input[data-role="variant-main"]');
+                    if (!mainInput) return;
+                    const vMatch = mainInput.name.match(/^variant_(\d+)_(\d+)$/);
+                    const vId = vMatch ? vMatch[2] : null;
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    const isCorrect = checkbox && checkbox.checked;
+
+                    const vRu = qId && vId ? document.getElementById(`variant_${qId}_${vId}_ru`) : null;
+                    const vEn = qId && vId ? document.getElementById(`variant_${qId}_${vId}_en`) : null;
+
+                    html += `
+                        <div class="bg-slate-900/60 rounded-lg p-2.5 ${isCorrect ? 'border border-emerald-500/40' : 'border border-transparent'}">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                ${isCorrect
+                                    ? '<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i><span class="text-[10px] text-emerald-400">верный ответ</span>'
+                                    : '<i class="fa-regular fa-circle text-slate-600 text-xs"></i><span class="text-[10px] text-slate-500">вариант</span>'}
+                            </div>
+                            <div class="space-y-1">
+                                ${langBlock('UZ', mainInput.value.trim())}
+                                ${langBlock('RU', vRu ? vRu.value : '')}
+                                ${langBlock('EN', vEn ? vEn.value : '')}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+        });
+
+        body.innerHTML = html;
+    }
+
+    function openPreview() {
+        const form = document.getElementById('addQuestionForm');
+        // Сохраняем нативную HTML5-валидацию (required-поля) — без submit
+        // браузер её сам не запустит.
+        if (!form.reportValidity()) return;
+
+        renderPreview();
+        document.getElementById('previewModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePreview() {
+        document.getElementById('previewModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function confirmAndSave() {
+        document.getElementById('addQuestionForm').submit();
     }
 </script>
 {% endblock %}
