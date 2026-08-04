@@ -13,7 +13,7 @@ from core.quiz import (
     user_profile,
 )
 
-from .dashboard import action, dlist, form, home, lock
+from .dashboard import action, dlist, form, home, lock, ai_translate
 
 # ── Пути, которые должны попадать под языковой префикс (/uz/..., /en/...) ──
 # Оборачиваются в i18n_patterns() в src/urls.py (корневом URLConf).
@@ -35,6 +35,7 @@ urlpatterns = [
     path("test/answer/", test_answer, name="test_answer"),
     path("test/create/", create_test, name="create_test"),
     path("dashboard/", home, name="dashboard"),
+    path("dashboard/ai-translate/", ai_translate, name="ai_translate"),
     path("dashboard/list/<str:tip>/", dlist, name="dlist"),
     path("action/<str:status>/<str:path>/<int:pk>/", action, name="action"),
     path("action/<str:status>/<str:path>/", action, name="action_no_pk"),
