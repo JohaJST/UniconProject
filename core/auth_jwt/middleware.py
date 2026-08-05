@@ -99,6 +99,7 @@ class JWTAuthenticationMiddleware:
                     request.user = User.objects.get(id=int(p["sub"]))
                 except User.DoesNotExist:
                     return self._clear_cookies_and_redirect_login()
+                translation.activate(request.user.lang or "uz")
                 response = self.get_response(request)
                 _sync_language_cookie(request, response, request.user)
                 return response
@@ -121,6 +122,8 @@ class JWTAuthenticationMiddleware:
         except User.DoesNotExist:
             return self._clear_cookies_and_redirect_login()
 
+        translation.activate(request.user.lang or "uz")
+        
         response = self.get_response(request)
 
         if new_tokens is not None:
