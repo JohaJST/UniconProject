@@ -415,16 +415,16 @@
             </div>
 
             <div class="mb-3">
-                <textarea name="question_${qId}_uz" 
-                          id="question_${qId}_uz" 
+                <textarea name="question_${qId}"
+                          id="question_${qId}"
                           data-role="question-main"
-                          rows="2" 
+                          rows="2"
                           placeholder="Текст вопроса..."
                           class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5
                                  text-white placeholder-slate-500 text-sm resize-none
                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
                                  transition-colors"></textarea>
-            </div>
+            </div> 
 
             <div class="mb-3">
                 <label class="text-xs font-medium text-slate-500 mb-1 block">Изображение (необязательно)</label>
@@ -445,9 +445,18 @@
                 </div>
                 <div class="space-y-2">
                     <div>
+                        <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">UZ</span>
+                        <textarea name="question_${qId}_uz" id="question_${qId}_uz"
+                                  rows="2" placeholder="Matn (o'zbekcha)..."
+                                  class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                         text-white placeholder-slate-500 text-sm resize-none
+                                         focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                         transition-colors"></textarea>
+                    </div>
+                    <div>
                         <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">RU</span>
-                        <textarea name="question_${qId}_ru" id="question_${qId}_ru"
-                                  rows="2" placeholder="Текст вопроса на русском..."
+                        <textarea name="question_${qId}_ru" id="question_${qId}_ru" rows="2"
+                                  placeholder="Текст вопроса на русском..."
                                   class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
                                          text-white placeholder-slate-500 text-sm resize-none
                                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
@@ -455,8 +464,8 @@
                     </div>
                     <div>
                         <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">EN</span>
-                        <textarea name="question_${qId}_en" id="question_${qId}_en"
-                                  rows="2" placeholder="Question text in English..."
+                        <textarea name="question_${qId}_en" id="question_${qId}_en" rows="2"
+                                  placeholder="Question text in English..."
                                   class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
                                          text-white placeholder-slate-500 text-sm resize-none
                                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
@@ -476,6 +485,10 @@
         `;
         container.appendChild(div);
 
+        invalidateTranslation();
+        const mainTa = div.querySelector('textarea[data-role="question-main"]');
+        if (mainTa) mainTa.addEventListener('input', invalidateTranslation);
+        
         /* Add 2 default variants automatically */
         questionCounter++;
         variantCounters[qId] = 0;
@@ -554,6 +567,10 @@
             </div>
         `;
         vContainer.appendChild(wrap);
+        
+        invalidateTranslation();
+        const mainInput = wrap.querySelector('input[data-role="variant-main"]');
+        if (mainInput) mainInput.addEventListener('input', invalidateTranslation);
     }
 
     function removeQuestion(id) {
@@ -679,41 +696,41 @@
         }
     }
 
+    let translateInFlight = false;      // защита от повторного клика/двойного запуска
+    let translationApplied = false;
+    
+    function invalidateTranslation() {
+        translationApplied = false;
+    }
+    
+    document.getElementById('test-name').addEventListener('input', invalidateTranslation);
+    document.getElementById('test-desc').addEventListener('input', invalidateTranslation);
+   
+    
     async function translateAll() {
+        if (translateInFlight) return;
         const btn = document.getElementById('aiTranslateBtn');
-
-        // ── Сбор items: пересканируем DOM при каждом вызове ────────────
+    
         const items = [];
-
         const testNameInput = document.getElementById('test-name');
-        if (testNameInput && testNameInput.value.trim()) {
-            items.push({ id: 'test_name', text: testNameInput.value.trim() });
-        }
-
+        if (testNameInput && testNameInput.value.trim()) items.push({ id: 'test_name', text: testNameInput.value.trim() });
         const testDescInput = document.getElementById('test-desc');
-        if (testDescInput && testDescInput.value.trim()) {
-            items.push({ id: 'test_desc', text: testDescInput.value.trim() });
-        }
-
+        if (testDescInput && testDescInput.value.trim()) items.push({ id: 'test_desc', text: testDescInput.value.trim() });
+    
         document.querySelectorAll('#questionFields .question-card').forEach(card => {
             const textarea = card.querySelector('textarea[data-role="question-main"]');
-            if (textarea && textarea.value.trim()) {
-                items.push({ id: textarea.name, text: textarea.value.trim() });
-            }
-
+            if (textarea && textarea.value.trim()) items.push({ id: textarea.name, text: textarea.value.trim() });
             card.querySelectorAll('input[data-role="variant-main"]').forEach(input => {
-                if (input.value.trim()) {
-                    items.push({ id: input.name, text: input.value.trim() });
-                }
+                if (input.value.trim()) items.push({ id: input.name, text: input.value.trim() });
             });
         });
-
+    
         if (items.length === 0) {
             alert('Сначала заполните название и хотя бы один вопрос');
             return;
         }
-
-        // ── UI: дизейблим кнопку, показываем спиннер ────────────────────
+    
+        translateInFlight = true;
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
         btn.classList.add('opacity-60', 'cursor-not-allowed');
@@ -722,34 +739,31 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
-            <span>Перевод...</span>
-        `;
-
+            <span>Перевод...</span>`;
+    
         const resetBtn = () => {
             btn.disabled = false;
             btn.classList.remove('opacity-60', 'cursor-not-allowed');
             btn.innerHTML = originalHtml;
+            translateInFlight = false;
         };
-
+    
         try {
             const res = await fetch(AI_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify({ items })
             });
-
+    
             const contentType = res.headers.get('content-type') || '';
             if (!contentType.includes('application/json')) {
                 showToast('Сессия обновилась, перезагрузите страницу и повторите', 'error');
                 resetBtn();
                 return;
             }
-
+    
             const data = await res.json();
-
+    
             if (!res.ok || data.error) {
                 let msg = 'Не удалось перевести, впишите вручную';
                 if (res.status === 429) msg = 'Подождите немного';
@@ -758,21 +772,18 @@
                 resetBtn();
                 return;
             }
-
+    
             const missingSet = new Set(data.missing || []);
             (data.translations || []).forEach(t => {
-                applyTranslation(t.id, t.ru, t.en, missingSet.has(t.id));
+                applyTranslation(t.id, t.uz, t.ru, t.en, missingSet.has(t.id));   // ← ИСПРАВЛЕНО
             });
-
+    
+            translationApplied = true;   // ← ИСПРАВЛЕНО: без этого повторный вызов не остановить
             showToast('Перевод готов', 'success');
             resetBtn();
-
+    
         } catch (e) {
-            if (e instanceof TypeError) {
-                showToast('Проблема соединения, попробуйте ещё раз', 'error');
-            } else {
-                showToast('Не удалось перевести, впишите вручную', 'error');
-            }
+            showToast(e instanceof TypeError ? 'Проблема соединения, попробуйте ещё раз' : 'Не удалось перевести, впишите вручную', 'error');
             resetBtn();
         }
     }
@@ -802,13 +813,11 @@
     
         const subjectSelect = document.querySelector('select[name="subject"]');
         const subjectName = subjectSelect && subjectSelect.selectedOptions.length
-            ? subjectSelect.selectedOptions[0].textContent.trim()
-            : '—';
+            ? subjectSelect.selectedOptions[0].textContent.trim() : '—';
     
         const name_uz = document.getElementById('test-name-uz').value;
         const name_ru = document.getElementById('test-name-ru').value;
         const name_en = document.getElementById('test-name-en').value;
-    
         const desc_uz = document.getElementById('test-desc-uz').value;
         const desc_ru = document.getElementById('test-desc-ru').value;
         const desc_en = document.getElementById('test-desc-en').value;
@@ -818,7 +827,6 @@
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Предмет</p>
                 <p class="text-sm text-white">${escapeHtml(subjectName)}</p>
             </div>
-    
             <div class="mb-6 pb-5 border-b border-slate-700">
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Название теста</p>
                 <div class="space-y-2">
@@ -827,7 +835,6 @@
                     ${langEditBlock('EN','test-name-en', name_en)}
                 </div>
             </div>
-    
             <div class="mb-6 pb-5 border-b border-slate-700">
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Описание теста</p>
                 <div class="space-y-2">
@@ -837,40 +844,42 @@
                 </div>
             </div>
         `;
-
+    
         const cards = document.querySelectorAll('#questionFields .question-card');
-        if (cards.length === 0) {
-            html += `<p class="text-sm text-slate-500 italic">Вопросы не добавлены</p>`;
-        }
-
+        if (cards.length === 0) html += `<p class="text-sm text-slate-500 italic">Вопросы не добавлены</p>`;
+    
         cards.forEach((card, qi) => {
             const textarea = card.querySelector('textarea[data-role="question-main"]');
-            const q_uz = textarea ? textarea.value.trim() : '';
             const qMatch = textarea ? textarea.name.match(/^question_(\d+)$/) : null;
             const qId = qMatch ? qMatch[1] : null;
-
+    
+            const uzField = qId ? document.getElementById(`question_${qId}_uz`) : null;
             const ruField = qId ? document.getElementById(`question_${qId}_ru`) : null;
             const enField = qId ? document.getElementById(`question_${qId}_en`) : null;
-
+    
+            const uzVal = (uzField && uzField.value.trim()) || (textarea ? textarea.value.trim() : '');
+            const ruVal = ruField ? ruField.value : '';
+            const enVal = enField ? enField.value : '';
+    
             const fileInput = card.querySelector('input[type="file"]');
             const hasImage = fileInput && fileInput.files && fileInput.files.length > 0;
-
+    
             html += `
                 <div class="mb-5 pb-5 border-b border-slate-700">
                     <div class="flex items-center justify-between mb-2">
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Вопрос ${qi + 1}</p>
                         ${hasImage ? `<span class="text-[10px] text-indigo-400 inline-flex items-center gap-1"><i class="fa-solid fa-image"></i> ${escapeHtml(fileInput.files[0].name)}</span>` : ''}
                     </div>
-                    <div class="space-y-1.5 mb-3">
-                        ${langBlock('UZ', q_uz)}
-                        ${langBlock('RU', ruField ? ruField.value : '')}
-                        ${langBlock('EN', enField ? enField.value : '')}
+                    <div class="space-y-2 mb-3">
+                        ${qId ? langEditBlock('UZ', `question_${qId}_uz`, uzVal) : langBlock('UZ', uzVal)}
+                        ${qId ? langEditBlock('RU', `question_${qId}_ru`, ruVal) : langBlock('RU', ruVal)}
+                        ${qId ? langEditBlock('EN', `question_${qId}_en`, enVal) : langBlock('EN', enVal)}
                     </div>
             `;
-
+    
             const vContainer = qId ? document.getElementById(`variantFields_${qId}`) : null;
             const variantDivs = vContainer ? Array.from(vContainer.children) : [];
-
+    
             if (variantDivs.length === 0) {
                 html += `<p class="text-xs text-slate-500 italic pl-2">Варианты не добавлены</p>`;
             } else {
@@ -879,13 +888,22 @@
                     const mainInput = row.querySelector('input[data-role="variant-main"]');
                     if (!mainInput) return;
                     const vMatch = mainInput.name.match(/^variant_(\d+)_(\d+)$/);
+                    const vQ = vMatch ? vMatch[1] : null;
                     const vId = vMatch ? vMatch[2] : null;
                     const checkbox = row.querySelector('input[type="checkbox"]');
                     const isCorrect = checkbox && checkbox.checked;
-
-                    const vRu = qId && vId ? document.getElementById(`variant_${qId}_${vId}_ru`) : null;
-                    const vEn = qId && vId ? document.getElementById(`variant_${qId}_${vId}_en`) : null;
-
+    
+                    const vUzId = vQ && vId ? `variant_${vQ}_${vId}_uz` : null;
+                    const vRuId = vQ && vId ? `variant_${vQ}_${vId}_ru` : null;
+                    const vEnId = vQ && vId ? `variant_${vQ}_${vId}_en` : null;
+                    const vUzEl = vUzId ? document.getElementById(vUzId) : null;
+                    const vRuEl = vRuId ? document.getElementById(vRuId) : null;
+                    const vEnEl = vEnId ? document.getElementById(vEnId) : null;
+    
+                    const vUzVal = (vUzEl && vUzEl.value.trim()) || mainInput.value.trim();
+                    const vRuVal = vRuEl ? vRuEl.value : '';
+                    const vEnVal = vEnEl ? vEnEl.value : '';
+    
                     html += `
                         <div class="bg-slate-900/60 rounded-lg p-2.5 ${isCorrect ? 'border border-emerald-500/40' : 'border border-transparent'}">
                             <div class="flex items-center gap-1.5 mb-1">
@@ -894,19 +912,17 @@
                                     : '<i class="fa-regular fa-circle text-slate-600 text-xs"></i><span class="text-[10px] text-slate-500">вариант</span>'}
                             </div>
                             <div class="space-y-1">
-                                ${langBlock('UZ', mainInput.value.trim())}
-                                ${langBlock('RU', vRu ? vRu.value : '')}
-                                ${langBlock('EN', vEn ? vEn.value : '')}
+                                ${vUzId ? langEditBlock('UZ', vUzId, vUzVal) : langBlock('UZ', vUzVal)}
+                                ${vRuId ? langEditBlock('RU', vRuId, vRuVal) : langBlock('RU', vRuVal)}
+                                ${vEnId ? langEditBlock('EN', vEnId, vEnVal) : langBlock('EN', vEnVal)}
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
                 html += `</div>`;
             }
-
             html += `</div>`;
         });
-
+    
         body.innerHTML = html;
     }
 
@@ -920,8 +936,6 @@
     function confirmAndSave() {
         document.getElementById('addQuestionForm').submit();
     }
-    
-    let translationApplied = false;
     
     function fallbackFillMissing() {
         const fillTriplet = (draftVal, uzId, ruId, enId, tabsId, noteId) => {
