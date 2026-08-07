@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import logger
 
 import requests
 from django.contrib.auth.decorators import login_required
@@ -45,6 +46,8 @@ _SYSTEM_PROMPT = (
     "1) определи, на каком из трёх языков написан текст; "
     "2) верни ВСЕ ТРИ варианта — uz, ru, en, — где поле языка оригинала содержит "
     "исходный текст ДОСЛОВНО, а два других — точный перевод. Не путай языки. "
+    "ПОЛЕ 'en' ОБЯЗАТЕЛЬНО ДОЛЖНО БЫТЬ ЗАПОЛНЕНО НЕПУСТЫМ ПЕРЕВОДОМ для каждого "
+    "элемента без исключений, даже если исходный текст короткий или на английском. "
     "Отвечай ТОЛЬКО валидным JSON без markdown-фенсов: "
     "{\"translations\": [{\"id\": \"...\", \"detected\": \"uz\"|\"ru\"|\"en\", "
     "\"uz\": \"...\", \"ru\": \"...\", \"en\": \"...\"}]}, сохраняя порядок и id."
@@ -92,9 +95,11 @@ def _call_ai(items: list[dict], model: str, thinking: bool) -> dict:
                 "content": json.dumps({"items": items}, ensure_ascii=False),
             },
         ],
-        "max_tokens": 4096,
+        "max_tokens": 8192,
+        "response_format": {"type": "json_object"},
         "stream": False,
     }
+    
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key or ''}",
@@ -124,17 +129,28 @@ def _call_ai(items: list[dict], model: str, thinking: bool) -> dict:
 
     cleaned = _FENCE_RE.sub("", raw_text).strip()
 
+    # try:
+    #     parsed = json.loads(cleaned)
+    # except json.JSONDecodeError as exc:
+    #     # print(3)
+    #     raise AIProviderError("invalid_ai_response") from exc
     try:
         parsed = json.loads(cleaned)
     except json.JSONDecodeError as exc:
-        # print(3)
+        logger.error("DeepSeek returned non-JSON: %s | raw=%s", exc, raw_text)
         raise AIProviderError("invalid_ai_response") from exc
 
     if not isinstance(parsed, dict):
-        # print(4)
         raise AIProviderError("invalid_ai_response")
 
+    # logger.debug("DeepSeek raw translations: %s", parsed.get("translations"))  # временно, потом убрать
+    print(parsed)
     return parsed
+    # if not isinstance(parsed, dict):
+    #     # print(4)
+    #     raise AIProviderError("invalid_ai_response")
+
+    # return parsed
 
 @login_required(login_url="login")
 @require_POST
