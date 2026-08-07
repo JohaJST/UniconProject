@@ -81,7 +81,7 @@ def _call_ai(items: list[dict], model: str, thinking: bool) -> dict:
     # deepseek-chat — это осознанный выбор: thinking mode не имеет смысла
     # без reasoner-модели.
     # effective_model = "deepseek-reasoner" if thinking else model
-    effective_model = "deepseek-v4-pro"
+    effective_model = "deepseek-chat"
 
     payload = {
         "model": effective_model,
