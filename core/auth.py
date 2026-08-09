@@ -34,6 +34,13 @@ def _redirect_to_login_clearing_cookies():
     response.delete_cookie(settings.JWT_REFRESH_COOKIE_NAME)
     return response
 
+def _redirect_to_about_clearing_cookies():
+    """Логаут по действию пользователя: на главную (about), с очисткой JWT-кук."""
+    response = redirect("about")
+    response.delete_cookie(settings.JWT_ACCESS_COOKIE_NAME)
+    response.delete_cookie(settings.JWT_REFRESH_COOKIE_NAME)
+    return response
+
 def _set_language_cookie(response, lang):
     """
     Единая точка простановки cookie django_language.
@@ -193,7 +200,7 @@ def sign_out(request):
         if user_id is not None:
             AuthRedisService.clear_active_session(user_id)
 
-    return _redirect_to_login_clearing_cookies()
+    return _redirect_to_about_clearing_cookies()
 
 
 @login_required(login_url="login")
