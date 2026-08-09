@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Self Study Page{% endblock %}
+
+{% block header %}
+<!-- Подключаем шрифт Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Иконки FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+            /* ================= ОСНОВНЫЕ СТИЛИ ================= */
+            :root {
+                --primary: #007bff;
+                --primary-dark: #0056b3;
+                --bg-color: #f4f7f6;
+                --text-main: #333;
+                --text-muted: #666;
+                --card-bg: rgba(255, 255, 255, 0.9);
+            }
+    
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Poppins', sans-serif;
+                scroll-behavior: smooth; /* Плавная прокрутка к якорям */
+            }
+    
+            body {
+                background: var(--bg-color);
+                color: var(--text-main);
+                overflow-x: hidden;
+            }
+    
+            /* ================= НАВИГАЦИЯ (HEADER) ================= */
+            header {
+                position: fixed;
+                top: 0;
+                width: 100%;
+                height: 70px;
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(10px); /* Эффект стекла */
+                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 5%;
+                z-index: 1000;
+            }
+    
+            .logo {
+                font-size: 24px;
+                font-weight: 700;
+                color: var(--primary);
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+    
+            /* ================= ГЛАВНЫЙ ЭКРАН (HERO) ================= */
+            .hero {
+                /*margin-top: 70px;*/
+                height: 40vh;
+                background: linear-gradient(135deg, #007bff, #00c6ff);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                text-align: center;
+                padding: 0 20px;
+            }
+    
+            .hero h1 {
+                font-size: 40px;
+                margin-bottom: 15px;
+                animation: slideDown 0.8s ease forwards;
+            }
+    
+            .hero p {
+                font-size: 18px;
+                opacity: 0.9;
+                animation: fadeIn 1.2s ease forwards;
+            }
+    
+            /* ================= СТРУКТУРА КОНТЕНТА ================= */
+            .container {
+                display: flex;
+                max-width: 1200px;
+                margin: 40px auto;
+                padding: 0 20px;
+                gap: 40px;
+            }
+    
+            /* Боковое меню */
+            .sidebar {
+                flex: 1;
+                min-width: 250px;
+                position: sticky;
+                top: 100px;
+                height: max-content;
+                background: var(--card-bg);
+                padding: 25px;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            }
+    
+            .sidebar h3 {
+                margin-bottom: 15px;
+                color: var(--primary);
+            }
+    
+            .sidebar ul {
+                list-style: none;
+            }
+    
+            .sidebar ul li {
+                margin-bottom: 10px;
+            }
+    
+            .sidebar ul li a {
+                text-decoration: none;
+                color: var(--text-muted);
+                font-weight: 500;
+                display: block;
+                padding: 10px 15px;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+    
+            .sidebar ul li a:hover,
+            .sidebar ul li a.active {
+                background: #eef5ff;
+                color: var(--primary);
+                transform: translateX(5px);
+            }
+    
+            /* Основной контент */
+            .content {
+                flex: 3;
+            }
+    
+            .topic-section {
+                background: var(--card-bg);
+                border-radius: 15px;
+                padding: 40px;
+                margin-bottom: 40px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                /* Начальное состояние для анимации прокрутки */
+                opacity: 0;
+                transform: translateY(30px);
+                transition: all 0.8s ease;
+            }
+    
+            .topic-section.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+    
+            .topic-section h2 {
+                color: var(--text-main);
+                font-size: 32px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+    
+            .topic-section h2 i {
+                color: var(--primary);
+            }
+    
+            .topic-section p {
+                line-height: 1.8;
+                color: var(--text-muted);
+                margin-bottom: 20px;
+                font-size: 16px;
+            }
+    
+            .topic-image {
+                width: 100%;
+                height: 350px;
+                object-fit: cover;
+                border-radius: 12px;
+                margin: 20px 0;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+            }
+    
+            .topic-image:hover {
+                transform: scale(1.02);
+            }
+    
+            /* Карточки с примерами */
+            .example-box {
+                background: #fff3cd;
+                border-left: 5px solid #ffc107;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            
+            .example-box.secure {
+                background: #d4edda;
+                border-left: 5px solid #28a745;
+            }
+    
+            .example-box h4 {
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+    
+            /* ================= АНИМАЦИИ ================= */
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateY(-30px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+    
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+    
+            /* ================= АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) ================= */
+            @media (max-width: 900px) {
+                .container {
+                    flex-direction: column;
+                }
+                
+                .sidebar {
+                    position: static;
+                    width: 100%;
+                    margin-bottom: 20px;
+                }
+    
+                .hero h1 {
+                    font-size: 30px;
+                }
+                
+                .topic-section {
+                    padding: 25px;
+                }
+                
+                .topic-image {
+                    height: 200px;
+                }
+            }
+            /* ================= БЛОК ТЕСТИРОВАНИЯ (CTA) ================= */
+            .cta-section {
+                background: linear-gradient(135deg, #ffffff, #eef5ff);
+                border: 2px solid #b8daff;
+                border-radius: 15px;
+                padding: 40px;
+                text-align: center;
+                margin-top: 20px;
+                margin-bottom: 40px;
+                box-shadow: 0 10px 30px rgba(0, 123, 255, 0.15);
+                transition: transform 0.3s ease;
+            }
+            
+            .cta-section:hover {
+                transform: translateY(-5px);
+            }
+            
+            .cta-section h3 {
+                color: var(--primary-dark);
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+            
+            .cta-section p {
+                color: var(--text-muted);
+                font-size: 16px;
+                margin-bottom: 25px;
+            }
+            
+            .btn-primary {
+                display: inline-block;
+                background: var(--primary);
+                color: #fff;
+                padding: 15px 40px;
+                font-size: 18px;
+                font-weight: 600;
+                text-decoration: none;
+                border-radius: 50px; /* Делаем кнопку круглой по краям */
+                transition: all 0.3s ease;
+                box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+            }
+            
+            .btn-primary:hover {
+                background: var(--primary-dark);
+                transform: scale(1.05); /* Кнопка слегка увеличивается */
+                box-shadow: 0 8px 25px rgba(0, 123, 255, 0.6);
+            }
+            
+            .btn-primary i {
+                margin-right: 10px;
+            }
+            
+            /* Адаптация блока для телефонов */
+            @media (max-width: 480px) {
+                .cta-section {
+                    padding: 30px 20px;
+                }
+                .cta-section h3 {
+                    font-size: 24px;
+                }
+                .btn-primary {
+                    width: 100%; /* На телефоне кнопка растянется на всю ширину */
+                    font-size: 16px;
+                }
+            }
+        </style>
+{% endblock %}
+
+{% block body %}
+<!-- Шапка -->
+    <!--<header>
+        <a href="#" class="logo"><i class="fas fa-shield-alt"></i> Unicon Project</a>
+    </header>-->
+
+    <!-- Приветственный экран -->
+    <section class="hero">
+        <h1>Основы Кибербезопасности</h1>
+        <p>Изучите главные угрозы цифрового мира и научитесь от них защищаться</p>
+    </section>
+
+    <!-- Основной контейнер -->
+    <div class="container">
+        
+        <!-- Боковое меню (Навигация по странице) -->
+        <aside class="sidebar">
+            <h3>Содержание</h3>
+            <ul>
+                <li><a href="#phishing" class="nav-link active">Фишинг (Phishing)</a></li>
+                <li><a href="#bruteforce" class="nav-link">Брутфорс (Brute Force)</a></li>
+                <li><a href="#social" class="nav-link">Социальная инженерия</a></li>
+            </ul>
+        </aside>
+
+        <!-- Контент -->
+        <main class="content">
+            
+            <!-- Секция 1: Фишинг -->
+            <section id="phishing" class="topic-section">
+                <h2><i class="fas fa-fish"></i> Фишинг (Phishing)</h2>
+                <p><strong>Фишинг</strong> — это вид интернет-мошенничества, целью которого является получение доступа к конфиденциальным данным пользователей — логинам и паролям. Это достигается путем проведения массовых рассылок электронных писем от имени популярных брендов.</p>
+                
+                <img src="https://images.unsplash.com/photo-1563206767-5b18f218e8de?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Phishing Hacker" class="topic-image">
+                
+                <p>Злоумышленники создают точную копию известного сайта (например, Telegram, Instagram или банка) и заманивают туда жертву. Ничего не подозревающий пользователь вводит свои данные, и они отправляются прямиком к хакеру.</p>
+                
+                <div class="example-box">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Пример атаки:</h4>
+                    <p>Вам на почту приходит письмо: "Ваш аккаунт будет заблокирован через 24 часа. Срочно подтвердите свои данные по ссылке: <i>http://telegrom-security.com/login</i>". Заметьте, в адресе допущена намеренная опечатка ("telegrom").</p>
+                </div>
+
+                <div class="example-box secure">
+                    <h4><i class="fas fa-check-circle"></i> Как защититься:</h4>
+                    <p>Всегда проверяйте URL-адрес в адресной строке. Настройте двухфакторную аутентификацию (2FA) для всех важных сервисов.</p>
+                </div>
+            </section>
+
+            <!-- Секция 2: Брутфорс -->
+            <section id="bruteforce" class="topic-section">
+                <h2><i class="fas fa-hammer"></i> Брутфорс (Brute Force)</h2>
+                <p><strong>Brute Force (Атака полным перебором)</strong> — это метод угадывания пароля, при котором специальная программа систематически перебирает все возможные комбинации символов до тех пор, пока не найдет верную.</p>
+                
+                <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Matrix Code" class="topic-image">
+                
+                <p>Хотя этот метод кажется долгим, современные видеокарты способны перебирать миллиарды паролей в секунду. Если ваш пароль состоит только из цифр или является обычным словом из словаря, его взломают за доли секунды.</p>
+
+                <div class="example-box">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Пример атаки:</h4>
+                    <p>Хакер загружает словарь самых популярных паролей (например, "123456", "qwerty", "password", "admin") и запускает скрипт, который пытается войти в ваш аккаунт, подставляя эти слова одно за другим.</p>
+                </div>
+
+                <div class="example-box secure">
+                    <h4><i class="fas fa-check-circle"></i> Как защититься:</h4>
+                    <p>Используйте пароли длиной не менее 12 символов, включая заглавные и строчные буквы, цифры и спецсимволы (@, #, $). Системным администраторам следует ограничивать количество попыток входа (например, блокировать IP после 5 неудачных попыток).</p>
+                </div>
+            </section>
+
+            <!-- Секция 3: Социальная инженерия -->
+            <section id="social" class="topic-section">
+                <h2><i class="fas fa-users"></i> Социальная инженерия</h2>
+                <p><strong>Социальная инженерия</strong> — это метод управления действиями человека без использования технических средств. Взламывается не компьютер, а психология человека.</p>
+                
+                <img src="https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Social Engineering" class="topic-image">
+                
+                <p>Мошенники играют на чувствах страха, жадности или сострадания. Они могут звонить под видом службы безопасности банка, сотрудников полиции или представляться вашими родственниками, попавшими в беду.</p>
+
+                <div class="example-box">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Пример атаки:</h4>
+                    <p>Звонок: "Здравствуйте, это служба безопасности банка. С вашей карты пытаются перевести средства. Чтобы отменить операцию, продиктуйте код из СМС, который вам сейчас придет".</p>
+                </div>
+
+                <div class="example-box secure">
+                    <h4><i class="fas fa-check-circle"></i> Как защититься:</h4>
+                    <p>Никогда и никому не сообщайте коды из СМС, CVC/CVV коды (на обратной стороне карты) и пароли. Настоящие сотрудники банков или техподдержки никогда не запрашивают такую информацию.</p>
+                </div>
+            </section>
+
+            <!-- Блок с кнопкой перехода на тест -->
+            <section class="cta-section topic-section">
+                <h3>Готовы проверить свои знания?</h3>
+                <p>Пройдите небольшой тест, чтобы закрепить изученный материал и узнать свой уровень!</p>
+                <!-- Ссылка ведет на ваш url self/check/ -->
+                <a href="{% url 'self_check' %}" class="btn-primary">
+                    <i class="fas fa-tasks"></i> Проверить себя
+                </a>
+            </section>
+
+        </main> <!-- Здесь закрывается main -->
+    </div> <!-- Здесь закрывается container -->
+
+    <!-- JavaScript для анимаций при прокрутке и подсветки меню -->
+    <script>
+        // 1. Анимация появления блоков при скролле (Intersection Observer)
+        const sections = document.querySelectorAll('.topic-section');
+        
+        const observerOptions = {
+            root: null,
+            threshold: 0.15, // Блок появляется, когда 15% его видно на экране
+            rootMargin: "0px"
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // 2. Динамическая подсветка пунктов бокового меню при скролле
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+{% endblock %}

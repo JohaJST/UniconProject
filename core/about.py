@@ -32,7 +32,7 @@ def about(request):
 
 
 def self(request):
-    return render(request, "self.html")
+    return render(request, "module 3 test/self.html")
 
 
 def self_check(request):
@@ -64,10 +64,11 @@ def self_check(request):
                     for answer in question.answers.all()
                 ]
             })
-    print(questions_list)
+    
     ctx = {
         "questions": questions_list
     }
+    print(ctx)
     return render(request, "module 3 test/test.html", ctx)
     
     

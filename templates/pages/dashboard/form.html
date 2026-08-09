@@ -120,7 +120,8 @@
                         class="text-sm font-medium text-slate-300 mb-1.5 block"
                         for="id_password"
                     >
-                        Пароль <span class="text-rose-400">*</span>
+                        Пароль
+                        
                     </label>
                     <input
                         id="id_password"
@@ -129,7 +130,7 @@
                         maxlength="255"
                         placeholder="••••••••"
                         value="{{ user_data.password }}"
-                        required
+                        
                         class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
                 </div>
@@ -174,12 +175,6 @@
                     <option value="4"
                         {% if user_data.role == "4" %}selected{% endif %}
                     >Ученик</option>
-                    <option value="3"
-                        {% if user_data.role == "3" %}selected{% endif %}
-                    >Учитель</option>
-                    <option value="2"
-                        {% if user_data.role == "2" %}selected{% endif %}
-                    >Администратор</option>
                     <option value="1"
                         {% if user_data.role == "1" %}selected{% endif %}
                     >Суперадмин</option>

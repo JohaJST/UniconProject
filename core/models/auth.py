@@ -67,7 +67,7 @@ class User(AbstractBaseUser):
     phone = models.CharField(max_length=20, null=True, blank=True)
 
     # ── Настройки ─────────────────────────────────────────
-    log = models.JSONField(default=dict, null=True)
+    log = models.JSONField(default=dict, null=True, blank=True)
     lang = models.CharField(
         default="uz",
         max_length=2,

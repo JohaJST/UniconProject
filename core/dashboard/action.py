@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+import datetime
 
 from core.models import (
     ClassRooms,
@@ -133,24 +134,24 @@ def form(req):
     c = ClassRooms.objects.all()
     if req.POST:
         data = req.POST
-        try:
-            User.objects.create_user(
-                phone=data.get("phone"),
-                username=None,
-                password=data.get("password"),
-                birthday=data.get("birthday"),
-                name=data["first_name"],
-                last_name=data["last_name"],
-                classroom_id=int(data["classroom"]),
-                role=int(data["role"]),
-                lang=data.get("lang")
-            )
-        except:
-            return render(
-                req,
-                "pages/dashboard/form.html",
-                {"classrooms": c, "error": "Проверьте данные", "user_data": data},
-            )
+        # try:
+        User.objects.create_user(
+            phone=data.get("phone") or 1234,
+            username=None,
+            password=data.get("password") or "1234",
+            birthday = data.get("birthday") or datetime.datetime.today().strftime('%Y-%m-%d'),
+            name=data["first_name"],
+            last_name=data["last_name"],
+            classroom_id=int(data["classroom"]),
+            role=int(data["role"]),
+            lang=data.get("lang")
+        )
+        # except:
+        #     return render(
+        #         req,
+        #         "pages/dashboard/form.html",
+        #         {"classrooms": c, "error": "Проверьте данные", "user_data": data},
+        #     )
         return render(
             req,
             "pages/dashboard/form.html",

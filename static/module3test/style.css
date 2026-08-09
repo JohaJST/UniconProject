@@ -49,10 +49,11 @@ body{
     cursor: pointer;
 }
 
-.info_box{
-    width: 540px;
+.info_box {
+    width: 90%; /* На маленьких экранах займет 90% ширины */
+    max-width: 540px; /* На больших экранах не растянется больше 540px */
     background: #fff;
-    border-radius: 5px;
+    border-radius: 15px;
     transform: translate(-50%, -50%) scale(0.9);
     opacity: 0;
     pointer-events: none;
@@ -107,14 +108,19 @@ body{
     transition: all 0.3s ease;
 }
 
-.quiz_box{
-    width: 550px;
+.quiz_box {
+    width: 95%; /* Чуть шире, чтобы сетке было место */
+    max-width: 800px; 
+    max-height: 90vh; /* Высота не более 90% от высоты окна браузера */
+    display: flex;
+    flex-direction: column; /* Готовим структуру для правильного скролла */
     background: #fff;
-    border-radius: 5px;
+    border-radius: 15px;
     transform: translate(-50%, -50%) scale(0.9);
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .quiz_box header{
@@ -181,72 +187,85 @@ section{
     background: #fff;
 }
 
-section .que_text{
-    font-size: 25px;
+section .que_text {
+    font-size: 24px;
     font-weight: 600;
+    text-align: center; /* Центрируем вопрос */
+    margin-bottom: 20px;
 }
 
-section .option_list{
+section .option_list {
     padding: 20px 0px;
-    display: block;   
+    display: grid;
+    /* Уменьшили minmax до 200px. Теперь на узких экранах карточки перестроятся в колонку, а на широких - в ряд */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 15px; 
 }
 
-section .option_list .option{
-    background: aliceblue;
-    border: 1px solid #84c5fe;
-    border-radius: 5px;
-    padding: 8px 15px;
+section .option_list .option {
+    background: #f8faff;
+    border: 2px solid #dbeafe; /* Толстая, но нежная рамка */
+    border-radius: 12px;
+    padding: 20px 15px;
     font-size: 17px;
-    margin-bottom: 15px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    /* Выравнивание внутри карточки */
     display: flex;
+    flex-direction: column; 
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
 }
 
 section .option_list .option:last-child{
     margin-bottom: 0px;
 }
 
-section .option_list .option:hover{
+section .option_list .option:hover {
     color: #004085;
-    background: #cce5ff;
-    border: 1px solid #b8daff;
+    background: #eef5ff;
+    border: 2px solid #84c5fe;
+    transform: translateY(-4px); /* Поднимаем вверх */
+    box-shadow: 0 10px 20px rgba(0, 123, 255, 0.1); /* Добавляем тень при наведении */
 }
 
-section .option_list .option.select{
-    color: #004085;
-    background: #cce5ff;
-    border: 1px solid #b8daff;
+section .option_list .option.select {
+    transform: none; /* Убираем эффект парения после клика */
 }
 
-section .option_list .option.correct{
+section .option_list .option.correct {
     color: #155724;
     background: #d4edda;
-    border: 1px solid #c3e6cb;
+    border: 2px solid #28a745;
 }
 
-section .option_list .option.incorrect{
+section .option_list .option.incorrect {
     color: #721c24;
     background: #f8d7da;
-    border: 1px solid #f5c6cb;
+    border: 2px solid #dc3545;
 }
 
 section .option_list .option.disabled{
     pointer-events: none;
 }
 
-section .option_list .option .icon{
-    height: 26px;
-    width: 26px;
-    border: 2px solid transparent;
+section .option_list .option .icon {
+    position: absolute;
+    top: -10px; /* Выносим иконку на границу карточки */
+    right: -10px;
+    height: 30px;
+    width: 30px;
+    border: 3px solid #fff; /* Белая обводка вокруг иконки */
     border-radius: 50%;
     text-align: center;
-    font-size: 13px;
+    font-size: 14px;
     pointer-events: none;
-    transition: all 0.3s ease;
     line-height: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 .option_list .option .icon.tick{
     color: #23903c;
@@ -312,12 +331,13 @@ footer button.show{
     transform: scale(1);
 }
 
-.result_box{
+.result_box {
+    width: 90%;
+    max-width: 450px;
     background: #fff;
-    border-radius: 5px;
+    border-radius: 15px;
     display: flex;
     padding: 25px 30px;
-    width: 450px;
     align-items: center;
     flex-direction: column;
     justify-content: center;
@@ -444,4 +464,171 @@ footer button.show{
 .result_box .score_text span b {
     color: #007bff;
     word-break: break-word; /* Позволяет длинному имени перенестись, если оно вообще не влезает */
+}
+/* Изображение в самом вопросе */
+.que_image_box {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.que_img {
+    max-width: 100%;
+    max-height: 180px; /* Немного уменьшили максимальную высоту картинки вопроса */
+    border-radius: 10px;
+    object-fit: contain; /* Заменил cover на contain, чтобы картинки не обрезались */
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
+}
+
+.opt_img {
+    margin-top: 15px;
+    max-width: 100%;
+    height: 110px; /* Строго фиксируем высоту, чтобы все карточки были ровными */
+    object-fit: contain; /* Картинка впишется без искажений */
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+section .option_list .option:hover .opt_img {
+    transform: scale(1.05); /* Легкий зум картинки при наведении */
+}
+
+.quiz_box section {
+    padding: 25px 30px 20px 30px;
+    background: #fff;
+    flex-grow: 1; 
+    overflow-y: auto; /* Если контент (картинки + сетка) не влезает по высоте, появится красивый скролл */
+}
+
+.quiz_box section::-webkit-scrollbar {
+    width: 6px;
+}
+
+.quiz_box section::-webkit-scrollbar-thumb {
+    background: #b8daff;
+    border-radius: 10px;
+}
+
+/* =======================================================
+   АДАПТАЦИЯ ДЛЯ ПЛАНШЕТОВ И МОБИЛЬНЫХ ТЕЛЕФОНОВ (MEDIA QUERIES)
+   ======================================================= */
+
+/* --- ДЛЯ ПЛАНШЕТОВ (экраны меньше 768px) --- */
+@media (max-width: 768px) {
+    .quiz_box header {
+        padding: 0 20px;
+    }
+    .quiz_box section {
+        padding: 20px 20px 15px 20px;
+    }
+    footer {
+        padding: 0 20px;
+    }
+    
+    .que_img {
+        max-height: 200px; /* Картинка вопроса чуть меньше */
+    }
+    
+    section .option_list {
+        /* Делаем колонки чуть уже, чтобы на планшете точно влезало 2 в ряд */
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    }
+}
+
+/* --- ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ (экраны меньше 480px) --- */
+@media (max-width: 480px) {
+    /* Контейнеры занимают почти весь экран */
+    .info_box, .quiz_box, .result_box {
+        width: 98%; 
+        max-height: 95vh;
+        border-radius: 10px; /* Скругления чуть меньше */
+    }
+
+    /* Шапка (Header) */
+    .quiz_box header {
+        height: 60px;
+        padding: 0 15px;
+    }
+    .quiz_box header .title {
+        font-size: 16px; /* Уменьшаем логотип/название */
+    }
+    .quiz_box header .timer {
+        width: 120px;
+        height: 35px;
+    }
+    .quiz_box header .timer .time_left_txt {
+        font-size: 13px;
+    }
+    .quiz_box header .timer .timer_sec {
+        font-size: 14px;
+        width: 35px;
+        height: 25px;
+        line-height: 25px;
+    }
+
+    /* Тело вопроса (Section) */
+    .quiz_box section {
+        padding: 15px 15px 10px 15px; /* Экономим отступы по краям */
+    }
+    section .que_text {
+        font-size: 18px; /* Уменьшаем шрифт вопроса */
+        margin-bottom: 15px;
+    }
+    .que_img {
+        max-height: 150px; /* Картинка вопроса еще меньше */
+    }
+
+    /* Карточки ответов */
+    section .option_list {
+        grid-template-columns: 1fr; /* СТРОГО 1 колонка на смартфонах */
+        gap: 10px;
+    }
+    section .option_list .option {
+        padding: 12px 10px;
+        font-size: 15px;
+    }
+    .opt_img {
+        height: 90px; /* Картинка в ответе компактнее */
+        margin-top: 10px;
+    }
+    
+    /* Иконки ответов (крестик/галочка) на телефоне */
+    section .option_list .option .icon {
+        height: 24px;
+        width: 24px;
+        font-size: 11px;
+        line-height: 18px;
+        top: -8px;
+        right: -8px;
+    }
+
+    /* Подвал (Footer) */
+    footer {
+        height: 50px;
+        padding: 0 15px;
+    }
+    footer .total_que span {
+        font-size: 14px;
+    }
+    footer button {
+        height: 35px;
+        padding: 0 10px;
+        font-size: 14px; /* Уменьшаем кнопку "Следующий вопрос" */
+    }
+
+    /* Окно результатов (Result Box) */
+    .result_box .icon {
+        font-size: 70px; /* Уменьшаем корону/иконку */
+    }
+    .result_box .complete_text {
+        font-size: 20px;
+    }
+    .result_box .score_text span {
+        font-size: 15px;
+    }
+    .result_box .buttons button {
+        height: 40px;
+        font-size: 15px;
+        padding: 0 15px;
+        margin: 0 5px; /* Чтобы две кнопки поместились рядом */
+    }
 }

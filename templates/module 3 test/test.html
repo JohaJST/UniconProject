@@ -80,69 +80,36 @@
     {% trans "statusBad" as statusBad_t %}
     const statusBad = "{{ statusBad_t|escapejs }}";
     const statusNorm = "{% trans 'statusNorm'|escapejs %}";
-
-    
-        function showQuetions(index){
-    const que_text = document.querySelector(".que_text");
-
-    {#//creating a new span and div tag for question and option and passing the value using array index#}
-    {#let que_tag = '<span>'+ questions[index].numb + ". " + questions[index].question +'</span>';#}
-    // console.log(index, questions[index]);
-    let que_tag = '<span>' + questions[index].question +'</span>';
-
-    {#let option_tag = {% for q in question %}{% for v in variant %}{% if v.question_id == q.id %}#}
-    {#    '<div class="option"><span>'+ questions[index].options[{{ forloop.counter0 }}] +'</span></div>'{% endif %}{% endfor %}{% endfor %};#}
-
-    que_text.innerHTML = que_tag; //adding new span tag inside que_tag
-
-    {#option_list.innerHTML = option_tag; //adding new div tag inside option_tag#}
-
-    option_list.innerHTML = "";
-    let option_tag = "";
-    const option = option_list.querySelectorAll(".option");
-    {#option.innerHTML = "Test"#}
-    var myClasses = document.getElementsByClassName("option");
-
-    for (let i = 0; i < questions[index].options.length; i++) {
-        // Формируем HTML для каждого варианта и сразу вешаем onclick
-        option_tag += '<div class="option" onclick="optionSelected(this)"><span>' + questions[index].options[i] + '</span></div>';
-    }
-    
-    // Вставляем сгенерированные варианты в контейнер
-    option_list.innerHTML = option_tag;
-    // set onclick attribute to all available options
-
-    const allOptions = option_list.children.length; //getting all option items
-
-    for(i=0; i < allOptions; i++){
-        option_list.children[i].classList.remove("disabled"); //once user select an option then disabled all options
-    }
-}
+    const quesOf = "{% trans 'quesOf'|escapejs %}";
+    const subtitleTemplate = "{% trans 'resultText'|escapejs %}";
     </script>
-    <script> 
-    let questions = [
-        {% for q in questions %}
-        {
-            numb: {{ q.id }},
-            // Используем escapejs, чтобы кавычки внутри текста не сломали JS код
-            question: "{{ q.text|escapejs }}",
-            
-            // Отдельно ищем правильный ответ и выводим его
-            {% for a in q.answers %}
-                {% if a.is_correct %}
-                    answer: "{{ a.text|escapejs }}",
-                {% endif %}
-            {% endfor %}
-            
-            // Здесь выводим только список вариантов
-            options: [
+    <script>
+        // Генерируем массив вопросов из данных, пришедших из Python (questions_list)
+        let questions = [
+            {% for q in questions %}
+            {
+                numb: {{ q.id }},
+                question: "{{ q.text|escapejs }}",
+                img: {% if q.img %}"{{ q.img }}"{% else %}null{% endif %},
+                
+                options: [
+                    {% for a in q.answers %}
+                    {
+                        text: "{{ a.text|escapejs }}",
+                        img: {% if a.img %}"{{ a.img }}"{% else %}null{% endif %}
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                
                 {% for a in q.answers %}
-                    "{{ a.text|escapejs }}"{% if not forloop.last %},{% endif %}
+                    {% if a.is_correct %}
+                        answer: "{{ a.text|escapejs }}"
+                    {% endif %}
                 {% endfor %}
-            ]
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+    
   // you can uncomment the below codes and make duplicate as more as you want to add question
   // but remember you need to give the numb value serialize like 1,2,3,5,6,7,8,9.....
 

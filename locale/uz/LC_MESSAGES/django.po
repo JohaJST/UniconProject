@@ -176,7 +176,7 @@ msgstr "Yana ko'proq shug'ulanish kerak"
 
 #: ⁨.\templates\module 3 test\test.html⁩:82
 msgid "statusNorm"
-msgstr "Normalno"
+msgstr "Yaxshi"
 
 #: .\templates\pages\auth\login.html:17
 msgid "Выберите ученика"
@@ -210,3 +210,15 @@ msgstr "Ismingizni kiriting"
 
 msgid "lastNameInput"
 msgstr "Familiyangizni kiriting"
+
+msgid "quesOf"
+msgstr "ta savoldan"
+
+msgid "SelfStudy"
+msgstr "O'rganib va bilimni tekshirish"
+
+msgid "about"
+msgstr "Kriptologiya maktabi"
+
+msgid "resultText"
+msgstr "Hurmatli, <b>{last_name} {first_name}</b>, siz <p>{total}</p> ta savoldan <p>{score}</p> ta to'g'ri javob berdingiz"

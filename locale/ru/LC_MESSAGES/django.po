@@ -212,3 +212,15 @@ msgstr "Введите ваше имя"
 
 msgid "lastNameInput"
 msgstr "Введите вашу фамилию"
+
+msgid "quesOf"
+msgstr "вопрос(а) из"
+
+msgid "SelfStudy"
+msgstr "Учиться и проверить себя"
+
+msgid "about"
+msgstr "Школа криптологии"
+
+msgid "resultText"
+msgstr "Уважаемый(ая) <b>{last_name} {first_name}</b>, вы набрали <p>{score}</p> из <p>{total}</p>"

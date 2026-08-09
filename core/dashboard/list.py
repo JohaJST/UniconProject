@@ -4,13 +4,13 @@ from django.shortcuts import render
 from core.models import ClassRooms, Question, Result, Subject, Test, User, Variant
 
 _QUERYSETS = {
-    "subject":   lambda: Subject.objects.all(),
-    "classroom": lambda: ClassRooms.objects.all(),
+    "subject":   lambda: Subject.objects.all().order_by('-created'),
+    "classroom": lambda: ClassRooms.objects.all().order_by('-created'),
     "result":    lambda: Result.objects.select_related('user', 'test').order_by('-created'),
-    "user":      lambda: User.objects.all(),
+    "user":      lambda: User.objects.all().order_by('-created'),
     "quiz":      lambda: Test.objects.select_related('subject').order_by('-created'),
-    "variant":   lambda: Variant.objects.select_related('question').all(),
-    "question":  lambda: Question.objects.select_related('varianta__test').all(),
+    "variant":   lambda: Variant.objects.select_related('question').all().order_by('-created'),
+    "question":  lambda: Question.objects.select_related('varianta__test').all().order_by('-created'),
 }
 
 _DISPLAY_NAMES = {

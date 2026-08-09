@@ -2,7 +2,7 @@
 const start_btn = document.querySelector(".start_btn button");
 const info_box = document.querySelector(".info_box");
 const exit_btn = info_box.querySelector(".buttons .quit");
-const start_quiz_btn = document.getElementById("start_quiz_btn"); // Кнопка "Далее"
+const start_quiz_btn = document.getElementById("start_quiz_btn");
 const quiz_box = document.querySelector(".quiz_box");
 const result_box = document.querySelector(".result_box");
 const option_list = document.querySelector(".option_list");
@@ -12,7 +12,7 @@ const bottom_ques_counter = document.querySelector("footer .total_que");
 const retake_btn = document.getElementById("retake_btn");
 const final_quit_btn = document.getElementById("final_quit_btn");
 
-// Переменные для пользователя
+// Данные пользователя
 let firstName = "";
 let lastName = "";
 const fNameInput = document.getElementById("first_name");
@@ -22,15 +22,21 @@ let que_count = 0;
 let que_numb = 1;
 let userScore = 0;
 
+// Иконки для ответов
+let tickIconTag = '<div class="icon tick"><i class="fas fa-check"></i></div>';
+let crossIconTag = '<div class="icon cross"><i class="fas fa-times"></i></div>';
+
+// Открытие правил
 start_btn.onclick = ()=>{
     info_box.classList.add("activeInfo");
 }
 
+// Выход из правил
 exit_btn.onclick = ()=>{
     info_box.classList.remove("activeInfo");
 }
 
-// Проверка имени и старт теста
+// Старт теста (с проверкой имени)
 start_quiz_btn.onclick = ()=>{
     if(fNameInput.value.trim() === "" || lNameInput.value.trim() === ""){
         alert(fioReq);
@@ -45,7 +51,7 @@ start_quiz_btn.onclick = ()=>{
     queCounter(1);
 }
 
-// Кнопка Следующий вопрос
+// Кнопка "Следующий вопрос"
 next_btn.onclick = ()=>{
     if(que_count < questions.length - 1){
         que_count++;
@@ -53,17 +59,54 @@ next_btn.onclick = ()=>{
         showQuetions(que_count);
         queCounter(que_numb);
         next_btn.classList.remove("show");
-    }else{
+    } else {
         showResult();
     }
 }
 
-let tickIconTag = '<div class="icon tick"><i class="fas fa-check"></i></div>';
-let crossIconTag = '<div class="icon cross"><i class="fas fa-times"></i></div>';
+// Функция отображения вопросов и картинок
+function showQuetions(index){
+    const que_text = document.querySelector(".que_text");
+    
+    // 1. Формируем текст вопроса и картинку (если есть)
+    let que_tag = '<span class="que_title">' + questions[index].question +'</span>';
+    if (questions[index].img && questions[index].img !== "null" && questions[index].img !== "None") {
+        que_tag += '<div class="que_image_box"><img src="' + questions[index].img + '" class="que_img" alt="Question"></div>';
+    }
+    que_text.innerHTML = que_tag;
 
+    // 2. Формируем варианты ответов
+    option_list.innerHTML = "";
+    let option_tag = "";
+    
+    for (let i = 0; i < questions[index].options.length; i++) {
+        let opt = questions[index].options[i];
+        
+        // Текст варианта
+        let content = '<span class="opt_text">' + opt.text + '</span>';
+        
+        // Если есть картинка, добавляем её БЕЗ inline-стилей (всё сделаем в CSS)
+        if (opt.img && opt.img !== "null" && opt.img !== "None") {
+            content += '<img src="' + opt.img + '" class="opt_img" alt="Option">';
+        }
+    
+        option_tag += '<div class="option" onclick="optionSelected(this)">' + content + '</div>';
+    }
+    
+    option_list.innerHTML = option_tag;
+
+    const allOptions = option_list.children.length;
+    for(let i=0; i < allOptions; i++){
+        option_list.children[i].classList.remove("disabled");
+    }
+}
+
+// Функция проверки выбранного ответа
 function optionSelected(answer){
-    let userAns = answer.textContent;
+    // Важно: берем текст только из .opt_text, игнорируя картинки!
+    let userAns = answer.querySelector(".opt_text").textContent; 
     let correcAns = questions[que_count].answer;
+    
     const allOptions = option_list.children.length;
     answer.classList.add("select");
     
@@ -76,12 +119,14 @@ function optionSelected(answer){
         answer.insertAdjacentHTML("beforeend", crossIconTag);
     }
     
+    // Блокируем остальные варианты
     for(let i=0; i < allOptions; i++){
         option_list.children[i].classList.add("disabled");
     }
     next_btn.classList.add("show");
 }
 
+// Показ результатов
 function showResult(){
     info_box.classList.remove("activeInfo");
     quiz_box.classList.remove("activeQuiz");
@@ -91,13 +136,12 @@ function showResult(){
     const subtitleText = document.getElementById("subtitle_text");
     const resultIcon = document.getElementById("result_icon");
 
-    // Высчитываем процент
     let percentage = (userScore / questions.length) * 100;
     
     if (percentage >= 80) {
         statusText.innerHTML = statusNice;
         resultIcon.innerHTML = '<i class="fas fa-crown" style="color: gold;"></i>';
-        fireConfetti(); // Запуск салюта
+        fireConfetti();
     } else if (percentage >= 50) {
         statusText.innerHTML = statusNorm;
         resultIcon.innerHTML = '<i class="fas fa-thumbs-up" style="color: #007bff;"></i>';
@@ -106,15 +150,21 @@ function showResult(){
         resultIcon.innerHTML = '<i class="fas fa-dumbbell" style="color: #dc3545;"></i>';
     }
 
-    // Подставляем данные в Subtitle
-    subtitleText.innerHTML = `<span>Уважаемый(ая) <b>${lastName} ${firstName}</b>, вы набрали <p>${userScore}</p> из <p>${questions.length}</p></span>`;
-
-    // Отправляем на бэкенд
+    let finalSubtitle = subtitleTemplate
+        .replace('{last_name}', lastName)
+        .replace('{first_name}', firstName)
+        .replace('{score}', userScore)
+        .replace('{total}', questions.length);
+    
+    // Вставляем готовый текст
+    subtitleText.innerHTML = `<span>${finalSubtitle}</span>`;
+  
     sendResultToBackend();
 }
 
+// Счетчик в футере
 function queCounter(index){
-    let totalQueCounTag = '<span><p>'+ index +'</p> вопрос из <p>'+ questions.length + '</p></span>';
+    let totalQueCounTag = '<span><p>'+ index +'</p>' + quesOf + '<p>'+ questions.length + '</p></span>';
     bottom_ques_counter.innerHTML = totalQueCounTag;
 }
 
@@ -130,14 +180,13 @@ retake_btn.onclick = ()=>{
     next_btn.classList.remove("show");
 }
 
-// Выход из результатов
+// Кнопка финального выхода
 final_quit_btn.onclick = ()=>{
     window.location.href = homelink; // укажите ваш URL для главной страницы
 }
 
-// --- ФУНКЦИИ КРЕАТИВА И ОТПРАВКИ ---
+// --- ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ---
 
-// Функция эффекта салюта
 function fireConfetti() {
     let duration = 3 * 1000;
     let animationEnd = Date.now() + duration;
@@ -155,7 +204,6 @@ function fireConfetti() {
     }, 250);
 }
 
-// Функция отправки на бэкенд без перезагрузки (AJAX)
 function sendResultToBackend() {
     const form = document.getElementById("results-id");
     const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -167,19 +215,14 @@ function sendResultToBackend() {
     formData.append('total', questions.length);
     formData.append('percentage', (userScore / questions.length) * 100);
 
-    // Отправляем POST запрос на текущий URL (или укажите ваш API endpoint)
     fetch(window.location.href, {
         method: 'POST',
         headers: {
             'X-CSRFToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest' // Помечаем как AJAX запрос для Django
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
-    .then(response => {
-        console.log("Результат успешно отправлен!");
-    })
-    .catch(error => {
-        console.error("Ошибка отправки на сервер: ", error);
-    });
+    .then(response => console.log("Результат отправлен на бэкенд"))
+    .catch(error => console.error("Ошибка:", error));
 }
