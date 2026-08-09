@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-29 19:36+0500\n"
+"POT-Creation-Date: 2026-08-09 21:08+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,101 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
 "(n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: .\templates\about.html:67
+msgid "Missiya"
+msgstr ""
+
+#: .\templates\about.html:68
+msgid "Maqsad va vazifalar"
+msgstr ""
+
+#: .\templates\about.html:69
+msgid ""
+"Kriptologiya sohasida milliy xavfsizlikni ta'minlashga qaratilgan strategik "
+"yo'nalishlar"
+msgstr ""
+
+#: .\templates\about.html:86
+msgid "Kriptografik himoya"
+msgstr ""
+
+#: .\templates\about.html:87
+msgid "Ilmiy-tadqiqot"
+msgstr ""
+
+#: .\templates\about.html:115
+msgid "O'quv dasturlari"
+msgstr ""
+
+#: .\templates\about.html:116
+msgid "Kurslar"
+msgstr ""
+
+#: .\templates\about.html:117
+msgid "Zamonaviy kriptografiya va axborot xavfsizligi bo'yicha yo'nalishlar"
+msgstr ""
+
+#: .\templates\about.html:133
+msgid "Kurs"
+msgstr ""
+
+#: .\templates\about.html:142
+msgid "Kurslar hali qo'shilmagan"
+msgstr ""
+
+#: .\templates\about.html:155
+msgid "Jamoa"
+msgstr ""
+
+#: .\templates\about.html:156
+msgid "O'qituvchilar"
+msgstr ""
+
+#: .\templates\about.html:157
+msgid "Sohaning yetakchi mutaxassislari va tajribali pedagoglar jamoasi"
+msgstr ""
+
+#: .\templates\about.html:160 .\templates\about.html:197
+msgid "Oldingi"
+msgstr ""
+
+#: .\templates\about.html:177
+msgid "O'qituvchilar hali qo'shilmagan"
+msgstr ""
+
+#: .\templates\about.html:180 .\templates\about.html:220
+msgid "Keyingi"
+msgstr ""
+
+#: .\templates\about.html:192
+msgid "Yangiliklar"
+msgstr ""
+
+#: .\templates\about.html:193
+msgid "So'nggi yangiliklar"
+msgstr ""
+
+#: .\templates\about.html:194
+msgid "Kriptologiya maktabi hayotidagi eng muhim voqealar"
+msgstr ""
+
+#: .\templates\about.html:217
+msgid "Yangiliklar hali qo'shilmagan"
+msgstr ""
+
+#: .\templates\about.html:233
+msgid "Hamkorlik"
+msgstr ""
+
+#: .\templates\about.html:234
+msgid "Hamkorlar"
+msgstr ""
+
+#: .\templates\about.html:235
+msgid "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
+msgstr ""
+
 #: .\templates\base.html:32
 msgid "Тесты"
 msgstr "Тесты"
@@ -27,39 +122,93 @@ msgstr "Тесты"
 msgid "Панель управления"
 msgstr "Панель управления"
 
-#: .\templates\base.html:64
-msgid "Профиль"
-msgstr "Профиль"
-
-#: .\templates\base.html:68
-msgid "Выйти"
-msgstr "Выйти"
-
-#: .\templates\pages\auth\login.html:54
-msgid "Класс"
-msgstr "Класс"
-
-#: .\templates\pages\auth\login.html:64
-msgid "Выберите класс"
-msgstr "Выберите класс"
-
-#: .\templates\pages\auth\login.html:87
-msgid "Ученик"
-msgstr "Ученик"
-
-#: .\templates\pages\auth\login.html:96
-msgid "Сначала выберите класс"
-msgstr "Сначала выберите класс"
-
-#: .\templates\pages\auth\login.html:116
+#: .\templates\base.html:77 .\templates\pages\auth\login.html:117
 msgid "Войти"
 msgstr "Войти"
 
-#: .\templates\pages\auth\login.html:165
+#: .\templates\base.html:83
+msgid "Выйти"
+msgstr "Выйти"
+
+#: ⁨.\templates\module 3 test\test.html⁩:17
+msgid "startQuiz"
+msgstr "Начать Тест"
+
+#: ⁨.\templates\module 3 test\test.html⁩:21
+msgid "infoTitle"
+msgstr "Введите ваши данные"
+
+#: ⁨.\templates\module 3 test\test.html⁩:24
+msgid "firstName"
+msgstr "Имя:"
+
+#: ⁨.\templates\module 3 test\test.html⁩:28
+msgid "lastName"
+msgstr "Фамилия:"
+
+#: ⁨.\templates\module 3 test\test.html⁩:33
+#: ⁨.\templates\module 3 test\test.html⁩:66
+msgid "quit"
+msgstr "Выйти"
+
+#: ⁨.\templates\module 3 test\test.html⁩:34
+#: ⁨.\templates\module 3 test\test.html⁩:49
+msgid "next"
+msgstr "Далее"
+
+#: ⁨.\templates\module 3 test\test.html⁩:59
+msgid "completeText"
+msgstr "Тест закончен"
+
+#: ⁨.\templates\module 3 test\test.html⁩:65
+msgid "retake"
+msgstr "Пройти заново"
+
+#: ⁨.\templates\module 3 test\test.html⁩:78
+msgid "fioReq"
+msgstr "Пожалуйста, введите ваше имя и фамилию для начала теста."
+
+#: ⁨.\templates\module 3 test\test.html⁩:79
+msgid "statusNice"
+msgstr "Молодец!"
+
+#: ⁨.\templates\module 3 test\test.html⁩:80
+msgid "statusBad"
+msgstr "Нужно потренироваться"
+
+#: ⁨.\templates\module 3 test\test.html⁩:82
+msgid "statusNorm"
+msgstr "Нормально"
+
+#: .\templates\pages\auth\login.html:17
 msgid "Выберите ученика"
 msgstr "Выберите ученика"
 
-#: .\templates\pages\auth\login.html:165
+#: .\templates\pages\auth\login.html:29
 msgid "Войдите в свою учётную запись"
 msgstr "Войдите в свою учётную запись"
 
+#: .\templates\pages\auth\login.html:55
+msgid "Класс"
+msgstr "Класс"
+
+#: .\templates\pages\auth\login.html:65
+msgid "Выберите класс"
+msgstr "Выберите класс"
+
+#: .\templates\pages\auth\login.html:88
+msgid "Ученик"
+msgstr "Ученик"
+
+#: .\templates\pages\auth\login.html:97
+msgid "Сначала выберите класс"
+msgstr "Сначала выберите класс"
+
+#~ msgid "Профиль"
+#~ msgstr "Профиль"
+
+msgid "firstNameInput"
+msgstr "Введите ваше имя"
+
+msgid "lastNameInput"
+msgstr "Введите вашу фамилию"

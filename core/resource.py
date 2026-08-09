@@ -18,6 +18,11 @@ from .models import (
     Courses,
     Teachers,
     News,
+    SelfAnswer,
+    SelfQuestion,
+    SelfResult,
+    SelfStudy,
+    SelfImg,
 )
 
 
@@ -133,4 +138,34 @@ class NewsResource(resources.ModelResource):
             'desc_uz', 'desc_ru', 'desc_en', 'photo',
             'date',
         )
-        
+
+class SelfAnswerResource(resources.ModelResource):
+    class Meta:
+        model = SelfAnswer
+        fields = (
+            'id', 'question', 'text_uz', 'text_ru', 'text_en', 'img', 'is_correct',
+        )
+
+
+class SelfQuestionResource(resources.ModelResource):
+    class Meta:
+        model = SelfQuestion
+        fields = (
+            'id', 'text_uz', 'text_ru', 'text_en', 'img',
+        )
+
+class SelfStudyResource(resources.ModelResource):
+    class Meta:
+        model = SelfStudy
+        fields = (
+            'id', 'html_text_uz', 'html_text_ru', 'html_text_en',
+        )
+
+class SelfImgResource(resources.ModelResource):
+    class Meta:
+        model = SelfImg
+
+class SelfResultResource(resources.ModelResource):
+    class Meta:
+        model = SelfResult
+

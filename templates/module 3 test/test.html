@@ -1,111 +1,117 @@
 <html lang="en">
 {% load static %}
+{% load i18n %}
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ APP_NAME }} // {{ test.name }}</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
-    <!-- FontAweome CDN Link for Icons -->
+    <title>{{ APP_NAME }} // Self-Check</title>
+    <link rel="stylesheet" href="{% static 'module3test/style.css' %}">
+    <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <!-- Подключаем библиотеку для салюта -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <style>
-        a{
-        text-decoration: None;
-        }
-    </style>
-    {% if test.is_start %}
     <!-- start Quiz button -->
-        <div class="start_btn"><button>Начать Тест</button></div>
+    <div class="start_btn"><button>{% trans 'startQuiz' %}</button></div>
     
-        <!-- Info Box -->
-        <div class="info_box">
-            <div class="info-title"><span>Правила теста</span></div>
-            <div class="info-list">
-                <div class="info">1. После того как вы выберете ответ, его нельзя будет отменить.</div>
-                <div class="info">2. После оканчение теста нвжмите на кнопку выйти</div>
-                <div class="info">3. Вы получите баллы за правильные ответы</div>
-                <div class="info">4. Сколько баллов вы набрали можно будет посмотреть когда вы закончите тест</div>
-
+    <!-- Info Box (теперь с полями для ввода) -->
+    <div class="info_box">
+        <div class="info-title"><span>{% trans 'infoTitle' %}</span></div>
+        <div class="info-list">
+            <div class="input-group">
+                <label for="first_name">{% trans 'firstName' %}</label>
+                <input type="text" id="first_name" placeholder="{% trans 'firstNameInput' %}" required>
             </div>
-            <div class="buttons">
-                <button class="quit"><a href="{% url 'home' %}">Выйти</a></button>
-                <button class="restart">Далее</button>
+            <div class="input-group">
+                <label for="last_name">{% trans 'lastName' %}</label>
+                <input type="text" id="last_name" placeholder="{% trans 'lastNameInput' %}" required>
             </div>
         </div>
-    
-        <!-- Quiz Box -->
-        <div class="quiz_box">
-            <header>
-                <div class="title">{{ APP_NAME }}</div>
-            </header>
-            <section>
-                <div class="que_text">
-                    <!-- Here I've inserted question from JavaScript -->
-                </div>
-                <div class="option_list">
-                    <!-- Here I've inserted options from JavaScript -->
-                    {% for v in variant %}{% if v.question_id == question.first.id %}
-                        <div class="option"><span>1</span></div>
-                    {% endif %} {% endfor %}
-                </div>
-            </section>
-    
-            <!-- footer of Quiz Box -->
-            <footer>
-                <div class="total_que">
-                    <!-- Here I've inserted Question Count Number from JavaScript -->
-                </div>
-                <button class="next_btn">Cледуюший вопрос</button>
-            </footer>
+        <div class="buttons">
+            <button class="quit"><a href="{% url 'home' %}" style="text-decoration:none; color:inherit;">{% trans 'quit' %}</a></button>
+            <button class="restart" id="start_quiz_btn">{% trans 'next' %}</button>
         </div>
+    </div>
     
-        <!-- Result Box -->
-        <div class="result_box">
-            <div class="icon">
-                <i class="fas fa-crown"></i>
-            </div>
-            <div class="complete_text">Тест закончен</div>
-            <div class="score_text">
-                <!-- Here I've inserted Score Result from JavaScript -->
-            </div>
-            <div class="buttons">
-                <form method="post" id="results-id">
-                    {% csrf_token %}
-        {#            <button class="restart">Replay Quiz</button>#}
-                        <div class="result_for_backend"></div>
-                    <button type="submit" class="quit">Выйти</button>
-                </form>
-            </div>
-        </div>
-    {% else %}
-        <div class="wait-text"><h1>Ждём начала теста...</h1></div>
-    {% endif %}
+    <!-- Quiz Box -->
+    <div class="quiz_box">
+        <header>
+            <div class="title">{{ APP_NAME }}</div>
+        </header>
+        <section>
+            <div class="que_text"></div>
+            <div class="option_list"></div>
+        </section>
+        <footer>
+            <div class="total_que"></div>
+            <button class="next_btn">{% trans 'next' %}</button>
+        </footer>
+    </div>
+    
+               <!-- Result Box -->
+               <div class="result_box">
+                       <div class="icon" id="result_icon">
+                           <i class="fas fa-crown"></i>
+                       </div>
+                       <!-- Title (Status) -->
+                       <div class="complete_text" id="status_text">{% trans 'completeText' %}</div>
+                       <!-- Subtitle -->
+                       <div class="score_text" id="subtitle_text">
+                           <!-- Сюда подставится текст через JS -->
+                       </div>
+                       <div class="buttons">
+                           <button class="restart" id="retake_btn">{% trans 'retake' %}</button>
+                           <button class="quit" id="final_quit_btn">{% trans 'quit' %}</button>
+                       </div>
+                       <!-- Скрытая форма, нужна только чтобы взять CSRF токен для JS запроса -->
+                       <form id="results-id" style="display: none;">
+                           {% csrf_token %}
+                       </form>
+                   </div>
+                   
     <!-- Inside this JavaScript file I've coded all Quiz Codes -->
-    <script src="{% static 'script.js' %}"></script>
+    <script src="{% static 'module3test/script.js' %}"></script>
     <script>
+    const homelink = "{% url 'about'|escapejs %}";
+    const fioReq = "{% trans 'fioReq'|escapejs %}";
+    const statusNice = "{% trans 'statusNice'|escapejs %}";
+    {% trans "statusBad" as statusBad_t %}
+    const statusBad = "{{ statusBad_t|escapejs }}";
+    const statusNorm = "{% trans 'statusNorm'|escapejs %}";
+
+    
         function showQuetions(index){
     const que_text = document.querySelector(".que_text");
 
     {#//creating a new span and div tag for question and option and passing the value using array index#}
     {#let que_tag = '<span>'+ questions[index].numb + ". " + questions[index].question +'</span>';#}
+    // console.log(index, questions[index]);
     let que_tag = '<span>' + questions[index].question +'</span>';
+
     {#let option_tag = {% for q in question %}{% for v in variant %}{% if v.question_id == q.id %}#}
     {#    '<div class="option"><span>'+ questions[index].options[{{ forloop.counter0 }}] +'</span></div>'{% endif %}{% endfor %}{% endfor %};#}
+
     que_text.innerHTML = que_tag; //adding new span tag inside que_tag
+
     {#option_list.innerHTML = option_tag; //adding new div tag inside option_tag#}
 
+    option_list.innerHTML = "";
+    let option_tag = "";
     const option = option_list.querySelectorAll(".option");
     {#option.innerHTML = "Test"#}
     var myClasses = document.getElementsByClassName("option");
 
-    for (var i = 0; i < myClasses.length; i++) {
-      myClasses[i].innerHTML = questions[index].options[i];
-      }
-    // set onclick attribute to all available options
-    for(i=0; i < option.length; i++){
-        option[i].setAttribute("onclick", "optionSelected(this)");
+    for (let i = 0; i < questions[index].options.length; i++) {
+        // Формируем HTML для каждого варианта и сразу вешаем onclick
+        option_tag += '<div class="option" onclick="optionSelected(this)"><span>' + questions[index].options[i] + '</span></div>';
     }
+    
+    // Вставляем сгенерированные варианты в контейнер
+    option_list.innerHTML = option_tag;
+    // set onclick attribute to all available options
+
     const allOptions = option_list.children.length; //getting all option items
 
     for(i=0; i < allOptions; i++){
@@ -115,24 +121,28 @@
     </script>
     <script> 
     let questions = [
-        {% for q in question %}
-            {
+        {% for q in questions %}
+        {
             numb: {{ q.id }},
-            question: "{{ q.text }}",
-            {% for a in variant %}
-                {% if a.question_id == q.id and a.is_answer %}
-                    answer: "{{ a.text }}",
+            // Используем escapejs, чтобы кавычки внутри текста не сломали JS код
+            question: "{{ q.text|escapejs }}",
+            
+            // Отдельно ищем правильный ответ и выводим его
+            {% for a in q.answers %}
+                {% if a.is_correct %}
+                    answer: "{{ a.text|escapejs }}",
                 {% endif %}
             {% endfor %}
+            
+            // Здесь выводим только список вариантов
             options: [
-                {% for v in variant %}
-                    {% if v.question_id == q.id %}
-                        "{{ v.text }}",
-                    {% endif %}
+                {% for a in q.answers %}
+                    "{{ a.text|escapejs }}"{% if not forloop.last %},{% endif %}
                 {% endfor %}
             ]
-          },
+        }{% if not forloop.last %},{% endif %}
         {% endfor %}
+    ];
   // you can uncomment the below codes and make duplicate as more as you want to add question
   // but remember you need to give the numb value serialize like 1,2,3,5,6,7,8,9.....
 
@@ -147,7 +157,7 @@
   //     "option 4"
   //   ]
   // },
-];
+
     </script>
 </body>
 </html>

@@ -20,6 +20,11 @@ from core.models import (
     Courses,
     Teachers,
     News,
+    SelfAnswer,
+    SelfQuestion,
+    SelfResult,
+    SelfStudy,
+    SelfImg,
 )
 
 from .resource import (
@@ -40,6 +45,11 @@ from .resource import (
     CoursesResource,
     TeachersResource,
     NewsResource,
+    SelfAnswerResource,
+    SelfQuestionResource,
+    SelfResultResource,
+    SelfStudyResource,
+    SelfImgResource,
 )
 
 
@@ -109,6 +119,21 @@ class TeachersAdmin(TranslationAdmin, ImportExportModelAdmin):
 class NewsAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = NewsResource
 
+class SelfResultAdmin(ImportExportModelAdmin):
+    resource_class = SelfResultResource
+
+class SelfAnswerAdmin(TranslationAdmin, ImportExportModelAdmin):
+    resource_class = SelfAnswerResource
+
+class SelfQuestionAdmin(TranslationAdmin, ImportExportModelAdmin):
+    resource_class = SelfQuestionResource
+
+class SelfStudyAdmin(TranslationAdmin, ImportExportModelAdmin):
+    resource_class = SelfStudyResource
+
+class SelfImgAdmin(ImportExportModelAdmin):
+    resource_class = SelfImgResource
+
 
 admin.site.register(User, UserAdmin)
 admin.site.register(TG_User, TgUserAdmin)
@@ -127,5 +152,9 @@ admin.site.register(About, AboutAdmin)
 admin.site.register(Courses, CoursesAdmin)
 admin.site.register(Teachers, TeachersAdmin)
 admin.site.register(News, NewsAdmin)
-
+admin.site.register(SelfResult, SelfResultAdmin)
+admin.site.register(SelfAnswer, SelfAnswerAdmin)
+admin.site.register(SelfQuestion, SelfQuestionAdmin)
+admin.site.register(SelfStudy, SelfStudyAdmin)
+admin.site.register(SelfImg, SelfImgAdmin)
 

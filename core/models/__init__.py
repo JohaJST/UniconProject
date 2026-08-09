@@ -17,3 +17,5 @@ from .about import (
     Teachers,
     News,
 )
+
+from .self import SelfImg, SelfAnswer, SelfQuestion, SelfResult, SelfStudy

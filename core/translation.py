@@ -14,7 +14,7 @@ from modeltranslation.translator import register, TranslationOptions
 
 from core.models import Subject, Test, Question, Variant
 from core.models import About, Teachers, Courses, News
-
+from core.models import SelfAnswer, SelfQuestion, SelfStudy
 
 @register(Subject)
 class SubjectTranslationOptions(TranslationOptions):
@@ -59,3 +59,18 @@ class CoursesTranslationOptions(TranslationOptions):
 class NewsTranslationOptions(TranslationOptions):
     fields = ('title', 'desc',)
 
+
+@register(SelfAnswer)
+class SelfAnswerTranslationOptions(TranslationOptions):
+    fields = ('text',)
+
+
+@register(SelfQuestion)
+class SelfQuestionTranslationOptions(TranslationOptions):
+    fields = ('text',)
+
+
+@register(SelfStudy)
+class SelfStudyTranslationOptions(TranslationOptions):
+    fields = ('html_text',)
+    

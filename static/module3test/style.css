@@ -338,18 +338,6 @@ footer button.show{
     font-weight: 500;
 }
 
-.result_box .score_text span{
-    display: flex;
-    margin: 10px 0;
-    font-size: 18px;
-    font-weight: 500;
-}
-
-.result_box .score_text span p{
-    padding: 0 4px;
-    font-weight: 600;
-}
-
 .result_box .buttons{
     display: flex;
     margin: 20px 0;
@@ -391,4 +379,69 @@ footer button.show{
     background-color: green;
     margin: 0 auto;
     text-align: center;
+}
+
+/* Стили для полей Имя и Фамилия */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+.input-group label {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+}
+.input-group input {
+    height: 45px;
+    border-radius: 5px;
+    border: 1px solid #b8daff;
+    padding: 0 15px;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    transition: all 0.3s ease;
+}
+.input-group input:focus {
+    border-color: #007bff;
+    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Красивая анимация появления результатов */
+.result_box.activeResult {
+    animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceIn {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* Адаптация текста в результате */
+.result_box .complete_text {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 10px;
+    color: #333;
+}
+.result_box .score_text span {
+    display: block; /* Меняем flex на block */
+    text-align: center; /* Выравниваем весь текст по центру */
+    margin: 10px 0;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.5; /* Добавляем межстрочный интервал, чтобы при переносе строки не слипались */
+}
+
+.result_box .score_text span p {
+    display: inline; /* Делаем <p> строчным элементом, чтобы он не ломал строку */
+    padding: 0 4px;
+    font-weight: 600;
+}
+
+.result_box .score_text span b {
+    color: #007bff;
+    word-break: break-word; /* Позволяет длинному имени перенестись, если оно вообще не влезает */
 }

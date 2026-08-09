@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-29 19:36+0500\n"
+"POT-Creation-Date: 2026-08-09 21:08+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,101 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#: .\templates\about.html:67
+msgid "Missiya"
+msgstr ""
+
+#: .\templates\about.html:68
+msgid "Maqsad va vazifalar"
+msgstr ""
+
+#: .\templates\about.html:69
+msgid ""
+"Kriptologiya sohasida milliy xavfsizlikni ta'minlashga qaratilgan strategik "
+"yo'nalishlar"
+msgstr ""
+
+#: .\templates\about.html:86
+msgid "Kriptografik himoya"
+msgstr ""
+
+#: .\templates\about.html:87
+msgid "Ilmiy-tadqiqot"
+msgstr ""
+
+#: .\templates\about.html:115
+msgid "O'quv dasturlari"
+msgstr ""
+
+#: .\templates\about.html:116
+msgid "Kurslar"
+msgstr ""
+
+#: .\templates\about.html:117
+msgid "Zamonaviy kriptografiya va axborot xavfsizligi bo'yicha yo'nalishlar"
+msgstr ""
+
+#: .\templates\about.html:133
+msgid "Kurs"
+msgstr ""
+
+#: .\templates\about.html:142
+msgid "Kurslar hali qo'shilmagan"
+msgstr ""
+
+#: .\templates\about.html:155
+msgid "Jamoa"
+msgstr ""
+
+#: .\templates\about.html:156
+msgid "O'qituvchilar"
+msgstr ""
+
+#: .\templates\about.html:157
+msgid "Sohaning yetakchi mutaxassislari va tajribali pedagoglar jamoasi"
+msgstr ""
+
+#: .\templates\about.html:160 .\templates\about.html:197
+msgid "Oldingi"
+msgstr ""
+
+#: .\templates\about.html:177
+msgid "O'qituvchilar hali qo'shilmagan"
+msgstr ""
+
+#: .\templates\about.html:180 .\templates\about.html:220
+msgid "Keyingi"
+msgstr ""
+
+#: .\templates\about.html:192
+msgid "Yangiliklar"
+msgstr ""
+
+#: .\templates\about.html:193
+msgid "So'nggi yangiliklar"
+msgstr ""
+
+#: .\templates\about.html:194
+msgid "Kriptologiya maktabi hayotidagi eng muhim voqealar"
+msgstr ""
+
+#: .\templates\about.html:217
+msgid "Yangiliklar hali qo'shilmagan"
+msgstr ""
+
+#: .\templates\about.html:233
+msgid "Hamkorlik"
+msgstr ""
+
+#: .\templates\about.html:234
+msgid "Hamkorlar"
+msgstr ""
+
+#: .\templates\about.html:235
+msgid "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
+msgstr ""
+
 #: .\templates\base.html:32
 msgid "Тесты"
 msgstr "Testlar"
@@ -25,38 +120,93 @@ msgstr "Testlar"
 msgid "Панель управления"
 msgstr "Boshqaruv paneli"
 
-#: .\templates\base.html:64
-msgid "Профиль"
-msgstr "Profil"
-
-#: .\templates\base.html:68
-msgid "Выйти"
-msgstr "Chiqish"
-
-#: .\templates\pages\auth\login.html:54
-msgid "Класс"
-msgstr "Sinf"
-
-#: .\templates\pages\auth\login.html:64
-msgid "Выберите класс"
-msgstr "Sinfni tanlang"
-
-#: .\templates\pages\auth\login.html:87
-msgid "Ученик"
-msgstr "O'quvchi"
-
-#: .\templates\pages\auth\login.html:96
-msgid "Сначала выберите класс"
-msgstr "Sinfni tanlang"
-
-#: .\templates\pages\auth\login.html:116
+#: .\templates\base.html:77 .\templates\pages\auth\login.html:117
 msgid "Войти"
 msgstr "Kirish"
 
-#: .\templates\pages\auth\login.html:165
+#: .\templates\base.html:83
+msgid "Выйти"
+msgstr "Chiqish"
+
+#: ⁨.\templates\module 3 test\test.html⁩:17
+msgid "startQuiz"
+msgstr "Testni boshlash"
+
+#: ⁨.\templates\module 3 test\test.html⁩:21
+msgid "infoTitle"
+msgstr "Ma'lumotlaringizni kiriting"
+
+#: ⁨.\templates\module 3 test\test.html⁩:24
+msgid "firstName"
+msgstr "Ismingiz:"
+
+#: ⁨.\templates\module 3 test\test.html⁩:28
+msgid "lastName"
+msgstr "Familiyangiz:"
+
+#: ⁨.\templates\module 3 test\test.html⁩:33
+#: ⁨.\templates\module 3 test\test.html⁩:66
+msgid "quit"
+msgstr "Chiqish"
+
+#: ⁨.\templates\module 3 test\test.html⁩:34
+#: ⁨.\templates\module 3 test\test.html⁩:49
+msgid "next"
+msgstr "Keyingisi"
+
+#: ⁨.\templates\module 3 test\test.html⁩:59
+msgid "completeText"
+msgstr "Test tugadi"
+
+#: ⁨.\templates\module 3 test\test.html⁩:65
+msgid "retake"
+msgstr "Qayta boshlash"
+
+#: ⁨.\templates\module 3 test\test.html⁩:78
+msgid "fioReq"
+msgstr "Iltimos, ismingiz va familiyangizni kiriting, testni boshlash uchun."
+
+#: ⁨.\templates\module 3 test\test.html⁩:79
+msgid "statusNice"
+msgstr "Barakalla!"
+
+#: ⁨.\templates\module 3 test\test.html⁩:80
+msgid "statusBad"
+msgstr "Yana ko'proq shug'ulanish kerak"
+
+#: ⁨.\templates\module 3 test\test.html⁩:82
+msgid "statusNorm"
+msgstr "Normalno"
+
+#: .\templates\pages\auth\login.html:17
 msgid "Выберите ученика"
 msgstr "O'quvchini tanlang"
 
-#: .\templates\pages\auth\login.html:165
+#: .\templates\pages\auth\login.html:29
 msgid "Войдите в свою учётную запись"
 msgstr "Hisobingizga kiring"
+
+#: .\templates\pages\auth\login.html:55
+msgid "Класс"
+msgstr "Sinf"
+
+#: .\templates\pages\auth\login.html:65
+msgid "Выберите класс"
+msgstr "Sinfni tanlang"
+
+#: .\templates\pages\auth\login.html:88
+msgid "Ученик"
+msgstr "O'quvchi"
+
+#: .\templates\pages\auth\login.html:97
+msgid "Сначала выберите класс"
+msgstr "Sinfni tanlang"
+
+#~ msgid "Профиль"
+#~ msgstr "Profil"
+
+msgid "firstNameInput"
+msgstr "Ismingizni kiriting"
+
+msgid "lastNameInput"
+msgstr "Familiyangizni kiriting"

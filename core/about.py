@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from core.models import About, Courses, News, Partners, Teachers
+from core.models import About, Courses, News, Partners, Teachers, Test
 
 
 def about(request):
@@ -36,4 +36,38 @@ def self(request):
 
 
 def self_check(request):
-    return render(request, "self_check.html")
+    if request.method == "POST":
+        print(request.POST)
+        
+    test = (
+                Test.objects
+                .only('id', 'name', 'desc')
+                .prefetch_related('variantas__questions__answers')
+                .get(id=10)
+            )
+
+    questions_list = []
+    for v_test in test.variantas.all():
+        for question in v_test.questions.all():
+            questions_list.append({
+                "id": question.id,
+                "text": question.text,
+                "img": question.img.url if question.img else None,
+                # "answer": question.answers.text if question.answers.is_answer else None,
+                "answers": [
+                    {
+                        "id": answer.id,
+                        "text": answer.text,
+                        "is_correct": answer.is_answer,
+                        # "img": answer.img.url if answer.img else None,
+                    }
+                    for answer in question.answers.all()
+                ]
+            })
+    print(questions_list)
+    ctx = {
+        "questions": questions_list
+    }
+    return render(request, "module 3 test/test.html", ctx)
+    
+    
