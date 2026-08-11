@@ -6,10 +6,12 @@ from django.db import models
 class SelfQuestion(models.Model):
     text = models.CharField(max_length=255)
     img = models.ImageField(upload_to='self_questions/', null=True, blank=True)
+    needs_review = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.id} // {self.text} // {"Yes" if self.img else "No"}"
+        return f"{self.id} // {self.text} // {'Yes' if self.img else 'No'}"
 
+        
 class SelfAnswer(models.Model):
     question = models.ForeignKey(SelfQuestion, on_delete=models.CASCADE)
     text = models.CharField(max_length=255)
