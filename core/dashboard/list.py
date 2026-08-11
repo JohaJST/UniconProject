@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from core.models import ClassRooms, Question, Result, Subject, Test, User, Variant
-from core.models.self import SelfQuestion
+from core.models.self import SelfQuestion, SelfResult
 
 _QUERYSETS = {
     "subject":      lambda: Subject.objects.all().order_by('-created'),
@@ -12,7 +12,8 @@ _QUERYSETS = {
     "quiz":         lambda: Test.objects.select_related('subject').order_by('-created'),
     "variant":      lambda: Variant.objects.select_related('question').all().order_by('-created'),
     "question":     lambda: Question.objects.select_related('varianta__test').all().order_by('-created'),
-    "selfquestion": lambda: SelfQuestion.objects.all().order_by('-id'),
+    "selfquestion": lambda: SelfQuestion.objects.prefetch_related('selfanswer_set').order_by('-id'),
+    "selfresult":   lambda: SelfResult.objects.order_by('-created'),
 }
 
 _DISPLAY_NAMES = {
@@ -24,6 +25,7 @@ _DISPLAY_NAMES = {
     "variant":      "Variant",
     "question":     "Question",
     "selfquestion": "Self Question",
+    "selfresult":   "Self Result",
 }
 
 

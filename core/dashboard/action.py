@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.files.storage import default_storage
 from django.shortcuts import redirect, render
 import datetime
 
@@ -12,6 +13,7 @@ from core.models import (
     User,
     Variant,
 )
+from core.models.self import SelfQuestion, SelfResult
 
 
 @login_required(login_url="login")
@@ -117,6 +119,30 @@ def action(request, status, path, pk=None):
             return redirect("dlist", tip=path)
         elif path == "user":
             User.objects.filter(id=pk).delete()
+            return redirect("dlist", tip=path)
+        elif path == "selfquestion":
+            q = SelfQuestion.objects.prefetch_related("selfanswer_set").get(id=pk)
+
+            # Собираем пути ко всем файлам ДО удаления записей из БД —
+            # после q.delete() доступ к q.img / answer.img через ORM уже
+            # недоступен (объекты каскадно удалены).
+            image_names = []
+            if q.img:
+                image_names.append(q.img.name)
+            for answer in q.selfanswer_set.all():
+                if answer.img:
+                    image_names.append(answer.img.name)
+
+            q.delete()
+
+            # Физически удаляем файлы с диска — Django не делает этого
+            # автоматически при удалении модели.
+            for name in image_names:
+                default_storage.delete(name)
+
+            return redirect("dlist", tip=path)
+        elif path == "selfresult":
+            SelfResult.objects.get(id=pk).delete()
             return redirect("dlist", tip=path)
         else:
             return redirect("dlist", tip=path)
