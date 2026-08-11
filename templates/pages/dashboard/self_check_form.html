@@ -461,5 +461,488 @@
         document.getElementById('selfCheckForm').submit();
     }
 </script>
+
+<script>
+    const AI_URL = "{% url 'ai_translate' %}";
+
+    /* ─── CSRF helper ─── */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Answer rows: add / remove
+    ═══════════════════════════════════════════════════════════ */
+    let answerIdx = document.querySelectorAll('[data-answer-row]').length;
+
+    function updateRemoveButtonsState() {
+        const rows = document.querySelectorAll('[data-answer-row]');
+        const disabled = rows.length <= 2;
+        rows.forEach(row => {
+            const btn = row.querySelector('button[onclick^="removeAnswerRow"]');
+            if (!btn) return;
+            btn.disabled = disabled;
+            btn.classList.toggle('opacity-30', disabled);
+            btn.classList.toggle('cursor-not-allowed', disabled);
+        });
+    }
+
+    function addAnswerField() {
+        const idx = answerIdx;
+        answerIdx++;
+
+        const container = document.getElementById('answerFields');
+        const row = document.createElement('div');
+        row.className = 'answer-row bg-slate-900 rounded-xl border border-slate-700 p-4';
+        row.setAttribute('data-answer-row', '');
+        row.innerHTML = `
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <label class="flex items-center gap-2 shrink-0 cursor-pointer">
+                    <input type="checkbox"
+                           name="answer_correct_${idx}"
+                           value="1"
+                           class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
+                                  focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
+                    <span class="text-xs text-slate-400 whitespace-nowrap">Верный ответ</span>
+                </label>
+                <button type="button" onclick="removeAnswerRow(this)"
+                        class="text-slate-500 hover:text-rose-400 transition-colors p-1 shrink-0">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <textarea name="answer_text_${idx}"
+                          data-role="answer-main"
+                          rows="2"
+                          placeholder="Текст варианта ответа..."
+                          required
+                          class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5
+                                 text-white placeholder-slate-500 text-sm resize-none
+                                 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                 transition-colors"></textarea>
+
+                <input type="hidden" name="answer_text_${idx}_uz" class="answer-hidden-uz" value="">
+                <input type="hidden" name="answer_text_${idx}_ru" class="answer-hidden-ru" value="">
+                <input type="hidden" name="answer_text_${idx}_en" class="answer-hidden-en" value="">
+            </div>
+
+            <div class="translation-tabs hidden mt-2 mb-3 pl-3 border-l-2 border-slate-700 space-y-1.5"
+                 data-translation-block>
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">UZ</span>
+                    <textarea rows="2" class="answer-tab-uz w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                              text-white text-xs placeholder-slate-500 resize-none
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors"></textarea>
+                </div>
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">RU</span>
+                    <textarea rows="2" class="answer-tab-ru w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                              text-white text-xs placeholder-slate-500 resize-none
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors"></textarea>
+                </div>
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">EN</span>
+                    <textarea rows="2" class="answer-tab-en w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                              text-white text-xs placeholder-slate-500 resize-none
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors"></textarea>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[11px] font-medium text-slate-500 mb-1 block">Изображение варианта (необязательно)</label>
+                <input type="file" name="answer_image_${idx}" accept="image/*"
+                       class="w-full text-[11px] text-slate-400 bg-slate-800 border border-slate-600
+                              rounded-lg px-2.5 py-1.5
+                              file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0
+                              file:bg-indigo-600 file:text-white file:text-[11px] file:font-medium
+                              file:cursor-pointer cursor-pointer">
+            </div>
+        `;
+        container.appendChild(row);
+
+        wireAnswerRow(row);
+        invalidateTranslation();
+        updateRemoveButtonsState();
+    }
+
+    function removeAnswerRow(btn) {
+        const row = btn.closest('[data-answer-row]');
+        const allRows = document.querySelectorAll('[data-answer-row]');
+        if (allRows.length <= 2) return; // минимум 2 варианта
+        if (row) row.remove();
+        invalidateTranslation();
+        updateRemoveButtonsState();
+    }
+
+    /* Wires main textarea + translation tab textareas of one answer row */
+    function wireAnswerRow(row) {
+        const mainTa = row.querySelector('textarea[data-role="answer-main"]');
+        if (mainTa) mainTa.addEventListener('input', invalidateTranslation);
+
+        const tabUz = row.querySelector('.answer-tab-uz');
+        const tabRu = row.querySelector('.answer-tab-ru');
+        const tabEn = row.querySelector('.answer-tab-en');
+        const hidUz = row.querySelector('.answer-hidden-uz');
+        const hidRu = row.querySelector('.answer-hidden-ru');
+        const hidEn = row.querySelector('.answer-hidden-en');
+
+        if (tabUz && hidUz) tabUz.addEventListener('input', () => { hidUz.value = tabUz.value; });
+        if (tabRu && hidRu) tabRu.addEventListener('input', () => { hidRu.value = tabRu.value; });
+        if (tabEn && hidEn) tabEn.addEventListener('input', () => { hidEn.value = tabEn.value; });
+    }
+
+    /* Wire rows already rendered by the server */
+    document.querySelectorAll('[data-answer-row]').forEach(wireAnswerRow);
+    updateRemoveButtonsState();
+
+    /* Question main textarea + tabs (tabs already have inline oninput in template
+       that write straight into the hidden fields, so we only need invalidation). */
+    const questionMainTa = document.getElementById('question-text');
+    if (questionMainTa) questionMainTa.addEventListener('input', invalidateTranslation);
+
+    /* ═══════════════════════════════════════════════════════════
+       Toasts
+    ═══════════════════════════════════════════════════════════ */
+    function getToastContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    function showToast(message, type = 'error') {
+        const container = getToastContainer();
+        const toast = document.createElement('div');
+        const colors = type === 'success'
+            ? 'bg-emerald-600 border-emerald-500'
+            : 'bg-rose-600 border-rose-500';
+        toast.className = `${colors} text-white text-sm font-medium px-4 py-3 rounded-xl
+                            shadow-xl border max-w-xs
+                            translate-x-4 opacity-0 transition-all duration-300 ease-out`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-4', 'opacity-0');
+            });
+        });
+
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-4');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Reveal translation blocks
+    ═══════════════════════════════════════════════════════════ */
+    function revealBlock(block, noteEl, isMissing) {
+        if (!block) return;
+
+        block.classList.remove('hidden');
+        block.style.maxHeight = '0px';
+        block.style.opacity = '0';
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                block.style.maxHeight = '500px';
+                block.style.opacity = '1';
+            });
+        });
+
+        if (noteEl) {
+            if (isMissing) {
+                noteEl.classList.remove('hidden');
+                noteEl.classList.add('flex');
+                block.classList.add('border-amber-500');
+                block.classList.remove('border-slate-700');
+            } else {
+                noteEl.classList.add('hidden');
+                noteEl.classList.remove('flex');
+                block.classList.remove('border-amber-500');
+                block.classList.add('border-slate-700');
+            }
+        } else if (isMissing) {
+            block.classList.add('border-amber-500');
+            block.classList.remove('border-slate-700');
+        } else {
+            block.classList.remove('border-amber-500');
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Applying AI translations
+    ═══════════════════════════════════════════════════════════ */
+    function applyTranslation(id, uz, ru, en, isMissing) {
+        if (id === 'question_text') {
+            const hidUz = document.getElementById('question-text-uz');
+            const hidRu = document.getElementById('question-text-ru');
+            const hidEn = document.getElementById('question-text-en');
+            const tabUz = document.getElementById('question-tab-uz');
+            const tabRu = document.getElementById('question-tab-ru');
+            const tabEn = document.getElementById('question-tab-en');
+
+            if (hidUz) hidUz.value = uz || '';
+            if (hidRu) hidRu.value = ru || '';
+            if (hidEn) hidEn.value = en || '';
+            if (tabUz) tabUz.value = uz || '';
+            if (tabRu) tabRu.value = ru || '';
+            if (tabEn) tabEn.value = en || '';
+
+            revealBlock(
+                document.getElementById('translationTabs_question'),
+                document.getElementById('missingNote_question'),
+                isMissing
+            );
+            return;
+        }
+
+        const m = id.match(/^answer_text_(\d+)$/);
+        if (m) {
+            const idx = m[1];
+            const mainTa = document.querySelector(`textarea[name="answer_text_${idx}"]`);
+            const row = mainTa ? mainTa.closest('[data-answer-row]') : null;
+            if (!row) return;
+
+            const hidUz = row.querySelector('.answer-hidden-uz');
+            const hidRu = row.querySelector('.answer-hidden-ru');
+            const hidEn = row.querySelector('.answer-hidden-en');
+            const tabUz = row.querySelector('.answer-tab-uz');
+            const tabRu = row.querySelector('.answer-tab-ru');
+            const tabEn = row.querySelector('.answer-tab-en');
+
+            if (hidUz) hidUz.value = uz || '';
+            if (hidRu) hidRu.value = ru || '';
+            if (hidEn) hidEn.value = en || '';
+            if (tabUz) tabUz.value = uz || '';
+            if (tabRu) tabRu.value = ru || '';
+            if (tabEn) tabEn.value = en || '';
+
+            revealBlock(row.querySelector('[data-translation-block]'), null, isMissing);
+        }
+    }
+
+    let translateInFlight = false;
+    let translationApplied = false;
+
+    function invalidateTranslation() {
+        translationApplied = false;
+    }
+
+    async function translateAll() {
+        if (translateInFlight) return;
+        const btn = document.getElementById('aiTranslateBtn');
+
+        const items = [];
+        if (questionMainTa && questionMainTa.value.trim()) {
+            items.push({ id: 'question_text', text: questionMainTa.value.trim() });
+        }
+        document.querySelectorAll('[data-answer-row]').forEach(row => {
+            const mainTa = row.querySelector('textarea[data-role="answer-main"]');
+            if (mainTa && mainTa.value.trim()) {
+                items.push({ id: mainTa.name, text: mainTa.value.trim() });
+            }
+        });
+
+        if (items.length === 0) {
+            alert('Сначала заполните текст вопроса и хотя бы один вариант ответа');
+            return;
+        }
+
+        translateInFlight = true;
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('opacity-60', 'cursor-not-allowed');
+            btn.innerHTML = `
+                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                <span>Перевод...</span>`;
+        }
+
+        const resetBtn = () => {
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                btn.innerHTML = originalHtml;
+            }
+            translateInFlight = false;
+        };
+
+        try {
+            const res = await fetch(AI_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ items })
+            });
+
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                showToast('Сессия обновилась, перезагрузите страницу и повторите', 'error');
+                resetBtn();
+                return;
+            }
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                let msg = 'Не удалось перевести, впишите вручную';
+                if (res.status === 429) msg = 'Подождите немного';
+                else if (res.status === 502) msg = 'AI сервис временно недоступен';
+                showToast(msg, 'error');
+                resetBtn();
+                return;
+            }
+
+            const missingSet = new Set(data.missing || []);
+            (data.translations || []).forEach(t => {
+                applyTranslation(t.id, t.uz, t.ru, t.en, missingSet.has(t.id));
+            });
+
+            translationApplied = true;
+            showToast('Перевод готов', 'success');
+            resetBtn();
+
+        } catch (e) {
+            showToast(e instanceof TypeError ? 'Проблема соединения, попробуйте ещё раз' : 'Не удалось перевести, впишите вручную', 'error');
+            resetBtn();
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Preview modal
+       ВАЖНО: никакого автозаполнения пустых переводов исходным
+       текстом — пустые поля так и остаются пустыми при сабмите.
+    ═══════════════════════════════════════════════════════════ */
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str ?? '';
+        return div.innerHTML;
+    }
+
+    function langEditBlock(labelText, targetName, value) {
+        return `
+            <div class="flex gap-2 items-start">
+                <span class="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-700 px-2 py-0.5 rounded-full mt-1.5">${labelText}</span>
+                <textarea data-preview-target="${targetName}" oninput="syncPreviewField(this)" rows="1"
+                    placeholder="нет перевода — впишите вручную"
+                    class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm text-white
+                           placeholder-slate-500 resize-y focus:outline-none focus:border-indigo-500
+                           focus:ring-1 focus:ring-indigo-500 transition-colors">${escapeHtml(value || '')}</textarea>
+            </div>`;
+    }
+
+    function syncPreviewField(el) {
+        const name = el.getAttribute('data-preview-target');
+        const target = document.querySelector(`[name="${name}"]`);
+        if (target) target.value = el.value;
+    }
+
+    function renderPreview() {
+        const body = document.getElementById('previewBody');
+
+        const qUz = document.getElementById('question-text-uz').value;
+        const qRu = document.getElementById('question-text-ru').value;
+        const qEn = document.getElementById('question-text-en').value;
+
+        let html = `
+            <div class="mb-6 pb-5 border-b border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Текст вопроса</p>
+                <div class="space-y-2">
+                    ${langEditBlock('UZ', 'question_text_uz', qUz)}
+                    ${langEditBlock('RU', 'question_text_ru', qRu)}
+                    ${langEditBlock('EN', 'question_text_en', qEn)}
+                </div>
+            </div>
+        `;
+
+        const rows = document.querySelectorAll('[data-answer-row]');
+        if (rows.length === 0) {
+            html += `<p class="text-sm text-slate-500 italic">Варианты не добавлены</p>`;
+        }
+
+        rows.forEach((row, i) => {
+            const mainTa = row.querySelector('textarea[data-role="answer-main"]');
+            if (!mainTa) return;
+            const m = mainTa.name.match(/^answer_text_(\d+)$/);
+            const idx = m ? m[1] : null;
+
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            const isCorrect = checkbox && checkbox.checked;
+
+            const hidUz = row.querySelector('.answer-hidden-uz');
+            const hidRu = row.querySelector('.answer-hidden-ru');
+            const hidEn = row.querySelector('.answer-hidden-en');
+
+            const uzVal = hidUz ? hidUz.value : '';
+            const ruVal = hidRu ? hidRu.value : '';
+            const enVal = hidEn ? hidEn.value : '';
+
+            const fileInput = row.querySelector('input[type="file"]');
+            const hasImage = fileInput && fileInput.files && fileInput.files.length > 0;
+
+            html += `
+                <div class="mb-4 bg-slate-900/60 rounded-lg p-3 ${isCorrect ? 'border border-emerald-500/40' : 'border border-transparent'}">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-1.5">
+                            ${isCorrect
+                                ? '<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i><span class="text-[10px] text-emerald-400">верный ответ</span>'
+                                : '<i class="fa-regular fa-circle text-slate-600 text-xs"></i><span class="text-[10px] text-slate-500">вариант ' + (i + 1) + '</span>'}
+                        </div>
+                        ${hasImage ? `<span class="text-[10px] text-indigo-400 inline-flex items-center gap-1"><i class="fa-solid fa-image"></i> ${escapeHtml(fileInput.files[0].name)}</span>` : ''}
+                    </div>
+                    <div class="space-y-1.5">
+                        ${idx !== null ? langEditBlock('UZ', `answer_text_${idx}_uz`, uzVal) : ''}
+                        ${idx !== null ? langEditBlock('RU', `answer_text_${idx}_ru`, ruVal) : ''}
+                        ${idx !== null ? langEditBlock('EN', `answer_text_${idx}_en`, enVal) : ''}
+                    </div>
+                </div>`;
+        });
+
+        body.innerHTML = html;
+    }
+
+    function closePreview() {
+        document.getElementById('previewModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function confirmAndSave() {
+        document.getElementById('selfCheckForm').submit();
+    }
+
+    async function openPreview() {
+        const form = document.getElementById('selfCheckForm');
+        if (!form.reportValidity()) return;
+        if (!translationApplied) { await translateAll(); }
+        // ВАЖНО: fallbackFillMissing() намеренно НЕ вызывается —
+        // пустые скрытые переводы остаются пустыми.
+        renderPreview();
+        document.getElementById('previewModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+</script>
 {% endblock %}
 {% endblock %}
