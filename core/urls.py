@@ -14,6 +14,7 @@ from core.quiz import (
 )
 
 from .dashboard import action, dlist, form, home, lock, ai_translate
+from .dashboard.self_check import create_or_edit_self_question
 
 # ── Пути, которые должны попадать под языковой префикс (/uz/..., /en/...) ──
 # Оборачиваются в i18n_patterns() в src/urls.py (корневом URLConf).
@@ -37,6 +38,8 @@ urlpatterns = [
     path("dashboard/", home, name="dashboard"),
     path("dashboard/ai-translate/", ai_translate, name="ai_translate"),
     path("dashboard/list/<str:tip>/", dlist, name="dlist"),
+    path("dashboard/self-check/create/", create_or_edit_self_question, name="self_check_create"),
+    path("dashboard/self-check/<int:pk>/edit/", create_or_edit_self_question, name="self_check_edit"),
     path("action/<str:status>/<str:path>/<int:pk>/", action, name="action"),
     path("action/<str:status>/<str:path>/", action, name="action_no_pk"),
     path("subject/<int:pk>/", index, name="sub"),
