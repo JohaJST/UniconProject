@@ -444,15 +444,15 @@
     /* JS-логика (AI-перевод, добавление/удаление вариантов, предпросмотр)
        будет реализована отдельным шагом — здесь только заглушки-обвязка,
        чтобы кнопки выше не падали в консоль до подключения полноценного script.js */
-    function addAnswerField() { /* TODO: реализация в следующем промпте */ }
+    // function addAnswerField() { /* TODO: реализация в следующем промпте */ }
     function removeAnswerRow(btn) {
         const row = btn.closest('[data-answer-row]');
         const allRows = document.querySelectorAll('[data-answer-row]');
         if (allRows.length <= 2) return; // минимум 2 варианта
         if (row) row.remove();
     }
-    function translateAll() { /* TODO: реализация в следующем промпте */ }
-    function openPreview() { /* TODO: реализация в следующем промпте */ }
+    // function translateAll() { /* TODO: реализация в следующем промпте */ }
+    // function openPreview() { /* TODO: реализация в следующем промпте */ }
     function closePreview() {
         document.getElementById('previewModal').classList.add('hidden');
         document.body.style.overflow = '';

@@ -1,7 +1,8 @@
 from django.shortcuts import render
 
-from core.models import About, Courses, News, Partners, Teachers, Test
-
+from core.models import About, Courses, News, Partners, Teachers, Test, SelfQuestion
+import random
+from core.models.self import SelfQuestion
 
 def about(request):
     # singleton-паттерн: одна запись About описывает всю страницу "О нас".
@@ -35,40 +36,62 @@ def self(request):
     return render(request, "module 3 test/self.html")
 
 
-def self_check(request):
-    if request.method == "POST":
-        print(request.POST)
+# def self_check(request):
+#     if request.method == "POST":
+#         print(request.POST)
         
-    test = (
-                Test.objects
-                .only('id', 'name', 'desc')
-                .prefetch_related('variantas__questions__answers')
-                .get(id=10)
-            )
+#     test = (
+#                 Test.objects
+#                 .only('id', 'name', 'desc')
+#                 .prefetch_related('variantas__questions__answers')
+#                 .get(id=10)
+#             )
 
-    questions_list = []
-    for v_test in test.variantas.all():
-        for question in v_test.questions.all():
-            questions_list.append({
-                "id": question.id,
-                "text": question.text,
-                "img": question.img.url if question.img else None,
-                # "answer": question.answers.text if question.answers.is_answer else None,
-                "answers": [
-                    {
-                        "id": answer.id,
-                        "text": answer.text,
-                        "is_correct": answer.is_answer,
-                        # "img": answer.img.url if answer.img else None,
-                    }
-                    for answer in question.answers.all()
-                ]
-            })
+#     questions_list = []
+#     for v_test in test.variantas.all():
+#         for question in v_test.questions.all():
+#             questions_list.append({
+#                 "id": question.id,
+#                 "text": question.text,
+#                 "img": question.img.url if question.img else None,
+#                 # "answer": question.answers.text if question.answers.is_answer else None,
+#                 "answers": [
+#                     {
+#                         "id": answer.id,
+#                         "text": answer.text,
+#                         "is_correct": answer.is_answer,
+#                         # "img": answer.img.url if answer.img else None,
+#                     }
+#                     for answer in question.answers.all()
+#                 ]
+#             })
     
-    ctx = {
-        "questions": questions_list
-    }
-    print(ctx)
-    return render(request, "module 3 test/test.html", ctx)
+#     ctx = {
+#         "questions": questions_list
+#     }
+#     print(ctx)
+#     return render(request, "module 3 test/test.html", ctx)
     
+
+def self_check(request):
+    # 1. Достаем 20 случайных вопросов. 
+    # order_by('?') дает команду БД перемешать записи перед выдачей.
+    random_questions = list(SelfQuestion.objects.order_by('?')[:20])
+    
+    # 2. Для каждого вопроса достаем его варианты ответов и перемешиваем
+    for q in random_questions:
+        # q.selfanswer_set.all() достает все ответы, привязанные к этому вопросу
+        answers = list(q.selfanswer_set.all())
+        
+        # Перемешиваем ответы случайным образом
+        random.shuffle(answers)
+        
+        # Присваиваем перемешанный список атрибуту `answers`.
+        # Именно этот атрибут вы используете в test.html: {% for a in q.answers %}
+        q.answers = answers
+        
+    # 3. Отдаем в ваш шаблон test.html
+    return render(request, 'module 3 test/test.html', {
+        'questions': random_questions
+    })
     
