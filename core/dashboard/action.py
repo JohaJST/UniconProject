@@ -3,6 +3,7 @@ from django.core.files.storage import default_storage
 from django.shortcuts import redirect, render
 import datetime
 from core.dashboard.subject_crud import view_subject, edit_subject
+from core.dashboard.classroom_crud import view_classroom
 
 from core.models import (
     ClassRooms,
@@ -156,6 +157,8 @@ def action(request, status, path, pk=None):
     elif status == "view":
         if path == "subject":
             return view_subject(request, pk)
+        elif path == "classroom":
+            return view_classroom(request, pk)
         pass
     else:
         return redirect("dlist", tip=path)
