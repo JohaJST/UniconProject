@@ -1,0 +1,269 @@
+{% extends 'pages/dashboard/base.html' %} {% block title %}Редактировать
+пользователя{%endblock %} {% block page_title %}Редактировать пользователя{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Page heading -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Редактировать пользователя</h1>
+        <a
+            href="{% url 'action' status='view' path='user' pk=target_user.id %}"
+            class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1"
+        >
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад к пользователю
+        </a>
+    </div>
+
+    <!-- Form card -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8">
+        <form method="post" action="{% url 'action' status='edit' path='user' pk=target_user.id %}">
+            {% csrf_token %}
+
+            <!-- 2-column grid for most fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                <!-- Имя (first_name) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_first_name"
+                    >
+                        Имя <span class="text-rose-400">*</span>
+                    </label>
+                    <input
+                        id="id_first_name"
+                        type="text"
+                        name="first_name"
+                        maxlength="255"
+                        placeholder="Имя..."
+                        value="{{ user_data.first_name|default:target_user.name }}"
+                        required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    />
+                </div>
+
+                <!-- Фамилия (last_name) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_last_name"
+                    >
+                        Фамилия <span class="text-rose-400">*</span>
+                    </label>
+                    <input
+                        id="id_last_name"
+                        type="text"
+                        name="last_name"
+                        maxlength="255"
+                        placeholder="Фамилия..."
+                        value="{{ user_data.last_name|default:target_user.last_name }}"
+                        required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    />
+                </div>
+
+                <!-- Дата рождения (birthday) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_birthday"
+                    >
+                        Дата рождения
+                    </label>
+                    <input
+                        id="id_birthday"
+                        type="date"
+                        name="birthday"
+                        value="{{ user_data.birthday|default:target_user.birthday|date:'Y-m-d' }}"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [color-scheme:dark]"
+                    />
+                </div>
+
+                <!-- Телефон (phone) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_phone"
+                    >
+                        Телефон
+                    </label>
+                    <input
+                        id="id_phone"
+                        type="number"
+                        name="phone"
+                        maxlength="255"
+                        placeholder="998997774488"
+                        value="{{ user_data.phone|default:target_user.phone }}"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                </div>
+
+                <!-- Пароль (password) — опционален -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_password"
+                    >
+                        Пароль
+                    </label>
+                    <input
+                        id="id_password"
+                        type="password"
+                        name="password"
+                        maxlength="255"
+                        placeholder="Оставьте пустым, чтобы не менять"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    />
+                </div>
+
+                <!-- Класс (classroom select) -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_classroom"
+                    >
+                        Класс
+                    </label>
+                    <select
+                        id="id_classroom"
+                        name="classroom"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    >
+                        <option value="">-- Выберите класс --</option>
+                        {% for i in classrooms %}
+                            <option value="{{ i.id }}"
+                                {% if user_data.classroom|slugify == i.id|slugify %}selected
+                                {% elif not user_data and target_user.classroom_id == i.id %}selected{% endif %}
+                            >{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            <!-- Роль (role) — full width -->
+            <div>
+                <label
+                    class="text-sm font-medium text-slate-300 mb-1.5 block"
+                    for="id_role"
+                >
+                    Роль <span class="text-rose-400">*</span>
+                </label>
+                <select
+                    id="id_role"
+                    name="role"
+                    required
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                >
+                    <option value="4"
+                        {% if user_data.role == "4" %}selected
+                        {% elif not user_data and target_user.role == 4 %}selected{% endif %}
+                    >Ученик</option>
+                    <option value="3"
+                        {% if user_data.role == "3" %}selected
+                        {% elif not user_data and target_user.role == 3 %}selected{% endif %}
+                    >Учитель</option>
+                    <option value="2"
+                        {% if user_data.role == "2" %}selected
+                        {% elif not user_data and target_user.role == 2 %}selected{% endif %}
+                    >Администратор</option>
+                    <option value="1"
+                        {% if user_data.role == "1" %}selected
+                        {% elif not user_data and target_user.role == 1 %}selected{% endif %}
+                    >Суперадмин</option>
+                </select>
+            </div>
+
+            <div>
+                <label
+                    class="text-sm font-medium text-slate-300 mb-1.5 block"
+                    for="id_lang"
+                >
+                    Язык
+                </label>
+                <select
+                    id="id_lang"
+                    name="lang"
+                    required
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                >
+                    <option class="rounded-xl" value="uz"
+                        {% if user_data.lang == "uz" %}selected
+                        {% elif not user_data and target_user.lang == "uz" %}selected{% endif %}
+                    >Узбекский</option>
+                    <option class="rounded-xl" value="ru"
+                        {% if user_data.lang == "ru" %}selected
+                        {% elif not user_data and target_user.lang == "ru" %}selected{% endif %}
+                    >Русский</option>
+                    <option class="rounded-xl" value="en"
+                        {% if user_data.lang == "en" %}selected
+                        {% elif not user_data and target_user.lang == "en" %}selected{% endif %}
+                    >Английский</option>
+                </select>
+            </div>
+        </div>
+            <!-- Divider -->
+            <div class="border-t border-slate-700 mb-6"></div>
+
+            <!-- Submit + Cancel -->
+            <div class="flex items-center gap-3">
+                <button
+                    type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-flex items-center gap-2"
+                >
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Сохранить
+                </button>
+                <a
+                    href="{% url 'action' status='view' path='user' pk=target_user.id %}"
+                    class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl transition-colors text-sm inline-flex items-center gap-2"
+                >
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    /* ─── Toasts (1-в-1 из form.html/subject_edit.html/classroom_edit.html) ─── */
+    function getToastContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    function showToast(message, type = 'error') {
+        const container = getToastContainer();
+        const toast = document.createElement('div');
+        const colors = type === 'success'
+            ? 'bg-emerald-600 border-emerald-500'
+            : 'bg-rose-600 border-rose-500';
+        toast.className = `${colors} text-white text-sm font-medium px-4 py-3 rounded-xl
+                            shadow-xl border max-w-xs
+                            translate-x-4 opacity-0 transition-all duration-300 ease-out`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-4', 'opacity-0');
+            });
+        });
+
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-4');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    {% if error %}
+    document.addEventListener('DOMContentLoaded', () => {
+        showToast("{{ error|escapejs }}", 'error');
+    });
+    {% endif %}
+</script>
+{% endblock %}

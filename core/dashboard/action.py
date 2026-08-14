@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 import datetime
 from core.dashboard.subject_crud import view_subject, edit_subject
 from core.dashboard.classroom_crud import view_classroom, edit_classroom
-from core.dashboard.user_crud import view_user
+from core.dashboard.user_crud import view_user, edit_user
 
 from core.models import (
     ClassRooms,
@@ -157,6 +157,8 @@ def action(request, status, path, pk=None):
             return edit_subject(request, pk)
         elif path == "classroom":
             return edit_classroom(request, pk)
+        elif path == "user":
+            return edit_user(request, pk)
     elif status == "view":
         if path == "subject":
             return view_subject(request, pk)
