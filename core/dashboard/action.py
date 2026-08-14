@@ -62,8 +62,11 @@ def action(request, status, path, pk=None):
                     {"action": "subject", "classrooms": classrooms},
                 )
             elif request.method == "POST":
+                raw_name = request.POST.get("subject_name", "")
                 subject = Subject.objects.create(
-                    name=request.POST.get("subject_name")
+                    name_uz=request.POST.get("subject_name_uz") or raw_name,
+                    name_ru=request.POST.get("subject_name_ru") or raw_name,
+                    name_en=request.POST.get("subject_name_en") or raw_name,
                 )
                 subject.save()
                 classroom_id = 0
