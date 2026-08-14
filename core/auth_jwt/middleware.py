@@ -26,7 +26,10 @@ from core.auth_jwt.tokens import decode_token
 from core.auth_jwt.refresh_logic import attempt_token_refresh
 
 _IGNORED_EXACT_PATHS = {"/login/", "/", "/about/", "/self/", "/self/check/"}
-_IGNORED_PREFIXES = ("/JustAdmin/", "/i18n/", "/self")
+# /static/ и /media/ публичные — иначе при истёкшем access_token запросы к
+# картинкам/CSS/JS редиректятся на /login/ и браузер получает HTML вместо
+# бинарника — картинки «пропадают» (битые/404).
+_IGNORED_PREFIXES = ("/JustAdmin/", "/i18n/", "/self", "/static/", "/media/")
 
 _LANGUAGE_PREFIX_RE = re.compile(r"^/(uz|ru|en)(/.*)?$")
 

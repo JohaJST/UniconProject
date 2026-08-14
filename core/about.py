@@ -76,7 +76,7 @@ def self(request):
 def self_check(request):
     # 1. Достаем 20 случайных вопросов. 
     # order_by('?') дает команду БД перемешать записи перед выдачей.
-    random_questions = list(SelfQuestion.objects.order_by('?')[:20])
+    random_questions = list(SelfQuestion.objects.order_by('?')[:2])
     
     # 2. Для каждого вопроса достаем его варианты ответов и перемешиваем
     for q in random_questions:

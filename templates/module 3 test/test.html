@@ -90,13 +90,13 @@
             {
                 numb: {{ q.id }},
                 question: "{{ q.text|escapejs }}",
-                img: {% if q.img %}"{{ q.img }}"{% else %}null{% endif %},
+                img: {% if q.img %}"{{ q.img.url }}"{% else %}null{% endif %},
                 
                 options: [
                     {% for a in q.answers %}
                     {
                         text: "{{ a.text|escapejs }}",
-                        img: {% if a.img %}"{{ a.img }}"{% else %}null{% endif %}
+                        img: {% if a.img %}"{{ a.img.url }}"{% else %}null{% endif %}
                     }{% if not forloop.last %},{% endif %}
                     {% endfor %}
                 ],

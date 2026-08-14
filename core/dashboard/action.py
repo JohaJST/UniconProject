@@ -5,7 +5,7 @@ import datetime
 from core.dashboard.subject_crud import view_subject, edit_subject
 from core.dashboard.classroom_crud import view_classroom, edit_classroom
 from core.dashboard.user_crud import view_user, edit_user
-from core.dashboard.quiz_crud import view_quiz
+from core.dashboard.quiz_crud import view_quiz, edit_quiz
 
 from core.models import (
     ClassRooms,
@@ -73,7 +73,8 @@ def action(request, status, path, pk=None):
                     name_en=request.POST.get("subject_name_en") or raw_name,
                 )
                 subject.save()
-                classroom_id = 0
+                # Шаблон new.html нумерует селекты с 1 (classroom_1, classroom_2, ...)
+                classroom_id = 1
                 while f"classroom_{classroom_id}" in request.POST:
                     clsb = ClassRoomsSubjects.objects.get_or_create(
                         classroom_id=ClassRooms.objects.get(
@@ -160,6 +161,10 @@ def action(request, status, path, pk=None):
             return edit_classroom(request, pk)
         elif path == "user":
             return edit_user(request, pk)
+        elif path == "quiz":
+            return edit_quiz(request, pk)
+        return redirect("dlist", tip=path)
+        
     elif status == "view":
         if path == "subject":
             return view_subject(request, pk)
@@ -169,7 +174,7 @@ def action(request, status, path, pk=None):
             return view_user(request, pk)
         elif path == "quiz":
             return view_quiz(request, pk)
-        pass
+        return redirect("dlist", tip=path)
     else:
         return redirect("dlist", tip=path)
 

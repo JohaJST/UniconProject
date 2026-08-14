@@ -218,7 +218,7 @@ msgid "SelfStudy"
 msgstr "Study and check your knowledge"
 
 msgid "about"
-msgstr "Kriptology school"
+msgstr "Criptology school"
 
 msgid "resultText"
 msgstr "Dear, <b>{last_name} {first_name}</b>, you scored <p>{score}</p> out of <p>{total}</p>"

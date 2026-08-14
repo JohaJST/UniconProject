@@ -13,7 +13,9 @@ class Test(models.Model):
     desc = models.TextField(default='', blank=True)
     subject = models.ForeignKey(
         Subject,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='tests',
     )
     is_start = models.BooleanField(default=False, db_index=True)

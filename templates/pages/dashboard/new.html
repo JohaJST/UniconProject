@@ -213,82 +213,127 @@
              ACTION: subject — Create Subject form
         ══════════════════════════════════════════════════ -->
         {% elif action == "subject" %}
-                <form method="post" action="{% url 'action_no_pk' status='create' path='subject' %}">
-                    {% csrf_token %}
+        <form method="post" action="{% url 'action_no_pk' status='create' path='subject' %}">
+            {% csrf_token %}
         
-                    <!-- Subject name -->
-                    <div class="mb-5">
-                        <div class="flex items-center justify-between gap-3 mb-1.5">
-                            <label class="text-sm font-medium text-slate-300 block" for="subject-name">
-                                Название предмета <span class="text-rose-400">*</span>
-                            </label>
-                            <button type="button" id="aiTranslateSubjectBtn" onclick="translateSubjectName()"
-                                    class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500
-                                           text-white px-3 py-1.5 rounded-xl text-xs font-medium
-                                           transition-colors shrink-0">
-                                <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
-                                <span id="aiTranslateSubjectBtnText">Перевести через AI</span>
-                            </button>
+            <!-- Subject name -->
+            <div class="mb-5">
+                <div class="flex items-center justify-between gap-3 mb-1.5">
+                    <label class="text-sm font-medium text-slate-300 block" for="subject-name">
+                        Название предмета <span class="text-rose-400">*</span>
+                    </label>
+                    <button type="button" id="aiTranslateSubjectBtn" onclick="translateSubjectName()"
+                            class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500
+                                   text-white px-3 py-1.5 rounded-xl text-xs font-medium
+                                   transition-colors shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                        <span id="aiTranslateSubjectBtnText">Перевести через AI</span>
+                    </button>
+                </div>
+                <input id="subject-name"
+                       type="text"
+                       name="subject_name"
+                       placeholder="Например: Математика..."
+                       required
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                              text-white placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors">
+                <!-- Скрытые переводы названия — всегда в DOM, чтобы обычный
+                     submit без клика по AI отправлял пустые строки. -->
+                <input type="hidden" name="subject_name_uz" id="subject-name-uz" value="">
+                <input type="hidden" name="subject_name_ru" id="subject-name-ru" value="">
+                <input type="hidden" name="subject_name_en" id="subject-name-en" value="">
+        
+                <!-- Мини-блок перевода (по образцу translationTabs в test-форме) -->
+                <div id="subjectTranslationTabs"
+                     class="translation-tabs hidden border border-slate-700 rounded-xl p-3 mt-3 bg-slate-800/50">
+                    <div id="subjectMissingNote" class="hidden text-xs text-amber-400 mb-2 items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        AI не смог перевести — впишите вручную
+                    </div>
+                    <div class="space-y-2">
+                        <div>
+                            <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">UZ</span>
+                            <input type="text" id="subject-tab-uz"
+                                   oninput="document.getElementById('subject-name-uz').value = this.value"
+                                   class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2
+                                          text-white placeholder-slate-500 text-sm
+                                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                          transition-colors">
                         </div>
-                        <input id="subject-name"
-                               type="text"
-                               name="subject_name"
-                               placeholder="Например: Математика..."
-                               required
-                               class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
-                                      text-white placeholder-slate-500
-                                      focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                                      transition-colors">
-                        <!-- Скрытые переводы названия — всегда в DOM, чтобы обычный
-                             submit без клика по AI отправлял пустые строки. -->
-                        <input type="hidden" name="subject_name_uz" id="subject-name-uz" value="">
-                        <input type="hidden" name="subject_name_ru" id="subject-name-ru" value="">
-                        <input type="hidden" name="subject_name_en" id="subject-name-en" value="">
-        
-                        <!-- Мини-блок перевода (по образцу translationTabs в test-форме) -->
-                        <div id="subjectTranslationTabs"
-                             class="translation-tabs hidden border border-slate-700 rounded-xl p-3 mt-3 bg-slate-800/50">
-                            <div id="subjectMissingNote" class="hidden text-xs text-amber-400 mb-2 items-center gap-1.5">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                AI не смог перевести — впишите вручную
-                            </div>
-                            <div class="space-y-2">
-                                <div>
-                                    <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">UZ</span>
-                                    <input type="text" id="subject-tab-uz"
-                                           oninput="document.getElementById('subject-name-uz').value = this.value"
-                                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2
-                                                  text-white placeholder-slate-500 text-sm
-                                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                                                  transition-colors">
-                                </div>
-                                <div>
-                                    <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">RU</span>
-                                    <input type="text" id="subject-tab-ru"
-                                           oninput="document.getElementById('subject-name-ru').value = this.value"
-                                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2
-                                                  text-white placeholder-slate-500 text-sm
-                                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                                                  transition-colors">
-                                </div>
-                                <div>
-                                    <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">EN</span>
-                                    <input type="text" id="subject-tab-en"
-                                           oninput="document.getElementById('subject-name-en').value = this.value"
-                                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2
-                                                  text-white placeholder-slate-500 text-sm
-                                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                                                  transition-colors">
-                                </div>
-                            </div>
+                        <div>
+                            <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">RU</span>
+                            <input type="text" id="subject-tab-ru"
+                                   oninput="document.getElementById('subject-name-ru').value = this.value"
+                                   class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2
+                                          text-white placeholder-slate-500 text-sm
+                                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                          transition-colors">
+                        </div>
+                        <div>
+                            <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">EN</span>
+                            <input type="text" id="subject-tab-en"
+                                   oninput="document.getElementById('subject-name-en').value = this.value"
+                                   class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2
+                                          text-white placeholder-slate-500 text-sm
+                                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                          transition-colors">
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-700 my-6"></div>
+
+            <!-- Classrooms checkboxes (Dynamic) -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block">
+                    Привязанные классы
+                </label>
+                <div id="classroomsField" class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <select name="classroom_1"
+                                class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                       text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                                       focus:ring-indigo-500 transition-colors">
+                            <option value="">-- Выберите класс --</option>
+                            {% for class in classrooms %}
+                            <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <button type="button" onclick="addClassRoom()"
+                        class="mt-2 inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600
+                               text-slate-300 px-3 py-1.5 rounded-lg transition-colors text-sm">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    Ещё класс
+                </button>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                               font-medium transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Сохранить
+                </button>
+                <a href="{% url 'dlist' tip='subject' %}"
+                   class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                          transition-colors text-sm">
+                    Отмена
+                </a>
+            </div>
+        </form>
 
         <!-- ══════════════════════════════════════════════
              ACTION: classroom — Create Classroom form
         ══════════════════════════════════════════════════ -->
         {% elif action == "classroom" %}
-        <form method="post" actiontranslateAll="{% url 'action_no_pk' status='create' path='classroom' %}">
+        <form method="post" action="{% url 'action_no_pk' status='create' path='classroom' %}">
             {% csrf_token %}
 
             <!-- Classroom name -->
@@ -315,7 +360,7 @@
                     <i class="fa-solid fa-floppy-disk"></i>
                     Сохранить
                 </button>
-                <a href="{% url 'dashboard' %}"
+                <a href="{% url 'dlist' tip='classroom' %}"
                    class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
                           transition-colors text-sm">
                     Отмена
@@ -347,7 +392,7 @@
     }
 
     /* ─── Classroom selects for SUBJECT form ─── */
-    let classroomIdx = 1;
+    let classroomIdx = 2; // Начальное значение 2, т.к. 1 уже есть
 
     function addClassRoom() {
         const container = document.getElementById('classroomsField');
@@ -706,15 +751,22 @@
         }
     }
 
-    let translateInFlight = false;      // защита от повторного клика/двойного запуска
-    let translationApplied = false;
+    var translateInFlight = false;      // защита от повторного клика/двойного запуска
+    var translationApplied = false;
     
     function invalidateTranslation() {
         translationApplied = false;
     }
     
-    document.getElementById('test-name').addEventListener('input', invalidateTranslation);
-    document.getElementById('test-desc').addEventListener('input', invalidateTranslation);
+    // ДОБАВЛЕНА ПРОВЕРКА if (el) ДЛЯ ИЗБЕЖАНИЯ ОШИБКИ Cannot read properties of null
+    const testNameInput = document.getElementById('test-name');
+    if (testNameInput) {
+        testNameInput.addEventListener('input', invalidateTranslation);
+    }
+    const testDescInput = document.getElementById('test-desc');
+    if (testDescInput) {
+        testDescInput.addEventListener('input', invalidateTranslation);
+    }
    
     
     async function translateAll() {
@@ -722,10 +774,10 @@
         const btn = document.getElementById('aiTranslateBtn');
     
         const items = [];
-        const testNameInput = document.getElementById('test-name');
-        if (testNameInput && testNameInput.value.trim()) items.push({ id: 'test_name', text: testNameInput.value.trim() });
-        const testDescInput = document.getElementById('test-desc');
-        if (testDescInput && testDescInput.value.trim()) items.push({ id: 'test_desc', text: testDescInput.value.trim() });
+        const tNameInput = document.getElementById('test-name');
+        if (tNameInput && tNameInput.value.trim()) items.push({ id: 'test_name', text: tNameInput.value.trim() });
+        const tDescInput = document.getElementById('test-desc');
+        if (tDescInput && tDescInput.value.trim()) items.push({ id: 'test_desc', text: tDescInput.value.trim() });
     
         document.querySelectorAll('#questionFields .question-card').forEach(card => {
             const textarea = card.querySelector('textarea[data-role="question-main"]');
@@ -801,7 +853,7 @@
     /* ═══════════════════════════════════════════════════════════
            AI-перевод названия предмета (компактная форма, 1 item)
         ═══════════════════════════════════════════════════════════ */
-        let subjectTranslateInFlight = false;
+        var subjectTranslateInFlight = false;
     
         function revealSubjectTranslationTabs(isMissing) {
             const block = document.getElementById('subjectTranslationTabs');
@@ -840,7 +892,7 @@
             const input = document.getElementById('subject-name');
             const text = input ? input.value.trim() : '';
             if (!text) {
-                alert('Сначала введите название предмета');
+                showToast('Сначала введите название предмета', 'error');
                 return;
             }
     
@@ -899,12 +951,19 @@
                 const ru = t ? (t.ru || '') : '';
                 const en = t ? (t.en || '') : '';
     
-                document.getElementById('subject-name-uz').value = uz;
-                document.getElementById('subject-name-ru').value = ru;
-                document.getElementById('subject-name-en').value = en;
-                document.getElementById('subject-tab-uz').value = uz;
-                document.getElementById('subject-tab-ru').value = ru;
-                document.getElementById('subject-tab-en').value = en;
+                const subjectUz = document.getElementById('subject-name-uz');
+                const subjectRu = document.getElementById('subject-name-ru');
+                const subjectEn = document.getElementById('subject-name-en');
+                const tabUz = document.getElementById('subject-tab-uz');
+                const tabRu = document.getElementById('subject-tab-ru');
+                const tabEn = document.getElementById('subject-tab-en');
+
+                if (subjectUz) subjectUz.value = uz;
+                if (subjectRu) subjectRu.value = ru;
+                if (subjectEn) subjectEn.value = en;
+                if (tabUz) tabUz.value = uz;
+                if (tabRu) tabRu.value = ru;
+                if (tabEn) tabEn.value = en;
     
                 revealSubjectTranslationTabs(missingSet.has('subject_name'));
                 showToast('Перевод готов', 'success');
@@ -1074,8 +1133,10 @@
             uzEl.value = draftVal; ruEl.value = draftVal; enEl.value = draftVal;
             if (tabsId) revealTranslationTabs(tabsId, noteId, true);
         };
-        fillTriplet(document.getElementById('test-name').value.trim(), 'test-name-uz','test-name-ru','test-name-en', null, null);
-        fillTriplet(document.getElementById('test-desc').value.trim(), 'test-desc-uz','test-desc-ru','test-desc-en', null, null);
+        const tName = document.getElementById('test-name');
+        if (tName) fillTriplet(tName.value.trim(), 'test-name-uz','test-name-ru','test-name-en', null, null);
+        const tDesc = document.getElementById('test-desc');
+        if (tDesc) fillTriplet(tDesc.value.trim(), 'test-desc-uz','test-desc-ru','test-desc-en', null, null);
         document.querySelectorAll('#questionFields .question-card').forEach(card => {
             const ta = card.querySelector('textarea[data-role="question-main"]');
             if (!ta) return;

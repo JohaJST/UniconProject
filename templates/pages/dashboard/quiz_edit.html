@@ -1,0 +1,860 @@
+{% extends 'pages/dashboard/base.html' %}
+
+{% block title %}Редактировать тест{% endblock %}
+{% block page_title %}Редактировать тест{% endblock %}
+
+{% block head %}
+<style>
+    .translation-tabs {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 280ms ease-out, opacity 280ms ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+    <!-- Page heading -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Редактировать тест</h1>
+        <a href="{% url 'action' status='view' path='quiz' pk=test.id %}"
+           class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад к тесту
+        </a>
+    </div>
+
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8">
+        <form id="editQuizForm" method="post"
+              action="{% url 'action' status='edit' path='quiz' pk=test.id %}"
+              enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Test name -->
+            <div class="mb-5">
+                <div class="flex items-center justify-between gap-3 mb-1.5">
+                    <label class="text-sm font-medium text-slate-300 block" for="test-name">
+                        Название теста <span class="text-rose-400">*</span>
+                    </label>
+                    <button type="button" id="aiTranslateBtn" onclick="translateAll()"
+                            class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500
+                                   text-white px-3 py-1.5 rounded-xl text-xs font-medium
+                                   transition-colors shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                        <span id="aiTranslateBtnText">Перевести через AI</span>
+                    </button>
+                </div>
+                <input id="test-name" type="text" name="test_name" required
+                       placeholder="Введите название теста..."
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                              text-white placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors">
+                <input type="hidden" name="test_name_uz" id="test-name-uz" value="">
+                <input type="hidden" name="test_name_ru" id="test-name-ru" value="">
+                <input type="hidden" name="test_name_en" id="test-name-en" value="">
+            </div>
+
+            <!-- Test description -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="test-desc">
+                    Описание теста
+                </label>
+                <textarea id="test-desc" name="test_desc" rows="2"
+                          placeholder="Краткое описание теста (необязательно)..."
+                          class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                 text-white placeholder-slate-500 resize-none
+                                 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                 transition-colors"></textarea>
+                <input type="hidden" name="test_desc_uz" id="test-desc-uz" value="">
+                <input type="hidden" name="test_desc_ru" id="test-desc-ru" value="">
+                <input type="hidden" name="test_desc_en" id="test-desc-en" value="">
+            </div>
+
+            <!-- Subject -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block">
+                    Предмет <span class="text-rose-400">*</span>
+                </label>
+                <select id="subject-select" name="subject" required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                               text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                               focus:ring-indigo-500 transition-colors">
+                    <option value="">-- Выберите предмет --</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Classrooms (id-based checkboxes, checked via JS из test_data) -->
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-2 block">
+                    Классы
+                </label>
+                {% if classrooms %}
+                <div id="classroomsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {% for classroom in classrooms %}
+                    <label class="flex items-center gap-2 bg-slate-900 border border-slate-600 rounded-xl
+                                   px-3 py-2.5 cursor-pointer hover:border-indigo-500 transition-colors">
+                        <input type="checkbox" name="classroom_{{ classroom.id }}" value="1"
+                               data-classroom-id="{{ classroom.id }}"
+                               class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
+                                      focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
+                        <span class="text-sm text-slate-200 truncate">{{ classroom.name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-slate-500">Классы ещё не созданы</p>
+                {% endif %}
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-700 my-6"></div>
+
+            <!-- Questions -->
+            <div class="mb-4">
+                <label class="text-sm font-medium text-slate-300 mb-3 block">
+                    Вопросы
+                </label>
+                <div id="questionFields" class="space-y-3"></div>
+
+                <button type="button" onclick="addQuestionField()"
+                        class="mt-3 inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600
+                               text-slate-200 px-4 py-2.5 rounded-xl transition-colors text-sm font-medium">
+                    <i class="fa-solid fa-plus"></i>
+                    Добавить вопрос
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-700 my-6"></div>
+
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="openPreview()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                               font-medium transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-eye"></i>
+                    Проверить и сохранить
+                </button>
+                <a href="{% url 'action' status='view' path='quiz' pk=test.id %}"
+                   class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                          transition-colors text-sm">
+                    Отмена
+                </a>
+            </div>
+        </form>
+
+        <!-- Preview modal -->
+        <div id="previewModal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closePreview()"></div>
+            <div class="relative bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl
+                        max-h-[85vh] flex flex-col shadow-2xl">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700 shrink-0">
+                    <h3 class="text-lg font-bold text-white">
+                        <i class="fa-solid fa-eye text-indigo-400 mr-1.5"></i>
+                        Проверка перед сохранением
+                    </h3>
+                    <button type="button" onclick="closePreview()"
+                            class="text-slate-500 hover:text-white transition-colors p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div id="previewBody" class="px-6 py-5 overflow-y-auto"></div>
+                <div class="flex items-center gap-3 px-6 py-4 border-t border-slate-700 shrink-0">
+                    <button type="button" onclick="confirmAndSave()"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                                   font-medium transition-colors inline-flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Подтвердить и сохранить
+                    </button>
+                    <button type="button" onclick="closePreview()"
+                            class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                                   transition-colors text-sm">
+                        Вернуться к редактированию
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Снимок текущего состояния теста — единственный источник данных для JS.
+     Django сериализует и экранирует это безопасно через json_script. -->
+{{ test_data|json_script:"test-data" }}
+
+<script>
+    const AI_URL = "{% url 'ai_translate' %}";
+
+    /* ─── CSRF-хелпер ─── */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    /* ─── Toasts ─── */
+    function getToastContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    function showToast(message, type = 'error') {
+        const container = getToastContainer();
+        const toast = document.createElement('div');
+        const colors = type === 'success'
+            ? 'bg-emerald-600 border-emerald-500'
+            : 'bg-rose-600 border-rose-500';
+        toast.className = `${colors} text-white text-sm font-medium px-4 py-3 rounded-xl
+                            shadow-xl border max-w-xs
+                            translate-x-4 opacity-0 transition-all duration-300 ease-out`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-4', 'opacity-0');
+            });
+        });
+
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-4');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str ?? '';
+        return div.innerHTML;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Вопросы / Варианты — DOM строит ТОЛЬКО этот JS.
+       questionCounter / variantCounters — единственный источник
+       индексов form-полей (согласован сам с собой).
+    ═══════════════════════════════════════════════════════════ */
+    let questionCounter = 1;
+    const variantCounters = {};
+
+    /**
+     * @param {object|null} existingData — {id, text_uz, text_ru, text_en, img_url, variants: [...]}
+     *                                     null/undefined = новый пустой вопрос.
+     */
+    function addQuestionField(existingData) {
+        const container = document.getElementById('questionFields');
+        const qId = questionCounter++;
+        variantCounters[qId] = 0;
+
+        const data = existingData || {};
+        const hasTranslation = !!(data.text_ru || data.text_en);
+        const hasImg = !!data.img_url;
+
+        const div = document.createElement('div');
+        div.className = 'question-card bg-slate-900 rounded-xl border border-slate-700 p-4';
+        div.id = `question-block-${qId}`;
+        div.innerHTML = `
+            <input type="hidden" name="question_id_${qId}" value="${data.id || ''}">
+
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-sm font-semibold text-slate-300">
+                    <i class="fa-solid fa-circle-question text-indigo-400 mr-1.5"></i>
+                    Вопрос ${qId}
+                </span>
+                <button type="button" onclick="removeQuestion(${qId})"
+                        class="text-slate-500 hover:text-rose-400 transition-colors p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <textarea name="question_${qId}" id="question_${qId}"
+                          data-role="question-main" rows="2"
+                          placeholder="Текст вопроса..."
+                          class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5
+                                 text-white placeholder-slate-500 text-sm resize-none
+                                 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                 transition-colors">${escapeHtml(data.text_uz || '')}</textarea>
+            </div>
+
+            <div class="mb-3" data-img-block>
+                ${hasImg ? `
+                <div class="flex items-center gap-3 mb-2 bg-slate-800/60 border border-slate-700 rounded-xl p-3">
+                    <img src="${data.img_url}" alt="Текущее изображение вопроса"
+                         class="w-16 h-16 object-cover rounded-lg border border-slate-700 shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-slate-400 mb-1.5">Текущее изображение</p>
+                        <label class="inline-flex items-center gap-2 text-xs text-rose-400 cursor-pointer">
+                            <input type="checkbox" name="question_${qId}_img_clear" value="1"
+                                   class="w-4 h-4 rounded text-rose-600 bg-slate-700 border-slate-500
+                                          focus:ring-rose-500 focus:ring-offset-slate-900 cursor-pointer">
+                            Удалить текущее изображение
+                        </label>
+                    </div>
+                </div>` : ''}
+                <label class="text-xs font-medium text-slate-500 mb-1 block">Изображение (необязательно)</label>
+                <input type="file" name="question_${qId}_image" accept="image/*"
+                       class="w-full text-xs text-slate-400 bg-slate-800 border border-slate-600
+                              rounded-xl px-3 py-2
+                              file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0
+                              file:bg-indigo-600 file:text-white file:text-xs file:font-medium
+                              file:cursor-pointer cursor-pointer">
+            </div>
+
+            <div id="translationTabs_${qId}"
+                 class="translation-tabs ${hasTranslation ? '' : 'hidden'} border border-slate-700
+                        rounded-xl p-3 mb-3 bg-slate-800/50"
+                 ${hasTranslation ? 'style="max-height:500px;opacity:1;"' : ''}>
+                <div id="missingNote_${qId}" class="hidden text-xs text-amber-400 mb-2 items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    AI не смог перевести — впишите вручную
+                </div>
+                <div class="space-y-2">
+                    <div>
+                        <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">UZ</span>
+                        <textarea name="question_${qId}_uz" id="question_${qId}_uz" rows="2"
+                                  placeholder="Matn (o'zbekcha)..."
+                                  class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                         text-white placeholder-slate-500 text-sm resize-none
+                                         focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                         transition-colors">${escapeHtml(data.text_uz || '')}</textarea>
+                    </div>
+                    <div>
+                        <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">RU</span>
+                        <textarea name="question_${qId}_ru" id="question_${qId}_ru" rows="2"
+                                  placeholder="Текст вопроса на русском..."
+                                  class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                         text-white placeholder-slate-500 text-sm resize-none
+                                         focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                         transition-colors">${escapeHtml(data.text_ru || '')}</textarea>
+                    </div>
+                    <div>
+                        <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">EN</span>
+                        <textarea name="question_${qId}_en" id="question_${qId}_en" rows="2"
+                                  placeholder="Question text in English..."
+                                  class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                                         text-white placeholder-slate-500 text-sm resize-none
+                                         focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                         transition-colors">${escapeHtml(data.text_en || '')}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="variantFields_${qId}" class="space-y-2 mb-2"></div>
+
+            <button type="button" onclick="addVariantField(${qId})"
+                    class="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600
+                           text-slate-300 px-3 py-1.5 rounded-lg transition-colors text-xs">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                Добавить вариант
+            </button>
+        `;
+        container.appendChild(div);
+
+        const mainTa = div.querySelector('textarea[data-role="question-main"]');
+        if (mainTa) mainTa.addEventListener('input', invalidateTranslation);
+        invalidateTranslation();
+
+        if (data.variants && data.variants.length) {
+            data.variants.forEach(v => addVariantField(qId, v));
+        } else {
+            addVariantField(qId);
+            addVariantField(qId);
+        }
+
+        return qId;
+    }
+
+    /**
+     * @param {number} questionId
+     * @param {object|null} existingData — {id, text_uz, text_ru, text_en, is_answer}
+     */
+    function addVariantField(questionId, existingData) {
+        variantCounters[questionId] = (variantCounters[questionId] || 0) + 1;
+        const vCount = variantCounters[questionId];
+        const data = existingData || {};
+        const hasTranslation = !!(data.text_ru || data.text_en);
+
+        const vContainer = document.getElementById(`variantFields_${questionId}`);
+        if (!vContainer) return;
+
+        const wrap = document.createElement('div');
+        wrap.setAttribute('data-variant-row', '');
+        wrap.className = 'bg-slate-800/40 rounded-lg p-2';
+        wrap.innerHTML = `
+            <input type="hidden" name="variant_id_${questionId}_${vCount}" value="${data.id || ''}">
+            <div class="flex items-center gap-2">
+                <label class="flex items-center gap-2 shrink-0 cursor-pointer">
+                    <input type="checkbox" name="answer_${questionId}_${vCount}" value="1"
+                           ${data.is_answer ? 'checked' : ''}
+                           class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
+                                  focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
+                    <span class="text-xs text-slate-500 whitespace-nowrap">Верный</span>
+                </label>
+                <input type="text" name="variant_${questionId}_${vCount}" data-role="variant-main"
+                       placeholder="Вариант ответа..." value="${escapeHtml(data.text_uz || '')}"
+                       class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2
+                              text-white text-sm placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors">
+                <button type="button" onclick="this.closest('[data-variant-row]').remove()"
+                        class="text-slate-500 hover:text-rose-400 transition-colors p-1 shrink-0">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <div id="translationTabsVariant_${questionId}_${vCount}"
+                 class="translation-tabs ${hasTranslation ? '' : 'hidden'} mt-2 ml-1 pl-3
+                        border-l-2 border-slate-700 space-y-1.5"
+                 ${hasTranslation ? 'style="max-height:500px;opacity:1;"' : ''}>
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">UZ</span>
+                    <input type="text" name="variant_${questionId}_${vCount}_uz"
+                           id="variant_${questionId}_${vCount}_uz"
+                           value="${escapeHtml(data.text_uz || '')}"
+                           placeholder="Original text..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                                  text-white text-xs placeholder-slate-500
+                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                  transition-colors">
+                </div>
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">RU</span>
+                    <input type="text" name="variant_${questionId}_${vCount}_ru"
+                           id="variant_${questionId}_${vCount}_ru"
+                           value="${escapeHtml(data.text_ru || '')}"
+                           placeholder="Перевод на русский..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                                  text-white text-xs placeholder-slate-500
+                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                  transition-colors">
+                </div>
+                <div>
+                    <span class="inline-block text-[9px] font-bold text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded-full mb-1">EN</span>
+                    <input type="text" name="variant_${questionId}_${vCount}_en"
+                           id="variant_${questionId}_${vCount}_en"
+                           value="${escapeHtml(data.text_en || '')}"
+                           placeholder="Translation in English..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5
+                                  text-white text-xs placeholder-slate-500
+                                  focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                                  transition-colors">
+                </div>
+            </div>
+        `;
+        vContainer.appendChild(wrap);
+
+        const mainInput = wrap.querySelector('input[data-role="variant-main"]');
+        if (mainInput) mainInput.addEventListener('input', invalidateTranslation);
+        invalidateTranslation();
+    }
+
+    function removeQuestion(id) {
+        const el = document.getElementById(`question-block-${id}`);
+        if (el) el.remove();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       AI-перевод (1-в-1 логика с new.html)
+    ═══════════════════════════════════════════════════════════ */
+    function revealTranslationTabs(blockId, noteId, isMissing) {
+        const block = document.getElementById(blockId);
+        if (!block) return;
+
+        block.classList.remove('hidden');
+        block.style.maxHeight = '0px';
+        block.style.opacity = '0';
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                block.style.maxHeight = '500px';
+                block.style.opacity = '1';
+            });
+        });
+
+        if (noteId) {
+            const note = document.getElementById(noteId);
+            if (note) {
+                if (isMissing) {
+                    note.classList.remove('hidden');
+                    note.classList.add('flex');
+                    block.classList.add('border-amber-500');
+                    block.classList.remove('border-slate-700');
+                } else {
+                    note.classList.add('hidden');
+                    note.classList.remove('flex');
+                    block.classList.remove('border-amber-500');
+                    block.classList.add('border-slate-700');
+                }
+            }
+        } else if (isMissing) {
+            block.classList.add('border-amber-500');
+            block.classList.remove('border-slate-700');
+        } else {
+            block.classList.remove('border-amber-500');
+        }
+    }
+
+    function applyTranslation(id, uz, ru, en, isMissing) {
+        if (id === 'test_name') {
+            document.getElementById('test-name-uz').value = uz || '';
+            document.getElementById('test-name-ru').value = ru || '';
+            document.getElementById('test-name-en').value = en || '';
+            return;
+        }
+        if (id === 'test_desc') {
+            document.getElementById('test-desc-uz').value = uz || '';
+            document.getElementById('test-desc-ru').value = ru || '';
+            document.getElementById('test-desc-en').value = en || '';
+            return;
+        }
+        const qMatch = id.match(/^question_(\d+)$/);
+        if (qMatch) {
+            const qId = qMatch[1];
+            const uzF = document.getElementById(`question_${qId}_uz`);
+            const ruF = document.getElementById(`question_${qId}_ru`);
+            const enF = document.getElementById(`question_${qId}_en`);
+            if (!uzF || !ruF || !enF) return;
+            uzF.value = uz || ''; ruF.value = ru || ''; enF.value = en || '';
+            revealTranslationTabs(`translationTabs_${qId}`, `missingNote_${qId}`, isMissing);
+            return;
+        }
+        const vMatch = id.match(/^variant_(\d+)_(\d+)$/);
+        if (vMatch) {
+            const [, qId, vId] = vMatch;
+            const uzF = document.getElementById(`variant_${qId}_${vId}_uz`);
+            const ruF = document.getElementById(`variant_${qId}_${vId}_ru`);
+            const enF = document.getElementById(`variant_${qId}_${vId}_en`);
+            if (!uzF || !ruF || !enF) return;
+            uzF.value = uz || ''; ruF.value = ru || ''; enF.value = en || '';
+            revealTranslationTabs(`translationTabsVariant_${qId}_${vId}`, null, isMissing);
+        }
+    }
+
+    let translateInFlight = false;
+    let translationApplied = false;
+
+    function invalidateTranslation() { translationApplied = false; }
+
+    document.getElementById('test-name').addEventListener('input', invalidateTranslation);
+    document.getElementById('test-desc').addEventListener('input', invalidateTranslation);
+
+    async function translateAll() {
+        if (translateInFlight) return;
+        const btn = document.getElementById('aiTranslateBtn');
+
+        const items = [];
+        const testNameInput = document.getElementById('test-name');
+        if (testNameInput && testNameInput.value.trim()) items.push({ id: 'test_name', text: testNameInput.value.trim() });
+        const testDescInput = document.getElementById('test-desc');
+        if (testDescInput && testDescInput.value.trim()) items.push({ id: 'test_desc', text: testDescInput.value.trim() });
+
+        document.querySelectorAll('#questionFields .question-card').forEach(card => {
+            const textarea = card.querySelector('textarea[data-role="question-main"]');
+            if (textarea && textarea.value.trim()) items.push({ id: textarea.name, text: textarea.value.trim() });
+            card.querySelectorAll('input[data-role="variant-main"]').forEach(input => {
+                if (input.value.trim()) items.push({ id: input.name, text: input.value.trim() });
+            });
+        });
+
+        if (items.length === 0) {
+            showToast('Сначала заполните название и хотя бы один вопрос', 'error');
+            return;
+        }
+
+        translateInFlight = true;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+        btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <span>Перевод...</span>`;
+
+        const resetBtn = () => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            btn.innerHTML = originalHtml;
+            translateInFlight = false;
+        };
+
+        try {
+            const res = await fetch(AI_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ items })
+            });
+
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                showToast('Сессия обновилась, перезагрузите страницу и повторите', 'error');
+                resetBtn();
+                return;
+            }
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                let msg = 'Не удалось перевести, впишите вручную';
+                if (res.status === 429) msg = 'Подождите немного';
+                else if (res.status === 502) msg = 'AI сервис временно недоступен';
+                showToast(msg, 'error');
+                resetBtn();
+                return;
+            }
+
+            const missingSet = new Set(data.missing || []);
+            (data.translations || []).forEach(t => {
+                applyTranslation(t.id, t.uz, t.ru, t.en, missingSet.has(t.id));
+            });
+
+            translationApplied = true;
+            showToast('Перевод готов', 'success');
+            resetBtn();
+
+        } catch (e) {
+            showToast(e instanceof TypeError ? 'Проблема соединения, попробуйте ещё раз' : 'Не удалось перевести, впишите вручную', 'error');
+            resetBtn();
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Предпросмотр перед сохранением
+    ═══════════════════════════════════════════════════════════ */
+    function langEditBlock(labelText, targetId, value) {
+        return `
+            <div class="flex gap-2 items-start">
+                <span class="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-700 px-2 py-0.5 rounded-full mt-1.5">${labelText}</span>
+                <textarea data-preview-target="${targetId}" oninput="syncPreviewField(this)" rows="1"
+                    placeholder="нет перевода — впишите вручную"
+                    class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm text-white
+                           placeholder-slate-500 resize-y focus:outline-none focus:border-indigo-500
+                           focus:ring-1 focus:ring-indigo-500 transition-colors">${escapeHtml(value || '')}</textarea>
+            </div>`;
+    }
+
+    function syncPreviewField(el) {
+        const t = document.getElementById(el.getAttribute('data-preview-target'));
+        if (t) t.value = el.value;
+    }
+
+    function renderPreview() {
+        const body = document.getElementById('previewBody');
+
+        const subjectSelect = document.getElementById('subject-select');
+        const subjectName = subjectSelect && subjectSelect.selectedOptions.length
+            ? subjectSelect.selectedOptions[0].textContent.trim() : '—';
+
+        const name_uz = document.getElementById('test-name-uz').value;
+        const name_ru = document.getElementById('test-name-ru').value;
+        const name_en = document.getElementById('test-name-en').value;
+        const desc_uz = document.getElementById('test-desc-uz').value;
+        const desc_ru = document.getElementById('test-desc-ru').value;
+        const desc_en = document.getElementById('test-desc-en').value;
+
+        let html = `
+            <div class="mb-6 pb-5 border-b border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Предмет</p>
+                <p class="text-sm text-white">${escapeHtml(subjectName)}</p>
+            </div>
+            <div class="mb-6 pb-5 border-b border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Название теста</p>
+                <div class="space-y-2">
+                    ${langEditBlock('UZ', 'test-name-uz', name_uz)}
+                    ${langEditBlock('RU', 'test-name-ru', name_ru)}
+                    ${langEditBlock('EN', 'test-name-en', name_en)}
+                </div>
+            </div>
+            <div class="mb-6 pb-5 border-b border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Описание теста</p>
+                <div class="space-y-2">
+                    ${langEditBlock('UZ', 'test-desc-uz', desc_uz)}
+                    ${langEditBlock('RU', 'test-desc-ru', desc_ru)}
+                    ${langEditBlock('EN', 'test-desc-en', desc_en)}
+                </div>
+            </div>
+        `;
+
+        const cards = document.querySelectorAll('#questionFields .question-card');
+        if (cards.length === 0) html += `<p class="text-sm text-slate-500 italic">Вопросы не добавлены</p>`;
+
+        cards.forEach((card, qi) => {
+            const textarea = card.querySelector('textarea[data-role="question-main"]');
+            const qMatch = textarea ? textarea.name.match(/^question_(\d+)$/) : null;
+            const qId = qMatch ? qMatch[1] : null;
+
+            const uzField = qId ? document.getElementById(`question_${qId}_uz`) : null;
+            const ruField = qId ? document.getElementById(`question_${qId}_ru`) : null;
+            const enField = qId ? document.getElementById(`question_${qId}_en`) : null;
+
+            const uzVal = (uzField && uzField.value.trim()) || (textarea ? textarea.value.trim() : '');
+            const ruVal = ruField ? ruField.value : '';
+            const enVal = enField ? enField.value : '';
+
+            const fileInput = card.querySelector('input[type="file"]');
+            const hasNewImage = fileInput && fileInput.files && fileInput.files.length > 0;
+
+            html += `
+                <div class="mb-5 pb-5 border-b border-slate-700">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Вопрос ${qi + 1}</p>
+                        ${hasNewImage ? `<span class="text-[10px] text-indigo-400 inline-flex items-center gap-1"><i class="fa-solid fa-image"></i> ${escapeHtml(fileInput.files[0].name)}</span>` : ''}
+                    </div>
+                    <div class="space-y-2 mb-3">
+                        ${qId ? langEditBlock('UZ', `question_${qId}_uz`, uzVal) : ''}
+                        ${qId ? langEditBlock('RU', `question_${qId}_ru`, ruVal) : ''}
+                        ${qId ? langEditBlock('EN', `question_${qId}_en`, enVal) : ''}
+                    </div>
+            `;
+
+            const vContainer = qId ? document.getElementById(`variantFields_${qId}`) : null;
+            const variantDivs = vContainer ? Array.from(vContainer.children) : [];
+
+            if (variantDivs.length === 0) {
+                html += `<p class="text-xs text-slate-500 italic pl-2">Варианты не добавлены</p>`;
+            } else {
+                html += `<div class="space-y-2 pl-2">`;
+                variantDivs.forEach((row) => {
+                    const mainInput = row.querySelector('input[data-role="variant-main"]');
+                    if (!mainInput) return;
+                    const vMatch = mainInput.name.match(/^variant_(\d+)_(\d+)$/);
+                    const vQ = vMatch ? vMatch[1] : null;
+                    const vId = vMatch ? vMatch[2] : null;
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    const isCorrect = checkbox && checkbox.checked;
+
+                    const vUzId = vQ && vId ? `variant_${vQ}_${vId}_uz` : null;
+                    const vRuId = vQ && vId ? `variant_${vQ}_${vId}_ru` : null;
+                    const vEnId = vQ && vId ? `variant_${vQ}_${vId}_en` : null;
+                    const vUzEl = vUzId ? document.getElementById(vUzId) : null;
+                    const vRuEl = vRuId ? document.getElementById(vRuId) : null;
+                    const vEnEl = vEnId ? document.getElementById(vEnId) : null;
+
+                    const vUzVal = (vUzEl && vUzEl.value.trim()) || mainInput.value.trim();
+                    const vRuVal = vRuEl ? vRuEl.value : '';
+                    const vEnVal = vEnEl ? vEnEl.value : '';
+
+                    html += `
+                        <div class="bg-slate-900/60 rounded-lg p-2.5 ${isCorrect ? 'border border-emerald-500/40' : 'border border-transparent'}">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                ${isCorrect
+                                    ? '<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i><span class="text-[10px] text-emerald-400">верный ответ</span>'
+                                    : '<i class="fa-regular fa-circle text-slate-600 text-xs"></i><span class="text-[10px] text-slate-500">вариант</span>'}
+                            </div>
+                            <div class="space-y-1">
+                                ${vUzId ? langEditBlock('UZ', vUzId, vUzVal) : ''}
+                                ${vRuId ? langEditBlock('RU', vRuId, vRuVal) : ''}
+                                ${vEnId ? langEditBlock('EN', vEnId, vEnVal) : ''}
+                            </div>
+                        </div>`;
+                });
+                html += `</div>`;
+            }
+            html += `</div>`;
+        });
+
+        body.innerHTML = html;
+    }
+
+    function closePreview() {
+        document.getElementById('previewModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function confirmAndSave() {
+        document.getElementById('editQuizForm').submit();
+    }
+
+    function fallbackFillMissing() {
+        const fillTriplet = (draftVal, uzId, ruId, enId, tabsId, noteId) => {
+            const uzEl = document.getElementById(uzId), ruEl = document.getElementById(ruId), enEl = document.getElementById(enId);
+            if (!uzEl || !ruEl || !enEl) return;
+            if (uzEl.value.trim() || ruEl.value.trim() || enEl.value.trim()) return;
+            if (!draftVal) return;
+            uzEl.value = draftVal; ruEl.value = draftVal; enEl.value = draftVal;
+            if (tabsId) revealTranslationTabs(tabsId, noteId, true);
+        };
+        fillTriplet(document.getElementById('test-name').value.trim(), 'test-name-uz', 'test-name-ru', 'test-name-en', null, null);
+        fillTriplet(document.getElementById('test-desc').value.trim(), 'test-desc-uz', 'test-desc-ru', 'test-desc-en', null, null);
+        document.querySelectorAll('#questionFields .question-card').forEach(card => {
+            const ta = card.querySelector('textarea[data-role="question-main"]');
+            if (!ta) return;
+            const m = ta.name.match(/^question_(\d+)$/); if (!m) return;
+            const qId = m[1];
+            fillTriplet(ta.value.trim(), `question_${qId}_uz`, `question_${qId}_ru`, `question_${qId}_en`, `translationTabs_${qId}`, `missingNote_${qId}`);
+            card.querySelectorAll('input[data-role="variant-main"]').forEach(inp => {
+                const vm = inp.name.match(/^variant_(\d+)_(\d+)$/); if (!vm) return;
+                const [, vq, vId] = vm;
+                fillTriplet(inp.value.trim(), `variant_${vq}_${vId}_uz`, `variant_${vq}_${vId}_ru`, `variant_${vq}_${vId}_en`, `translationTabsVariant_${vq}_${vId}`, null);
+            });
+        });
+    }
+
+    async function openPreview() {
+        const form = document.getElementById('editQuizForm');
+        if (!form.reportValidity()) return;
+        if (!translationApplied) { await translateAll(); }
+        fallbackFillMissing();
+        renderPreview();
+        document.getElementById('previewModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Инициализация формы из test_data (единственный источник данных)
+    ═══════════════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+        const testData = JSON.parse(document.getElementById('test-data').textContent);
+
+        document.getElementById('test-name').value = testData.name_uz || '';
+        document.getElementById('test-name-uz').value = testData.name_uz || '';
+        document.getElementById('test-name-ru').value = testData.name_ru || '';
+        document.getElementById('test-name-en').value = testData.name_en || '';
+
+        document.getElementById('test-desc').value = testData.desc_uz || '';
+        document.getElementById('test-desc-uz').value = testData.desc_uz || '';
+        document.getElementById('test-desc-ru').value = testData.desc_ru || '';
+        document.getElementById('test-desc-en').value = testData.desc_en || '';
+
+        if (testData.subject_id) {
+            document.getElementById('subject-select').value = String(testData.subject_id);
+        }
+
+        (testData.classroom_ids || []).forEach(id => {
+            const cb = document.querySelector(`input[data-classroom-id="${id}"]`);
+            if (cb) cb.checked = true;
+        });
+
+        (testData.questions || []).forEach(q => addQuestionField(q));
+
+        translationApplied = true; // из БД уже переведено — не форсируем повторный AI-запрос
+
+        {% if errors %}
+        {% for e in errors %}
+        showToast("{{ e|escapejs }}", 'error');
+        {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}
