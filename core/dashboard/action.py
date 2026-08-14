@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.shortcuts import redirect, render
 import datetime
-from core.dashboard.subject_crud import view_subject
+from core.dashboard.subject_crud import view_subject, edit_subject
 
 from core.models import (
     ClassRooms,
@@ -151,7 +151,8 @@ def action(request, status, path, pk=None):
         else:
             return redirect("dlist", tip=path)
     elif status == "edit":
-        pass
+        if path == "subject":
+            return edit_subject(request, pk)
     elif status == "view":
         if path == "subject":
             return view_subject(request, pk)
