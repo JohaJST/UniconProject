@@ -5,6 +5,7 @@ import datetime
 from core.dashboard.subject_crud import view_subject, edit_subject
 from core.dashboard.classroom_crud import view_classroom, edit_classroom
 from core.dashboard.user_crud import view_user, edit_user
+from core.dashboard.quiz_crud import view_quiz
 
 from core.models import (
     ClassRooms,
@@ -166,6 +167,8 @@ def action(request, status, path, pk=None):
             return view_classroom(request, pk)
         elif path == "user":
             return view_user(request, pk)
+        elif path == "quiz":
+            return view_quiz(request, pk)
         pass
     else:
         return redirect("dlist", tip=path)

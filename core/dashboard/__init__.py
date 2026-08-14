@@ -6,3 +6,4 @@ from .self_check import create_or_edit_self_question
 from .subject_crud import view_subject
 from .classroom_crud import view_classroom, edit_classroom
 from .user_crud import view_user, edit_user
+from .quiz_crud import view_quiz
