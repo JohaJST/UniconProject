@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{ result.test.name }} — Результаты{% endblock %}
+{% block title %}{{ result.test }} — Результаты{% endblock %}
 {% block header %}
 <style>
     .result-page {
@@ -72,7 +72,7 @@
 
     <div class="result-header">
         <div class="trophy">🏆</div>
-        <h1>{{ result.test.name }}</h1>
+        <h1>{{ result.test }}</h1>
         <div class="subject">{{ result.test.subject.name }} &nbsp;·&nbsp; {{ result.created|date:"d.m.Y" }}</div>
         <div class="stats"> 
             <div class="stat-box">

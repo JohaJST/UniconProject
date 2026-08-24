@@ -1,7 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 
-from core.models.classrooms import ClassRooms
+from core.models.classrooms import Potok, Subject
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Role enum
@@ -62,12 +62,12 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=256, unique=True)
     name = models.CharField(max_length=256, default=" ", null=True)
     last_name = models.CharField(max_length=256, null=True)
-    classroom = models.ForeignKey(ClassRooms, on_delete=models.SET_NULL, null=True)
-    birthday = models.DateField(null=True, blank=True)
-    phone = models.CharField(max_length=20, null=True, blank=True)
-
+    potok = models.ForeignKey(Potok, on_delete=models.SET_NULL, null=True)
+    position = models.CharField(max_length=256, null=True, blank=True)
+    company_name = models.CharField(max_length=256, null=True, blank=True)
+    subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True)
     # ── Настройки ─────────────────────────────────────────
-    log = models.JSONField(default=dict, null=True, blank=True)
+    # log = models.JSONField(default=dict, null=True, blank=True)
     lang = models.CharField(
         default="uz",
         max_length=2,
@@ -85,9 +85,10 @@ class User(AbstractBaseUser):
     # ── Служебные флаги ───────────────────────────────────
     # in_dashboard и interval удалены (см. docstring выше) — сессии дашборда
     # больше не зависят от SQL-базы данных.
-    just = models.BooleanField(default=False)
+    # just = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-
+    is_result = models.BooleanField(default=False)
+    
     # ── Временные метки ───────────────────────────────────
     created = models.DateField(
         auto_now_add=True, auto_now=False, null=True, editable=False
@@ -177,7 +178,7 @@ class User(AbstractBaseUser):
             "name": self.name,
             "lang": self.lang,
             "role": self.get_role(),
-            "classroom": self.classroom,
+            "potok": self.potok,
             "created": self.created,
             "updated": self.updated,
         }
@@ -189,80 +190,3 @@ class User(AbstractBaseUser):
         if not self.username:
             self.username = self.full_name()
         return super().save(*args, **kwargs)
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# OTP
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-class Otp(models.Model):
-    key = models.CharField(max_length=512)
-    username = models.CharField(max_length=20)
-    is_expired = models.BooleanField(default=False)
-    tries = models.SmallIntegerField(default=0)
-    extra = models.JSONField(default=dict)
-    is_verified = models.BooleanField(default=False)
-    step = models.CharField(max_length=25)
-
-    created = models.DateTimeField(auto_now=False, auto_now_add=True, editable=False)
-    updated = models.DateTimeField(auto_now=True, auto_now_add=False)
-
-    def save(self, *args, **kwargs):
-        if self.tries >= 3 or self.is_verified:
-            self.is_expired = True
-        return super().save(*args, **kwargs)
-
-    def __str__(self) -> str:
-        return f"{self.username} -> {self.key}"
-
-    class Meta:
-        verbose_name_plural = "8. One Time Password"
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TG_User
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-class TG_User(models.Model):
-    user_id = models.BigIntegerField(unique=True)
-    phone = models.CharField("Phone", unique=True, max_length=50)
-    username = models.CharField(max_length=128, null=True)
-    first_name = models.CharField(max_length=255, null=True)
-    last_name = models.CharField(max_length=255, null=True)
-
-    log = models.JSONField(default=dict)
-    lang = models.CharField(
-        default="uz",
-        max_length=2,
-        choices=[("uz", "Uzbek"), ("ru", "Russian"), ("en", "English")],
-    )
-    is_admin = models.BooleanField(default=False)
-
-    created = models.DateTimeField(
-        auto_now_add=True, auto_now=False, null=True, editable=False
-    )
-    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True)
-
-    class Meta:
-        verbose_name_plural = "0. TG_Users"
-
-    def full_name(self) -> str:
-        return f"{self.last_name} {self.first_name}"
-
-    def tg_user_format(self) -> dict:
-        return {
-            "tg_user_id": self.user_id,
-            "mobile": self.phone,
-            "username": self.username,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
-            "lang": self.lang,
-            "log": self.log,
-            "created": self.created,
-            "updated": self.updated,
-        }
-
-    def __str__(self) -> str:
-        return f"{self.full_name()} || {self.phone}"

@@ -33,47 +33,6 @@
               enctype="multipart/form-data">
             {% csrf_token %}
 
-            <!-- Test name -->
-            <div class="mb-5">
-                <div class="flex items-center justify-between gap-3 mb-1.5">
-                    <label class="text-sm font-medium text-slate-300 block" for="test-name">
-                        Название теста <span class="text-rose-400">*</span>
-                    </label>
-                    <button type="button" id="aiTranslateBtn" onclick="translateAll()"
-                            class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500
-                                   text-white px-3 py-1.5 rounded-xl text-xs font-medium
-                                   transition-colors shrink-0">
-                        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
-                        <span id="aiTranslateBtnText">Перевести через AI</span>
-                    </button>
-                </div>
-                <input id="test-name" type="text" name="test_name" required
-                       placeholder="Введите название теста..."
-                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
-                              text-white placeholder-slate-500
-                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                              transition-colors">
-                <input type="hidden" name="test_name_uz" id="test-name-uz" value="">
-                <input type="hidden" name="test_name_ru" id="test-name-ru" value="">
-                <input type="hidden" name="test_name_en" id="test-name-en" value="">
-            </div>
-
-            <!-- Test description -->
-            <div class="mb-5">
-                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="test-desc">
-                    Описание теста
-                </label>
-                <textarea id="test-desc" name="test_desc" rows="2"
-                          placeholder="Краткое описание теста (необязательно)..."
-                          class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
-                                 text-white placeholder-slate-500 resize-none
-                                 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                                 transition-colors"></textarea>
-                <input type="hidden" name="test_desc_uz" id="test-desc-uz" value="">
-                <input type="hidden" name="test_desc_ru" id="test-desc-ru" value="">
-                <input type="hidden" name="test_desc_en" id="test-desc-en" value="">
-            </div>
-
             <!-- Subject -->
             <div class="mb-5">
                 <label class="text-sm font-medium text-slate-300 mb-1.5 block">
@@ -90,27 +49,20 @@
                 </select>
             </div>
 
-            <!-- Classrooms (id-based checkboxes, checked via JS из test_data) -->
+            <!-- Potok -->
             <div class="mb-5">
-                <label class="text-sm font-medium text-slate-300 mb-2 block">
-                    Классы
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block">
+                    Поток <span class="text-rose-400">*</span>
                 </label>
-                {% if classrooms %}
-                <div id="classroomsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {% for classroom in classrooms %}
-                    <label class="flex items-center gap-2 bg-slate-900 border border-slate-600 rounded-xl
-                                   px-3 py-2.5 cursor-pointer hover:border-indigo-500 transition-colors">
-                        <input type="checkbox" name="classroom_{{ classroom.id }}" value="1"
-                               data-classroom-id="{{ classroom.id }}"
-                               class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
-                                      focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
-                        <span class="text-sm text-slate-200 truncate">{{ classroom.name }}</span>
-                    </label>
+                <select id="potok-select" name="potok" required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                               text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                               focus:ring-indigo-500 transition-colors">
+                    <option value="">-- Выберите поток --</option>
+                    {% for potok in potoks %}
+                    <option value="{{ potok.id }}">{{ potok.date_range }}</option>
                     {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-sm text-slate-500">Классы ещё не созданы</p>
-                {% endif %}
+                </select>
             </div>
 
             <!-- Divider -->
@@ -118,9 +70,18 @@
 
             <!-- Questions -->
             <div class="mb-4">
-                <label class="text-sm font-medium text-slate-300 mb-3 block">
-                    Вопросы
-                </label>
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <label class="text-sm font-medium text-slate-300 block">
+                        Вопросы
+                    </label>
+                    <button type="button" id="aiTranslateBtn" onclick="translateAll()"
+                            class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500
+                                   text-white px-3 py-1.5 rounded-xl text-xs font-medium
+                                   transition-colors shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                        <span id="aiTranslateBtnText">Перевести через AI</span>
+                    </button>
+                </div>
                 <div id="questionFields" class="space-y-3"></div>
 
                 <button type="button" onclick="addQuestionField()"
@@ -515,18 +476,6 @@
     }
 
     function applyTranslation(id, uz, ru, en, isMissing) {
-        if (id === 'test_name') {
-            document.getElementById('test-name-uz').value = uz || '';
-            document.getElementById('test-name-ru').value = ru || '';
-            document.getElementById('test-name-en').value = en || '';
-            return;
-        }
-        if (id === 'test_desc') {
-            document.getElementById('test-desc-uz').value = uz || '';
-            document.getElementById('test-desc-ru').value = ru || '';
-            document.getElementById('test-desc-en').value = en || '';
-            return;
-        }
         const qMatch = id.match(/^question_(\d+)$/);
         if (qMatch) {
             const qId = qMatch[1];
@@ -555,18 +504,11 @@
 
     function invalidateTranslation() { translationApplied = false; }
 
-    document.getElementById('test-name').addEventListener('input', invalidateTranslation);
-    document.getElementById('test-desc').addEventListener('input', invalidateTranslation);
-
     async function translateAll() {
         if (translateInFlight) return;
         const btn = document.getElementById('aiTranslateBtn');
 
         const items = [];
-        const testNameInput = document.getElementById('test-name');
-        if (testNameInput && testNameInput.value.trim()) items.push({ id: 'test_name', text: testNameInput.value.trim() });
-        const testDescInput = document.getElementById('test-desc');
-        if (testDescInput && testDescInput.value.trim()) items.push({ id: 'test_desc', text: testDescInput.value.trim() });
 
         document.querySelectorAll('#questionFields .question-card').forEach(card => {
             const textarea = card.querySelector('textarea[data-role="question-main"]');
@@ -666,12 +608,9 @@
         const subjectName = subjectSelect && subjectSelect.selectedOptions.length
             ? subjectSelect.selectedOptions[0].textContent.trim() : '—';
 
-        const name_uz = document.getElementById('test-name-uz').value;
-        const name_ru = document.getElementById('test-name-ru').value;
-        const name_en = document.getElementById('test-name-en').value;
-        const desc_uz = document.getElementById('test-desc-uz').value;
-        const desc_ru = document.getElementById('test-desc-ru').value;
-        const desc_en = document.getElementById('test-desc-en').value;
+        const potokSelect = document.getElementById('potok-select');
+        const potokName = potokSelect && potokSelect.selectedOptions.length
+            ? potokSelect.selectedOptions[0].textContent.trim() : '—';
 
         let html = `
             <div class="mb-6 pb-5 border-b border-slate-700">
@@ -679,20 +618,8 @@
                 <p class="text-sm text-white">${escapeHtml(subjectName)}</p>
             </div>
             <div class="mb-6 pb-5 border-b border-slate-700">
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Название теста</p>
-                <div class="space-y-2">
-                    ${langEditBlock('UZ', 'test-name-uz', name_uz)}
-                    ${langEditBlock('RU', 'test-name-ru', name_ru)}
-                    ${langEditBlock('EN', 'test-name-en', name_en)}
-                </div>
-            </div>
-            <div class="mb-6 pb-5 border-b border-slate-700">
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Описание теста</p>
-                <div class="space-y-2">
-                    ${langEditBlock('UZ', 'test-desc-uz', desc_uz)}
-                    ${langEditBlock('RU', 'test-desc-ru', desc_ru)}
-                    ${langEditBlock('EN', 'test-desc-en', desc_en)}
-                </div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Поток</p>
+                <p class="text-sm text-white">${escapeHtml(potokName)}</p>
             </div>
         `;
 
@@ -795,8 +722,6 @@
             uzEl.value = draftVal; ruEl.value = draftVal; enEl.value = draftVal;
             if (tabsId) revealTranslationTabs(tabsId, noteId, true);
         };
-        fillTriplet(document.getElementById('test-name').value.trim(), 'test-name-uz', 'test-name-ru', 'test-name-en', null, null);
-        fillTriplet(document.getElementById('test-desc').value.trim(), 'test-desc-uz', 'test-desc-ru', 'test-desc-en', null, null);
         document.querySelectorAll('#questionFields .question-card').forEach(card => {
             const ta = card.querySelector('textarea[data-role="question-main"]');
             if (!ta) return;
@@ -827,24 +752,13 @@
     document.addEventListener('DOMContentLoaded', () => {
         const testData = JSON.parse(document.getElementById('test-data').textContent);
 
-        document.getElementById('test-name').value = testData.name_uz || '';
-        document.getElementById('test-name-uz').value = testData.name_uz || '';
-        document.getElementById('test-name-ru').value = testData.name_ru || '';
-        document.getElementById('test-name-en').value = testData.name_en || '';
-
-        document.getElementById('test-desc').value = testData.desc_uz || '';
-        document.getElementById('test-desc-uz').value = testData.desc_uz || '';
-        document.getElementById('test-desc-ru').value = testData.desc_ru || '';
-        document.getElementById('test-desc-en').value = testData.desc_en || '';
-
         if (testData.subject_id) {
             document.getElementById('subject-select').value = String(testData.subject_id);
         }
 
-        (testData.classroom_ids || []).forEach(id => {
-            const cb = document.querySelector(`input[data-classroom-id="${id}"]`);
-            if (cb) cb.checked = true;
-        });
+        if (testData.potok_id) {
+            document.getElementById('potok-select').value = String(testData.potok_id);
+        }
 
         (testData.questions || []).forEach(q => addQuestionField(q));
 

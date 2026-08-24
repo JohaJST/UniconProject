@@ -78,39 +78,41 @@
                     />
                 </div>
 
-                <!-- Дата рождения (birthday) -->
+                <!-- Должность (position) -->
                 <div>
                     <label
                         class="text-sm font-medium text-slate-300 mb-1.5 block"
-                        for="id_birthday"
+                        for="id_position"
                     >
-                        Дата рождения
+                        Должность
                     </label>
                     <input
-                        id="id_birthday"
-                        type="date"
-                        name="birthday"
-                        value="{{ user_data.birthday }}"
-                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [color-scheme:dark]"
+                        id="id_position"
+                        type="text"
+                        name="position"
+                        maxlength="255"
+                        placeholder="Должность..."
+                        value="{{ user_data.position }}"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
                 </div>
 
-                <!-- Телефон (phone) -->
+                <!-- Компания (company_name) -->
                 <div>
                     <label
                         class="text-sm font-medium text-slate-300 mb-1.5 block"
-                        for="id_phone"
+                        for="id_company_name"
                     >
-                        Телефон
+                        Компания
                     </label>
                     <input
-                        id="id_phone"
-                        type="number"
-                        name="phone"
+                        id="id_company_name"
+                        type="text"
+                        name="company_name"
                         maxlength="255"
-                        placeholder="998997774488"
-                        value="{{ user_data.phone }}"
-                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Компания..."
+                        value="{{ user_data.company_name }}"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
                 </div>
 
@@ -135,24 +137,24 @@
                     />
                 </div>
 
-                <!-- Класс (classroom select) -->
+                <!-- Поток (potok select) -->
                 <div>
                     <label
                         class="text-sm font-medium text-slate-300 mb-1.5 block"
-                        for="id_classroom"
+                        for="id_potok"
                     >
-                        Класс
+                        Поток
                     </label>
                     <select
-                        id="id_classroom"
-                        name="classroom"
+                        id="id_potok"
+                        name="potok"
                         class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     >
-                        <option value="">-- Выберите класс --</option>
-                        {% for i in classrooms %}
+                        <option value="">-- Выберите поток --</option>
+                        {% for i in potoks %}
                             <option value="{{ i.id }}"
-                                {% if user_data.classroom|slugify == i.id|slugify %}selected{% endif %}
-                            >{{ i.name }}</option>
+                                {% if user_data.potok|slugify == i.id|slugify %}selected{% endif %}
+                            >{{ i.date_range }}</option>
                         {% endfor %}
                     </select>
                 </div>

@@ -33,70 +33,39 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Список классов -->
-        <div class="lg:col-span-1 bg-slate-800 rounded-2xl border border-slate-700/50 shadow-sm p-6">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">Привязанные классы</h2>
-            {% if classrooms %}
-                <ul class="space-y-2">
-                    {% for item in classrooms %}
-                        <li class="flex items-center gap-2 text-sm text-slate-300 bg-slate-900/50 px-3 py-2 rounded-lg border border-slate-700/50">
-                            <i class="fa-solid fa-users text-slate-500"></i>
-                            {{ item.classroom.name }}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-sm text-slate-500 italic">Нет привязанных классов</p>
-            {% endif %}
-        </div>
+    <!-- Таблица тестов -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">Тесты по предмету</h2>
 
-        <!-- Таблица тестов -->
-        <div class="lg:col-span-2 bg-slate-800 rounded-2xl border border-slate-700/50 shadow-sm p-6">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">Тесты по предмету</h2>
-            
-            {% if tests %}
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-900/50 text-slate-400 text-xs uppercase font-semibold">
-                        <tr>
-                            <th class="px-4 py-3 rounded-tl-lg">Название</th>
-                            <th class="px-4 py-3">Статус</th>
-                            <th class="px-4 py-3 text-center">Вопросов</th>
-                            <th class="px-4 py-3 rounded-tr-lg">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-700/50">
-                        {% for test in tests %}
-                        <tr class="hover:bg-slate-700/30 transition-colors">
-                            <td class="px-4 py-3 font-medium text-white">{{ test.name }}</td>
-                            <td class="px-4 py-3">
-                                {% if test.is_start %}
-                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                                        Активен
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 bg-slate-700/50 border border-slate-600 px-2 py-0.5 rounded-full">
-                                        Закрыт
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="px-4 py-3 text-center font-medium">{{ test.question_count }}</td>
-                            <td class="px-4 py-3">
-                                <a href="{% url 'action' status='view' path='quiz' pk=test.id %}" 
-                                   class="text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 p-2 rounded-lg transition-colors inline-flex" title="Подробнее">
-                                    <i class="fa-solid fa-eye text-xs"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-                <p class="text-sm text-slate-500 italic">Тесты пока не созданы.</p>
-            {% endif %}
+        {% if tests %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-900/50 text-slate-400 text-xs uppercase font-semibold">
+                    <tr>
+                        <th class="px-4 py-3 rounded-tl-lg">Название</th>
+                        <th class="px-4 py-3 text-center">Вопросов</th>
+                        <th class="px-4 py-3 rounded-tr-lg">Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for test in tests %}
+                    <tr class="hover:bg-slate-700/30 transition-colors">
+                        <td class="px-4 py-3 font-medium text-white">{{ test }}</td>
+                        <td class="px-4 py-3 text-center font-medium">{{ test.question_count }}</td>
+                        <td class="px-4 py-3">
+                            <a href="{% url 'action' status='view' path='quiz' pk=test.id %}"
+                               class="text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 p-2 rounded-lg transition-colors inline-flex" title="Подробнее">
+                                <i class="fa-solid fa-eye text-xs"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        {% else %}
+            <p class="text-sm text-slate-500 italic">Тесты пока не созданы.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

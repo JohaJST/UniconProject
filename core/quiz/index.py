@@ -8,24 +8,21 @@ from core.models import Result, Test
 @login_required(login_url="login")
 def index(request, pk=None):
     """
-    Единый список всех тестов, доступных классу текущего пользователя.
+    Единый список всех тестов, доступных потоку текущего пользователя.
 
     Параметр `pk` (subject id) сохранён для совместимости с URL /subject/<pk>/,
-    но в данной версии он не используется — все активные тесты отображаются
+    но в данной версии он не используется — все тесты отображаются
     на одной странице.
     """
-    if request.user.birthday is None or request.user.phone is None:
+    if not request.user.position or not request.user.company_name:
         return redirect("required")
 
-    # Один запрос: тесты для класса + subject через JOIN (select_related).
-    # .distinct() необходим, т.к. через test_classrooms возможны дубли.
+    # Тесты для потока пользователя + subject через JOIN (select_related).
     tests = (
         Test.objects
-        .filter(
-            test_classrooms__classroom=request.user.classroom,
-        )
-        .select_related('subject')
-        .annotate(question_count=Count('variantas__questions', distinct=True))
+        .filter(potok=request.user.potok)
+        .select_related('subject', 'potok')
+        .annotate(question_count=Count('questions', distinct=True))
         .distinct()
         .order_by('-created')
     )
@@ -41,18 +38,16 @@ def index(request, pk=None):
 
 @login_required(login_url="login")
 def user_profile(request):
-    if request.user.birthday is None or request.user.phone is None:
+    if not request.user.position or not request.user.company_name:
         return redirect("required")
 
     """Профиль пользователя с историей результатов и средним баллом."""
-    # Фильтруем на уровне БД вместо перебора всех записей в Python.
     results = (
         Result.objects
         .filter(user=request.user)
         .select_related('test')
         .order_by('-created')
     )
-    # Avg корректно игнорирует NULL-значения.
     average = results.aggregate(avg=Avg('foyiz'))['avg']
 
     ctx = {
@@ -64,12 +59,12 @@ def user_profile(request):
 
 
 def required(request):
-    """Требование заполнить дату рождения и телефон при первом входе."""
+    """Требование заполнить должность и компанию при первом входе."""
     if request.method == "POST":
         try:
             u = request.user
-            u.birthday = request.POST['birthday']
-            u.phone = request.POST['phone']
+            u.position = request.POST['position']
+            u.company_name = request.POST['company_name']
             u.save()
             return redirect("home")
         except Exception:

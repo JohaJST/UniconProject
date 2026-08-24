@@ -19,7 +19,7 @@ from django.utils import translation
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import translate_url
 
-from core.models import ClassRooms, User
+from core.models import Potok, User
 from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
 from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token, generate_tokens
@@ -66,12 +66,21 @@ def sign_in(requests):
 
     ctx = {
         "u": User.objects.all(),
-        "c": ClassRooms.objects.all(),
+        "c": Potok.objects.all(),
     }
 
     if requests.POST:
         data = requests.POST
-        user = User.objects.filter(id=int(data["user"])).first()
+
+        # Валидация входа: поле user должно быть целым id существующего
+        # пользователя. Без этого int() на мусоре ронял бы 500
+        # (KeyError/ValueError), а не контролируемую ошибку формы.
+        raw_user = (data.get("user") or "").strip()
+        if not raw_user.isdigit():
+            ctx["error"] = "Абитуриент(ка) не найден(а)"
+            return render(requests, 'pages/auth/login.html', ctx)
+
+        user = User.objects.filter(id=int(raw_user)).first()
         if not user:
             ctx["error"] = "Абитуриент(ка) не найден(а)"
             return render(requests, 'pages/auth/login.html', ctx)
@@ -156,7 +165,15 @@ def refresh_token_view(request):
     if new_tokens is None:
         return _redirect_to_login_clearing_cookies()
 
-    response = redirect(request.GET.get('next', 'home'))
+    # Валидация next против open redirect: внешний хост запрещён —
+    # редиректим только на относительный путь собственного сайта.
+    next_url = request.GET.get('next', 'home')
+    if not url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        next_url = "home"
+
+    response = redirect(next_url)
     response.set_cookie(
         settings.JWT_ACCESS_COOKIE_NAME, new_tokens["access_token"],
         max_age=settings.JWT_ACCESS_TOKEN_TTL, httponly=settings.JWT_COOKIE_HTTPONLY,

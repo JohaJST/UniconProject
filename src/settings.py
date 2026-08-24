@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Путь к корневой директории проекта
@@ -25,12 +26,27 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "0")
+# ИСПРАВЛЕНО: раньше фолбэк был "0" — ключ длиной 1 байт (PyJWT прямо
+# предупреждает об этом). Теперь в проде без SECRET_KEY сервер не стартует,
+# а в dev используется явный локальный фолбэк с пометкой insecure.
+_SECRET_KEY = os.getenv("SECRET_KEY")
+if _SECRET_KEY:
+    SECRET_KEY = _SECRET_KEY
+elif os.getenv("DEBUG", "True").strip().lower() in ("1", "true", "yes"):
+    SECRET_KEY = "dev-insecure-secret-key-change-me-0123456789"
+else:
+    raise ImproperlyConfigured(
+        "SECRET_KEY не задан: добавьте SECRET_KEY в .env (не менее 50 символов)"
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", True)
+# ИСПРАВЛЕНО: os.getenv() возвращает строку, поэтому DEBUG=False из .env
+# раньше был truthy и DEBUG всегда оставался True. Теперь парсим явно.
+DEBUG = os.getenv("DEBUG", "True").strip().lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = [os.getenv("ALLOWED_HOST", "*")]
+ALLOWED_HOSTS = [
+    h.strip() for h in os.getenv("ALLOWED_HOST", "*").split(",") if h.strip()
+]
 
 APP_NAME = "Unicon Project"
 

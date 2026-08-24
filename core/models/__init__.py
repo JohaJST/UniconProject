@@ -1,12 +1,12 @@
-from .auth import Otp, Role, TG_User, User
-from .classrooms import ClassRooms, ClassRoomsSubjects, Subject
+from .auth import Role, User
+from .classrooms import Potok, Subject
 from .test import (
-    OldResult,
+    # OldResult,
     Question,
     Result,
     Test,
-    TestClassRoom,
-    TestVarianta,
+    # TestClassRoom,
+    # TestVarianta,
     Variant,
 )
 
@@ -18,4 +18,4 @@ from .about import (
     News,
 )
 
-from .self import SelfImg, SelfAnswer, SelfQuestion, SelfResult, SelfStudy
+from .self import SelfAnswer, SelfQuestion, SelfResult, SelfStudy, SelfUser

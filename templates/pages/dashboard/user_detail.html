@@ -32,16 +32,16 @@
                 <p class="text-sm text-slate-200 font-medium">{{ target_user.get_role_display }}</p>
             </div>
             <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3">
-                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Класс</p>
-                <p class="text-sm text-slate-200 font-medium">{{ target_user.classroom.name|default:"—" }}</p>
+                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Поток</p>
+                <p class="text-sm text-slate-200 font-medium">{{ target_user.potok.date_range|default:"—" }}</p>
             </div>
             <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3">
-                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Телефон</p>
-                <p class="text-sm text-slate-200 font-medium">{{ target_user.phone|default:"—" }}</p>
+                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Должность</p>
+                <p class="text-sm text-slate-200 font-medium">{{ target_user.position|default:"—" }}</p>
             </div>
             <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3">
-                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Дата рождения</p>
-                <p class="text-sm text-slate-200 font-medium">{{ target_user.birthday|date:"d.m.Y"|default:"—" }}</p>
+                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Компания</p>
+                <p class="text-sm text-slate-200 font-medium">{{ target_user.company_name|default:"—" }}</p>
             </div>
             <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3">
                 <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Язык</p>
@@ -87,7 +87,7 @@
                 <tbody class="divide-y divide-slate-700/50">
                     {% for result in results %}
                     <tr class="hover:bg-slate-750 transition-colors">
-                        <td class="px-4 py-3 text-white font-medium max-w-xs truncate">{{ result.test.name }}</td>
+                        <td class="px-4 py-3 text-white font-medium max-w-xs truncate">{{ result.test }}</td>
                         <td class="px-4 py-3 text-slate-300">{{ result.test.subject.name }}</td>
                         <td class="px-4 py-3 text-slate-300">{{ result.result }} / {{ result.totalQuestions }}</td>
                         <td class="px-4 py-3">

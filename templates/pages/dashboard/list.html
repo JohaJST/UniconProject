@@ -39,12 +39,12 @@
             <i class="fa-solid fa-plus"></i>
             Добавить предмет
         </a>
-        {% elif name == "ClassRoom" %}
-        <a href="{% url 'action_no_pk' status='create' path='classroom' %}"
+        {% elif name == "Potok" %}
+        <a href="{% url 'action_no_pk' status='create' path='potok' %}"
            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white
                   px-4 py-2.5 rounded-xl font-medium transition-colors text-sm shrink-0">
             <i class="fa-solid fa-plus"></i>
-            Добавить класс
+            Добавить поток
         </a>
         {% elif name == "Self Question" %}
         <a href="{% url 'self_check_create' %}"
@@ -64,21 +64,20 @@
                 <!-- ── Table head ── -->
                 <thead>
                     <tr class="bg-slate-900 border-b border-slate-700">
-                        {% if name == "Subject" or name == "ClassRoom" %}
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Название</th>
+                        {% if name == "Subject" or name == "Potok" %}
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">{% if name == "Subject" %}Название{% else %}Период{% endif %}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "User" %}
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Фамилия</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Имя</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Класс</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Поток</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "Result" %}
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ученик</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Username</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Класс</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Поток</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Результат</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">%</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Вопросов</th>
@@ -87,22 +86,19 @@
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "Quiz" %}
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Название</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Описание</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Поток</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Предмет</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Статус</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "Question" %}
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Текст</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Изображение</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Вариант теста</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Тест</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "Variant" %}
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Текст</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ответ</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Тест</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Вопрос</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "Self Question" %}
@@ -110,11 +106,10 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Текст вопроса</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Изображение</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Вариантов</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Перевод</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "Self Result" %}
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ФИО</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Пользователь</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Score</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">%</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Дата</th>
@@ -131,46 +126,39 @@
                         <tr class="hover:bg-slate-750 transition-colors">
                             <td class="px-4 py-3 text-white font-medium">{{ i.name }}</td>
                             <td class="px-4 py-3 text-right">
-                        
                                 <a href="{% url 'action' status='view' path='subject' pk=i.id %}"
                                    class="px-3 py-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
                                           rounded-lg transition-colors inline-flex" title="Посмотреть">
                                     <i class="fa-solid fa-eye text-xs"></i>
                                 </a>
-                        
                                 <a href="{% url 'action' status='edit' path='subject' pk=i.id %}"
                                    class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
                                           rounded-lg transition-colors inline-flex" title="Редактировать">
                                     <i class="fa-solid fa-pen text-xs"></i>
                                 </a>
-                        
                                 <a href="{% url 'action' status='delete' path='subject' pk=i.id %}"
                                    class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
                                           rounded-lg transition-colors inline-flex" title="Удалить">
                                     <i class="fa-solid fa-trash text-xs"></i>
                                 </a>
-                        
                             </td>
                         </tr>
 
-                        {% elif name == "ClassRoom" %}
+                        {% elif name == "Potok" %}
                         <tr class="hover:bg-slate-750 transition-colors">
-                            <td class="px-4 py-3 text-white font-medium">{{ i.name }}</td>
+                            <td class="px-4 py-3 text-white font-medium">{{ i.date_range }}</td>
                             <td class="px-4 py-3 text-right">
-
-                                <a href="{% url 'action' status='view' path='classroom' pk=i.id %}"
+                                <a href="{% url 'action' status='view' path='potok' pk=i.id %}"
                                    class="px-3 py-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
                                           rounded-lg transition-colors inline-flex" title="Посмотреть">
                                     <i class="fa-solid fa-eye text-xs"></i>
                                 </a>
-                                
-                                <a href="{% url 'action' status='edit' path='classroom' pk=i.id %}"
+                                <a href="{% url 'action' status='edit' path='potok' pk=i.id %}"
                                    class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
                                           rounded-lg transition-colors inline-flex" title="Редактировать">
                                     <i class="fa-solid fa-pen text-xs"></i>
                                 </a>
-                                
-                                <a href="{% url 'action' status='delete' path='classroom' pk=i.id %}"
+                                <a href="{% url 'action' status='delete' path='potok' pk=i.id %}"
                                    class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
                                           rounded-lg transition-colors inline-flex" title="Удалить">
                                     <i class="fa-solid fa-trash text-xs"></i>
@@ -183,7 +171,7 @@
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.id }}</td>
                             <td class="px-4 py-3 text-white font-medium">{{ i.last_name }}</td>
                             <td class="px-4 py-3 text-slate-300">{{ i.name }}</td>
-                            <td class="px-4 py-3 text-slate-300">{{ i.classroom.name }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ i.potok.date_range|default:"—" }}</td>
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.username }}</td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{% url 'action' status='view' path='user' pk=i.id %}"
@@ -191,13 +179,11 @@
                                           rounded-lg transition-colors inline-flex" title="Посмотреть">
                                     <i class="fa-solid fa-eye text-xs"></i>
                                 </a>
-                                
                                 <a href="{% url 'action' status='edit' path='user' pk=i.id %}"
                                    class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
                                           rounded-lg transition-colors inline-flex" title="Редактировать">
                                     <i class="fa-solid fa-pen text-xs"></i>
                                 </a>
-                                
                                 <a href="{% url 'action' status='delete' path='user' pk=i.id %}"
                                    class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
                                           rounded-lg transition-colors inline-flex" title="Удалить">
@@ -210,8 +196,7 @@
                         <tr class="hover:bg-slate-750 transition-colors">
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.id }}</td>
                             <td class="px-4 py-3 text-white font-medium">{{ i.user.last_name }} {{ i.user.name }}</td>
-                            <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.user.username }}</td>
-                            <td class="px-4 py-3 text-slate-300">{{ i.user.classroom.name }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ i.user.potok.date_range|default:"—" }}</td>
                             <td class="px-4 py-3 text-slate-300">{{ i.result }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
@@ -223,7 +208,7 @@
                             </td>
                             <td class="px-4 py-3 text-slate-400">{{ i.totalQuestions }}</td>
                             <td class="px-4 py-3 text-slate-400">{{ i.created|date:"d.m.Y" }}</td>
-                            <td class="px-4 py-3 text-slate-300 max-w-xs truncate">{{ i.test.name }}</td>
+                            <td class="px-4 py-3 text-slate-300 max-w-xs truncate">{{ i.test }}</td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{% url 'action' status='delete' path='result' pk=i.id %}"
                                    class="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
@@ -237,29 +222,9 @@
                         <tr class="hover:bg-slate-750 transition-colors">
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.id }}</td>
                             <td class="px-4 py-3 text-white font-medium max-w-xs">
-                                <span class="truncate block">{{ i.name }}</span>
+                                <span class="truncate block">{{ i.potok.date_range|default:"—" }}</span>
                             </td>
-                            <td class="px-4 py-3 text-slate-400 max-w-xs">
-                                <span class="truncate block text-xs">{{ i.desc }}</span>
-                            </td>
-                            <td class="px-4 py-3 text-slate-300">{{ i.subject.name }}</td>
-                            <td class="px-4 py-3">
-                                {% if i.is_start %}
-                                <a href="{% url 'action' status='end' path='quiz' pk=i.id %}"
-                                   class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold
-                                          bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
-                                    <i class="fa-solid fa-circle-dot text-[10px]"></i>
-                                    Активен
-                                </a>
-                                {% else %}
-                                <a href="{% url 'action' status='start' path='quiz' pk=i.id %}"
-                                   class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold
-                                          bg-slate-600 text-slate-400 hover:bg-slate-500/50 transition-colors">
-                                    <i class="fa-solid fa-circle text-[10px]"></i>
-                                    Неактивен
-                                </a>
-                                {% endif %}
-                            </td>
+                            <td class="px-4 py-3 text-slate-300">{{ i.subject.name|default:"—" }}</td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{% url 'action' status='view' path='quiz' pk=i.id %}"
                                    class="px-3 py-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
@@ -294,7 +259,7 @@
                                 <span class="text-slate-600">—</span>
                                 {% endif %}
                             </td>
-                            <td class="px-4 py-3 text-slate-300 text-xs">{{ i.varianta }}</td>
+                            <td class="px-4 py-3 text-slate-300 text-xs">{{ i.test }}</td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{% url 'action' status='delete' path='question' pk=i.id %}"
                                    class="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
@@ -322,9 +287,6 @@
                                     <i class="fa-solid fa-xmark text-[10px]"></i> Нет
                                 </span>
                                 {% endif %}
-                            </td>
-                            <td class="px-4 py-3 text-slate-300 text-xs max-w-xs">
-                                <span class="truncate block">{{ i.question.varianta.test.name }}</span>
                             </td>
                             <td class="px-4 py-3 text-slate-400 text-xs max-w-xs">
                                 <span class="truncate block">{{ i.question.text }}</span>
@@ -354,17 +316,6 @@
                                 {% endif %}
                             </td>
                             <td class="px-4 py-3 text-slate-300 text-xs">{{ i.selfanswer_set.count }}</td>
-                            <td class="px-4 py-3">
-                                {% if i.needs_review %}
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold
-                                                bg-amber-500/20 text-amber-400">
-                                    <i class="fa-solid fa-triangle-exclamation text-[10px]"></i>
-                                    Требует проверки перевода
-                                </span>
-                                {% else %}
-                                <span class="text-slate-600 text-xs">—</span>
-                                {% endif %}
-                            </td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{% url 'self_check_edit' pk=i.id %}"
                                     class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
@@ -382,7 +333,7 @@
                         {% elif name == "Self Result" %}
                         <tr class="hover:bg-slate-750 transition-colors">
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.id }}</td>
-                            <td class="px-4 py-3 text-white font-medium">{{ i.fio }}</td>
+                            <td class="px-4 py-3 text-white font-medium">{{ i.user }}</td>
                             <td class="px-4 py-3 text-slate-300">{{ i.score }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
@@ -413,10 +364,8 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-
             </table>
         </div>
     </div>
-
 </div>
 {% endblock %}

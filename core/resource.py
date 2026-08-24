@@ -1,16 +1,11 @@
 from import_export import resources
 
 from .models import (
-    ClassRooms,
-    ClassRoomsSubjects,
-    OldResult,
+    Potok,
     Question,
     Result,
     Subject,
     Test,
-    TestClassRoom,
-    TestVarianta,
-    TG_User,
     User,
     Variant,
     Partners,
@@ -22,52 +17,40 @@ from .models import (
     SelfQuestion,
     SelfResult,
     SelfStudy,
-    SelfImg,
+    SelfUser
 )
 
 
 class UserResource(resources.ModelResource):
     class Meta:
         model = User
+        # Хеш пароля никогда не должен попадать в CSV/Excel-экспорт.
+        exclude = ("password",)
 
 
-class TG_UserResource(resources.ModelResource):
+
+class PotokResource(resources.ModelResource):
     class Meta:
-        model = TG_User
-
-
-class CLassroomResource(resources.ModelResource):
-    class Meta:
-        model = ClassRooms
+        model = Potok
 
 class ResultResource(resources.ModelResource):
     class Meta:
         model = Result
 
 
-class OldResulrResource(resources.ModelResource):
-    class Meta:
-        model = OldResult
-
-
 class QuestionResource(resources.ModelResource):
     class Meta:
         model = Question
-        fields = ('id', 'text_uz', 'text_ru', 'text_en', 'img', 'varianta', 'created',)
+        # ИСПРАВЛЕНО: поле 'varianta' удалено из модели — вместо него FK 'test'.
+        fields = ('id', 'text_uz', 'text_ru', 'text_en', 'img', 'test', 'created',)
 
 class TestResource(resources.ModelResource):
     class Meta:
         model = Test
         fields = (
-            'id', 'name_uz', 'name_ru', 'name_en',
-            'desc_uz', 'desc_ru', 'desc_en',
-            'subject', 'is_start', 'created',
+            'id', 'potok', 'subject', 'created', 'updated',
         )
         
-
-class TestVariantaResource(resources.ModelResource):
-    class Meta:
-        model = TestVarianta
 
 
 class VariantResource(resources.ModelResource):
@@ -75,15 +58,6 @@ class VariantResource(resources.ModelResource):
         model = Variant
         fields = ('id', 'text_uz', 'text_ru', 'text_en', 'is_answer', 'question',)
 
-
-class ClassRoomsSubjectsResource(resources.ModelResource):
-    class Meta:
-        model = ClassRoomsSubjects
-
-
-class TestClassRoomResource(resources.ModelResource):
-    class Meta:
-        model = TestClassRoom
 
 
 class SUbjectResource(resources.ModelResource):
@@ -161,11 +135,11 @@ class SelfStudyResource(resources.ModelResource):
             'id', 'html_text_uz', 'html_text_ru', 'html_text_en',
         )
 
-class SelfImgResource(resources.ModelResource):
-    class Meta:
-        model = SelfImg
-
 class SelfResultResource(resources.ModelResource):
     class Meta:
         model = SelfResult
 
+
+class SelfUserResource(resources.ModelResource):
+    class Meta:
+        model = SelfUser

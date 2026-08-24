@@ -3,17 +3,16 @@ core/dashboard/quiz_crud.py
 ────────────────────────────
 CRUD-view для теста (Test) в дашборде.
 
-view_quiz  — просмотр (без изменений).
-edit_quiz  — полное редактирование: метаданные теста + структура
-             TestVarianta(variant=1) -> Question -> Variant.
+view_quiz — просмотр (без изменений).
+edit_quiz — полное редактирование: метаданные теста (subject + potok) +
+            структура Test -> Question -> Variant.
 
 RBAC и sliding-window таймаут дашборда проверяет DashboardSecurityMiddleware —
 свои проверки прав здесь не нужны.
 
 Паттерн вложенного id-based diff (create/update/delete + IDOR-защита через
 фильтрацию по родителю) скопирован 1-в-1 с core/dashboard/self_check.py.
-Обработка картинок переиспользует core/media_utils.process_uploaded_image —
-своей логики ресайза/валидации здесь нет и быть не должно.
+Обработка картинок переиспользует core/media_utils.process_uploaded_image.
 """
 from __future__ import annotations
 
@@ -22,18 +21,16 @@ import re
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Avg
+from django.db.models import Avg, Count
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.media_utils import InvalidImageError, process_uploaded_image
 from core.models import (
-    ClassRooms,
+    Potok,
     Question,
     Result,
     Subject,
     Test,
-    TestClassRoom,
-    TestVarianta,
     Variant,
 )
 
@@ -44,25 +41,17 @@ _VARIANT_RE = re.compile(r"variant_(\d+)_(\d+)")
 @login_required(login_url="login")
 def view_quiz(request, pk):
     """
-    Карточка теста: метаданные (название/описание/предмет/статус),
-    привязанные классы, статистика попыток + полная структура
-    Variant -> Question -> Answer для просмотра содержимого теста.
+    Карточка теста: предмет + поток, статистика попыток + полная структура
+    Question -> Answer для просмотра содержимого теста.
 
-    prefetch_related('variantas__questions__answers') обязателен: в шаблоне
-    цикл variantas -> questions -> answers иначе даст классический N+1
-    (отдельный запрос на каждый Question и на каждый Variant ответа).
+    prefetch_related('questions__answers') обязателен: в шаблоне цикл
+    questions -> answers иначе даст классический N+1.
     """
     test = get_object_or_404(
         Test.objects
-        .select_related('subject')
-        .prefetch_related('variantas__questions__answers'),
+        .select_related('subject', 'potok')
+        .prefetch_related('questions__answers'),
         pk=pk,
-    )
-
-    classrooms = (
-        ClassRooms.objects
-        .filter(test_classrooms__test=test)
-        .distinct()
     )
 
     results = Result.objects.filter(test=test)
@@ -71,7 +60,6 @@ def view_quiz(request, pk):
 
     ctx = {
         "test": test,
-        "classrooms": classrooms,
         "attempt_count": attempt_count,
         "avg_score": round(avg_score, 1) if avg_score is not None else None,
     }
@@ -82,7 +70,7 @@ def view_quiz(request, pk):
 # edit_quiz
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _build_test_data(test: Test, test_varianta: TestVarianta) -> dict:
+def _build_test_data(test: Test) -> dict:
     """
     Собирает JSON-сериализуемый снимок теста для шаблона (json_script).
 
@@ -92,7 +80,7 @@ def _build_test_data(test: Test, test_varianta: TestVarianta) -> dict:
     при первом же добавлении/удалении карточки на клиенте.
     """
     questions_data = []
-    for q in test_varianta.questions.prefetch_related('answers').all():
+    for q in test.questions.prefetch_related('answers').all():
         questions_data.append({
             "id": q.id,
             "text_uz": q.text_uz or "",
@@ -112,16 +100,8 @@ def _build_test_data(test: Test, test_varianta: TestVarianta) -> dict:
         })
 
     return {
-        "name_uz": test.name_uz or "",
-        "name_ru": test.name_ru or "",
-        "name_en": test.name_en or "",
-        "desc_uz": test.desc_uz or "",
-        "desc_ru": test.desc_ru or "",
-        "desc_en": test.desc_en or "",
         "subject_id": test.subject_id,
-        "classroom_ids": list(
-            TestClassRoom.objects.filter(test=test).values_list('classroom_id', flat=True)
-        ),
+        "potok_id": test.potok_id,
         "questions": questions_data,
     }
 
@@ -136,11 +116,8 @@ def edit_quiz(request, pk):
 
     POST — валидация -> обработка картинок вопросов ДО транзакции ->
            одна атомарная транзакция:
-             1. метаданные теста (name/desc *_uz/*_ru/*_en, subject) —
-                тот же fallback-паттерн, что в create_test;
-             2. синхронизация TestClassRoom по id классов (тот же паттерн,
-                что ClassRoomsSubjects в subject_crud.py::edit_subject);
-             3. id-based diff вопросов (varianta=test_varianta) и, вложенно,
+             1. метаданные теста (subject, potok);
+             2. id-based diff вопросов (test=this_test) и, вложенно,
                 id-based diff вариантов ответа (question=<этот вопрос>) —
                 IDOR-защита через обязательную фильтрацию по родителю.
            Файлы на диске, реально записанные в этом запросе, но не
@@ -148,20 +125,16 @@ def edit_quiz(request, pk):
            убранные картинки старых записей удаляются ПОСЛЕ успешного commit.
     """
     test = get_object_or_404(Test, pk=pk)
-    test_varianta = test.variantas.first()
-    if test_varianta is None:
-        # Edge case: очень старый тест без TestVarianta(variant=1).
-        test_varianta = TestVarianta.objects.create(test=test, variant=1)
 
     subjects = Subject.objects.all()
-    classrooms = ClassRooms.objects.all()
+    potoks = Potok.objects.all()
 
     def _render(errors=None, status=200):
         return render(request, "pages/dashboard/quiz_edit.html", {
             "test": test,
             "subjects": subjects,
-            "classrooms": classrooms,
-            "test_data": _build_test_data(test, test_varianta),
+            "potoks": potoks,
+            "test_data": _build_test_data(test),
             "errors": errors,
         }, status=status)
 
@@ -175,10 +148,6 @@ def edit_quiz(request, pk):
     # ═══════════════════════════════════════════════════════════════════════
     # 1. ВАЛИДАЦИЯ ФОРМЫ
     # ═══════════════════════════════════════════════════════════════════════
-    raw_name = (post_data.get("test_name") or "").strip()
-    if not raw_name and not (post_data.get("test_name_uz") or "").strip():
-        errors.append("Название теста обязательно")
-
     subject_id = post_data.get("subject")
     if not subject_id or not Subject.objects.filter(id=subject_id).exists():
         errors.append("Выберите корректный предмет")
@@ -233,43 +202,18 @@ def edit_quiz(request, pk):
     # ═══════════════════════════════════════════════════════════════════════
     # 3. СОХРАНЕНИЕ В ТРАНЗАКЦИИ
     # ═══════════════════════════════════════════════════════════════════════
-    # Django не откатывает файлы на диске вместе с транзакцией БД — если
-    # что-то упадёт по дороге, физически уже записанные файлы удаляем
-    # вручную в except-ветке (new_image_names). Файлы, которые были заменены
-    # или явно убраны галочкой "удалить изображение" у уже существующих
-    # записей, удаляем только ПОСЛЕ успешного commit (stale_image_names).
     new_image_names: list[str] = []
     stale_image_names: list[str] = []
 
     try:
         with transaction.atomic():
-            # ── Метаданные теста (fallback-паттерн как в create_test) ──────
-            raw_desc = (post_data.get("test_desc") or "").strip()
-
-            test.name_uz = (post_data.get("test_name_uz") or "").strip() or raw_name
-            test.name_ru = (post_data.get("test_name_ru") or "").strip()
-            test.name_en = (post_data.get("test_name_en") or "").strip()
-
-            test.desc_uz = (post_data.get("test_desc_uz") or "").strip() or raw_desc
-            test.desc_ru = (post_data.get("test_desc_ru") or "").strip()
-            test.desc_en = (post_data.get("test_desc_en") or "").strip()
-
+            # ── Метаданные теста: subject + potok ──────────────────────────
             test.subject_id = int(subject_id)
+            potok_id = post_data.get("potok")
+            test.potok_id = int(potok_id) if potok_id else None
             test.save()
 
-            # ── Синхронизация привязанных классов (по id классов) ──────────
-            submitted_classroom_ids = [
-                classroom.id
-                for classroom in classrooms
-                if f"classroom_{classroom.id}" in post_data
-            ]
-            TestClassRoom.objects.filter(test=test).exclude(
-                classroom_id__in=submitted_classroom_ids
-            ).delete()
-            for classroom_id in submitted_classroom_ids:
-                TestClassRoom.objects.get_or_create(test=test, classroom_id=classroom_id)
-
-            # ── Вопросы (id-based diff, varianta=test_varianta) ────────────
+            # ── Вопросы (id-based diff, test=this_test) ─────────────────────
             submitted_question_ids = []
 
             for qidx in question_indexes:
@@ -278,12 +222,12 @@ def edit_quiz(request, pk):
                 if q_id:
                     # IDOR-защита: вопрос должен принадлежать ИМЕННО этому тесту.
                     question = Question.objects.filter(
-                        id=q_id, varianta=test_varianta
+                        id=q_id, test=test
                     ).first()
 
                 is_new_question = question is None
                 if is_new_question:
-                    question = Question(varianta=test_varianta)
+                    question = Question(test=test)
 
                 raw_q_text = (post_data.get(f"question_{qidx}") or "")
                 question.text_uz = (post_data.get(f"question_{qidx}_uz") or "").strip() or raw_q_text.strip()
@@ -313,7 +257,7 @@ def edit_quiz(request, pk):
 
                 submitted_question_ids.append(question.id)
 
-                # ── Варианты ответа этого вопроса (id-based diff) ─────────
+                # ── Варианты ответа этого вопроса (id-based diff) ──────────
                 v_indexes = sorted(variants_by_question.get(qidx, set()))
                 submitted_variant_ids = []
 
@@ -345,7 +289,7 @@ def edit_quiz(request, pk):
             # Вопросы, которых нет среди присланных — удаляем (каскадно
             # удалит и их Variant-ы). Собираем картинки на удаление ДО delete().
             removed_questions = Question.objects.filter(
-                varianta=test_varianta
+                test=test
             ).exclude(id__in=submitted_question_ids)
             for removed in removed_questions:
                 if removed.img:

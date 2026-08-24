@@ -52,20 +52,20 @@
                     {% csrf_token %}
 
                     <div class="form-group">
-                        <label class="form-label" for="mainSelect">{% trans "Класс" %}</label>
+                        <label class="form-label" for="mainSelect">{% trans "Поток" %}</label>
                         <div class="select-wrapper">
                             <select
                                 required
-                                name="classroom"
+                                name="potok"
                                 id="mainSelect"
                                 class="form-select"
                                 onchange="updateOptions()"
                             >
                                 <option value="" disabled selected>
-                                    {% trans "Выберите класс" %}…
+                                    {% trans "Выберите поток" %}…
                                 </option>
                                 {% for i in c %}
-                                <option value="{{ i.id }}">{{ i.name }}</option>
+                                <option value="{{ i.id }}">{{ i.date_range }}</option>
                                 {% endfor %}
                             </select>
                             <span class="select-icon" aria-hidden="true">
@@ -94,7 +94,7 @@
                                 class="form-select"
                             >
                                 <option value="" disabled selected>
-                                    {% trans "Сначала выберите класс" %}…
+                                    {% trans "Сначала выберите поток" %}…
                                 </option>
                             </select>
                             <span class="select-icon" aria-hidden="true">
@@ -151,7 +151,7 @@
       {% for i in c %}
       "{{ i.id }}": [
         {% for j in u %}
-          {% if j.classroom.id == i.id %}
+          {% if j.potok_id == i.id %}
             { id: "{{ j.id }}", name: "{{ j.full_name|escapejs }}" },
           {% endif %}
         {% endfor %}

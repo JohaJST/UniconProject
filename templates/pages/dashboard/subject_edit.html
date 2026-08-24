@@ -112,31 +112,6 @@
             <!-- Divider -->
             <div class="border-t border-slate-700 my-6"></div>
 
-            <!-- Classrooms checkboxes -->
-            <div class="mb-6">
-                <label class="text-sm font-medium text-slate-300 mb-2 block">
-                    Привязанные классы
-                </label>
-                {% if classrooms %}
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {% for classroom in classrooms %}
-                    <label class="flex items-center gap-2 bg-slate-900 border border-slate-600 rounded-xl
-                                   px-3 py-2.5 cursor-pointer hover:border-indigo-500 transition-colors">
-                        <input type="checkbox"
-                               name="classroom_{{ classroom.id }}"
-                               value="1"
-                               {% if classroom.id in linked_classroom_ids %}checked{% endif %}
-                               class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
-                                      focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
-                        <span class="text-sm text-slate-200 truncate">{{ classroom.name }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-sm text-slate-500">Классы ещё не созданы</p>
-                {% endif %}
-            </div>
-
             <!-- Submit + Cancel -->
             <div class="flex items-center gap-3">
                 <button type="submit"

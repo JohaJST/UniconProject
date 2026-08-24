@@ -17,32 +17,26 @@ class Subject(models.Model):
         }
 
     class Meta:
-        verbose_name_plural = '3. Subject'
+        verbose_name_plural = '3. Subject(Kurs)'
 
 
-class ClassRooms(models.Model):
-    name = models.CharField(max_length=11)
+class Potok(models.Model):
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+
     created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
 
-    def __str__(self):
-        return self.name
+    @property
+    def date_range(self) -> str:
+        """Человекочитаемый диапазон потока: «22 мая 2026г - 27 мая 2026г»."""
+        months = ("января", "февраля", "марта", "апреля", "мая", "июня",
+                  "июля", "августа", "сентября", "октября", "ноября", "декабря")
 
-    def ClassRoomsFormat(self):
-        return {
-            self.name,
-            self.updated,
-            self.created,
-        }
+        def fmt(dt):
+            return f"{dt.day} {months[dt.month - 1]} {dt.year}г"
 
-    class Meta:
-        verbose_name_plural = '2. Class Rooms'
-
-
-class ClassRoomsSubjects(models.Model):
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    classroom = models.ForeignKey(ClassRooms, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+        return f"{fmt(self.start)} - {fmt(self.end)}"
 
     def __str__(self):
-        return f"{self.subject} || {self.classroom}"
+        return self.date_range

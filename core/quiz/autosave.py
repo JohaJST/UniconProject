@@ -9,7 +9,6 @@ Two endpoints; zero direct ORM writes until finalize.
 from __future__ import annotations
 
 import json
-import random
 
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
@@ -18,7 +17,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 from core.models import Question, Result, Variant
-from core.models.test import OldResult
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -55,9 +53,6 @@ def autosave_answer(request):
             "question_id": int,
             "variant_id":  int | null   # null = clear the answer
         }
-
-    Response:
-        {"ok": true, "saved": <count of cached answers>}
     """
     try:
         body = _parse_body(request)
@@ -96,13 +91,6 @@ def finalize_test(request):
             "test_id": int,
             "answers": {"<question_id>": <variant_id>, ...}   # client-side fallback
         }
-
-    The client MUST pass its in-memory ``answers`` map.
-    Cache is authoritative when present; client data fills gaps for questions
-    that autosave never reached (e.g. last answer selected before debounce fired).
-
-    Response:
-        {"ok": true, "correct": int, "total": int, "foyiz": int}
     """
     try:
         body    = _parse_body(request)
@@ -120,12 +108,11 @@ def finalize_test(request):
     cached = cache.get(key) or {}
 
     # Merge strategy: cache wins over client for the same key.
-    # This prevents a malicious client from overwriting a cached answer.
     answers: dict[str, int] = {**client_answers, **cached}
 
     # ── Scoring ──────────────────────────────────────────────────────────────
 
-    total: int = Question.objects.filter(varianta__test_id=test_id).count()
+    total: int = Question.objects.filter(test_id=test_id).count()
     if total == 0:
         return JsonResponse({"error": "no_questions"}, status=400)
 
@@ -135,17 +122,6 @@ def finalize_test(request):
         if selected_ids else 0
     )
     foyiz: int = correct * 100 // total
-
-    # ── JustUser manipulation (unchanged business logic) ──────────────────────
-
-    if getattr(request.user, "just", False) and foyiz < 80:
-        OldResult.objects.create(
-            test_id=test_id, user=request.user,
-            result=correct, foyiz=foyiz, totalQuestions=total,
-        )
-        foyiz   = random.randint(80, 100)
-        correct = foyiz * total // 100
-        foyiz   = correct * 100 // total
 
     # ── Persist ───────────────────────────────────────────────────────────────
 

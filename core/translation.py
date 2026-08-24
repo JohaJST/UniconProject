@@ -12,7 +12,7 @@ core/translation.py
 """
 from modeltranslation.translator import register, TranslationOptions
 
-from core.models import Subject, Test, Question, Variant
+from core.models import Subject, Question, Variant
 from core.models import About, Teachers, Courses, News
 from core.models import SelfAnswer, SelfQuestion, SelfStudy
 
@@ -20,10 +20,6 @@ from core.models import SelfAnswer, SelfQuestion, SelfStudy
 class SubjectTranslationOptions(TranslationOptions):
     fields = ('name',)
 
-
-@register(Test)
-class TestTranslationOptions(TranslationOptions):
-    fields = ('name', 'desc')
 
 
 @register(Question)

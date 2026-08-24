@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count
 from django.shortcuts import redirect, render
 
-from core.models import ClassRooms, Result, Subject, Test, User
+from core.models import Potok, Result, Subject, Test, User
 from core.models.auth import Role
 from core.auth_jwt.exceptions import RateLimitError
 from core.auth_jwt.services import AuthRedisService
@@ -16,26 +16,15 @@ from core.auth_jwt.services import AuthRedisService
 # ─────────────────────────────────────────────────────────────────────────────
 
 @login_required(login_url="login")
-def home(request, status="subject", subject_id=None, classroom_id=None, user_id=None):
+def home(request, status="subject", subject_id=None, potok_id=None, user_id=None):
     """
     Single view that handles all dashboard drill-down levels:
 
-      /dashboard/                                 → status="subject"
-      /dashboard/<status>/                        → status=<status>
-      /dashboard/<status>/<subject_id>/           → classroom list for a subject
-      /dashboard/<status>/<classroom_id>/         → user list for a classroom
-      /dashboard/<status>/<classroom_id>/<user_id>/  → results for a user
-
-    Note: the two URL patterns that carry a single integer use different kwarg
-    names in urls.py (``subject_id`` vs ``classroom_id``), but Django always
-    resolves the *first* matching pattern (``dashboard_classroom``), so the
-    integer arrives as ``subject_id`` in both cases.  The "user" branch
-    therefore normalises via ``_classroom_id`` below.
-
-    NOTE: этот view пока читает request.user.in_dashboard — это поле было
-    удалено из модели User в Промпте 2. Данный файл трогает только lock()
-    по текущему ТЗ; замена этой проверки на AuthRedisService.is_dashboard_authorized
-    для home() запланирована отдельным шагом (Промпт 10, вместе с ролями).
+      /dashboard/                                  → status="subject"
+      /dashboard/<status>/                         → status=<status>
+      /dashboard/<status>/<subject_id>/            → potok list
+      /dashboard/<status>/<potok_id>/              → user list for a potok
+      /dashboard/<status>/<potok_id>/<user_id>/    → results for a user
     """
 
     # ── Period filter ─────────────────────────────────────────────────────────
@@ -54,7 +43,7 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
 
     kpi = {
         "students": User.objects.filter(role=Role.STUDENT, is_active=True).count(),
-        "active_tests": Test.objects.filter(is_start=True).count(),
+        "total_potoks": Potok.objects.count(),
         "total_tests": Test.objects.count(),
         "results_period": period_qs.count(),
         "avg_score": round(avg_raw, 1) if avg_raw is not None else 0,
@@ -63,7 +52,7 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
     # ── Recent results (sidebar / overview table) ─────────────────────────────
     recent = (
         Result.objects
-        .select_related("user", "user__classroom", "test", "test__subject")
+        .select_related("user", "user__potok", "test", "test__subject")
         .order_by("-created", "-id")[:12]
     )
 
@@ -85,38 +74,19 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
             ("Subjects", None),
         ]
 
-    elif status == "classroom":
-        drill = (
-            ClassRooms.objects
-            .filter(classroomssubjects__subject_id=subject_id)
-            .annotate(
-                attempt_count=Count("user__results", distinct=True),
-                avg_score=Avg("user__results__foyiz"),
-            )
-            .distinct()
-            .order_by("-attempt_count")
-        )
-        # Persist subject selection for subsequent drill-downs
-        request.user.log["subject_id"] = subject_id
-        request.user.save(update_fields=["log"])
-
-        subject_name = (
-            Subject.objects.filter(pk=subject_id).values_list("name", flat=True).first() or ""
-        )
+    elif status == "potok":
+        drill = Potok.objects.all().order_by("-start")
         breadcrumb = [
             ("Dashboard", "dashboard"),
-            ("Subjects", "dashboard_subject"),
-            (subject_name, None),
+            ("Potoklar", None),
         ]
 
     elif status == "user":
-        # Due to identical URL pattern shapes, the classroom pk arrives as
-        # ``subject_id`` when matched by ``dashboard_classroom`` first.
-        _classroom_id = classroom_id if classroom_id is not None else subject_id
+        _potok_id = potok_id if potok_id is not None else subject_id
 
         drill = (
             User.objects
-            .filter(classroom_id=_classroom_id, role=Role.STUDENT, is_active=True)
+            .filter(potok_id=_potok_id, role=Role.STUDENT, is_active=True)
             .annotate(
                 attempt_count=Count("results", distinct=True),
                 avg_score=Avg("results__foyiz"),
@@ -124,44 +94,33 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
             .order_by("-avg_score")
         )
 
-        log_subject_id = request.user.log.get("subject_id")
-        subject_name = (
-            Subject.objects.filter(pk=log_subject_id).values_list("name", flat=True).first() or ""
-        )
-        classroom_name = (
-            ClassRooms.objects.filter(pk=_classroom_id).values_list("name", flat=True).first() or ""
+        potok_name = (
+            Potok.objects.filter(pk=_potok_id).values_list("start", "end").first()
         )
         breadcrumb = [
             ("Dashboard", "dashboard"),
-            ("Subjects", "dashboard_subject"),
-            (subject_name, "dashboard_classroom"),
-            (classroom_name, None),
+            ("Potoklar", "dashboard_potok"),
+            (str(_potok_id), None),
         ]
 
     elif status == "result":
-        log_subject_id = request.user.log.get("subject_id")
-
         drill = (
             Result.objects
-            .filter(user_id=user_id, test__subject_id=log_subject_id)
-            .select_related("test", "test__subject", "user", "user__classroom")
+            .filter(user_id=user_id)
+            .select_related("test", "test__subject", "user", "user__potok")
             .order_by("-created")
         )
 
-        subject_name = (
-            Subject.objects.filter(pk=log_subject_id).values_list("name", flat=True).first() or ""
-        )
         user_obj = (
-            User.objects.select_related("classroom").filter(pk=user_id).first()
+            User.objects.select_related("potok").filter(pk=user_id).first()
         )
         user_name = user_obj.name if user_obj else ""
-        classroom_name = user_obj.classroom.name if (user_obj and user_obj.classroom) else ""
+        potok_name = user_obj.potok.date_range if (user_obj and user_obj.potok) else ""
 
         breadcrumb = [
             ("Dashboard", "dashboard"),
-            ("Subjects", "dashboard_subject"),
-            (subject_name, "dashboard_classroom"),
-            (classroom_name, "dashboard_user"),
+            ("Potoklar", "dashboard_potok"),
+            (potok_name, "dashboard_user"),
             (user_name, None),
         ]
 
@@ -175,7 +134,7 @@ def home(request, status="subject", subject_id=None, classroom_id=None, user_id=
         "status": status,
         "period": period,
         "subject_id": subject_id,
-        "classroom_id": classroom_id,
+        "potok_id": potok_id,
         "user_id": user_id,
         "breadcrumb": breadcrumb,
     }
@@ -191,19 +150,12 @@ def lock(request):
     """
     Render the dashboard password gate (GET) or verify it (POST).
 
-    ПЕРЕПИСАНО на AuthRedisService: доступ к дашборду больше не хранится
-    в SQL (User.in_dashboard удалён в Промпте 2), а живёт в Redis-ключе
-    user:{user_id}:dashboard_auth с TTL 600s (sliding window, продлевается
-    в DashboardSecurityMiddleware на каждый запрос к защищённому пути).
-
-    Старая проверка ролей (редирект студентов на "home") здесь убрана —
-    переносится в middleware в Промпте 10.
+    Доступ к дашборду живёт в Redis-ключе user:{user_id}:dashboard_auth
+    с TTL 600s (sliding window, продлевается в DashboardSecurityMiddleware
+    на каждый запрос к защищённому пути).
     """
     if request.method == "POST":
         ip_raw = request.META.get("REMOTE_ADDR", "")
-        # В Redis храним не сырой IP, а его хэш — так же, как ua_hash в
-        # active_device (core/auth.py: sign_in) — и это совпадает с
-        # нейммингом ключа lock:ip:{ip_hash}:...
         ip_hash = hashlib.sha256(ip_raw.encode("utf-8")).hexdigest()
 
         try:
@@ -215,7 +167,6 @@ def lock(request):
 
         if request.user.check_password(request.POST.get("pass", "")):
             AuthRedisService.clear_login_attempts(request.user.id)
-            # Никаких user.save() — состояние доступа к дашборду только в Redis.
             AuthRedisService.authorize_dashboard(request.user.id)
             return redirect("dashboard")
 

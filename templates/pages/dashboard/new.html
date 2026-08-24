@@ -1,10 +1,10 @@
 {% extends 'pages/dashboard/base.html' %}
 
 {% block title %}
-    {% if action == "test" %}Создать тест{% elif action == "subject" %}Новый предмет{% else %}Новый класс{% endif %}
+    {% if action == "test" %}Создать тест{% elif action == "subject" %}Новый предмет{% else %}Новый поток{% endif %}
 {% endblock %}
 {% block page_title %}
-    {% if action == "test" %}Создать тест{% elif action == "subject" %}Новый предмет{% else %}Новый класс{% endif %}
+    {% if action == "test" %}Создать тест{% elif action == "subject" %}Новый предмет{% else %}Новый поток{% endif %}
 {% endblock %}
 
 {% block head %}
@@ -28,7 +28,7 @@
         <h1 class="text-2xl font-bold text-white">
             {% if action == "test" %}Создание теста
             {% elif action == "subject" %}Добавить предмет
-            {% else %}Добавить класс
+            {% else %}Добавить поток
             {% endif %}
         </h1>
         <a href="{% url 'dashboard' %}"
@@ -37,6 +37,12 @@
             Назад к панели
         </a>
     </div>
+
+    {% if error %}
+    <div class="mb-4 bg-rose-500/10 border border-rose-500/40 text-rose-300 text-sm rounded-xl px-4 py-3">
+        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>{{ error }}
+    </div>
+    {% endif %}
 
     <!-- Card -->
     <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8">
@@ -111,30 +117,20 @@
                 </select>
             </div>
 
-            <!-- Classroom selects (dynamic) -->
+            <!-- Potok select -->
             <div class="mb-5">
                 <label class="text-sm font-medium text-slate-300 mb-1.5 block">
-                    Классы
+                    Поток <span class="text-rose-400">*</span>
                 </label>
-                <div id="classrooms-test-container" class="space-y-2">
-                    <div class="flex items-center gap-2">
-                        <select name="classroom_1"
-                                class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
-                                       text-white focus:outline-none focus:border-indigo-500 focus:ring-1
-                                       focus:ring-indigo-500 transition-colors">
-                            <option value="">-- Выберите класс --</option>
-                            {% for classroom in classrooms %}
-                            <option value="{{ classroom.id }}">{{ classroom.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <button type="button" onclick="addTestClassroom()"
-                        class="mt-2 inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600
-                               text-slate-300 px-3 py-1.5 rounded-lg transition-colors text-sm">
-                    <i class="fa-solid fa-plus text-xs"></i>
-                    Ещё класс
-                </button>
+                <select name="potok" required
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                               text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                               focus:ring-indigo-500 transition-colors">
+                    <option value="">-- Выберите поток --</option>
+                    {% for potok in potoks %}
+                    <option value="{{ potok.id }}">{{ potok.date_range }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Divider -->
@@ -287,32 +283,6 @@
             <!-- Divider -->
             <div class="border-t border-slate-700 my-6"></div>
 
-            <!-- Classrooms checkboxes (Dynamic) -->
-            <div class="mb-5">
-                <label class="text-sm font-medium text-slate-300 mb-1.5 block">
-                    Привязанные классы
-                </label>
-                <div id="classroomsField" class="space-y-2">
-                    <div class="flex items-center gap-2">
-                        <select name="classroom_1"
-                                class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
-                                       text-white focus:outline-none focus:border-indigo-500 focus:ring-1
-                                       focus:ring-indigo-500 transition-colors">
-                            <option value="">-- Выберите класс --</option>
-                            {% for class in classrooms %}
-                            <option value="{{ class.id }}">{{ class.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <button type="button" onclick="addClassRoom()"
-                        class="mt-2 inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600
-                               text-slate-300 px-3 py-1.5 rounded-lg transition-colors text-sm">
-                    <i class="fa-solid fa-plus text-xs"></i>
-                    Ещё класс
-                </button>
-            </div>
-
             <!-- Submit -->
             <div class="flex items-center gap-3">
                 <button type="submit"
@@ -330,26 +300,40 @@
         </form>
 
         <!-- ══════════════════════════════════════════════
-             ACTION: classroom — Create Classroom form
+             ACTION: potok — Create Potok form
         ══════════════════════════════════════════════════ -->
-        {% elif action == "classroom" %}
-        <form method="post" action="{% url 'action_no_pk' status='create' path='classroom' %}">
+        {% elif action == "potok" %}
+        <form method="post" action="{% url 'action_no_pk' status='create' path='potok' %}">
             {% csrf_token %}
 
-            <!-- Classroom name -->
+            <!-- Potok start -->
             <div class="mb-6">
-                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="classroom-name">
-                    Название класса <span class="text-rose-400">*</span>
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="potok-start">
+                    Начало потока <span class="text-rose-400">*</span>
                 </label>
-                <input id="classroom-name"
-                       type="text"
-                       name="classroom_name"
-                       placeholder="Например: 9А..."
+                <input id="potok-start"
+                       type="datetime-local"
+                       name="potok_start"
                        required
                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
                               text-white placeholder-slate-500
                               focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                              transition-colors">
+                              transition-colors [color-scheme:dark]">
+            </div>
+
+            <!-- Potok end -->
+            <div class="mb-6">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="potok-end">
+                    Конец потока <span class="text-rose-400">*</span>
+                </label>
+                <input id="potok-end"
+                       type="datetime-local"
+                       name="potok_end"
+                       required
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                              text-white placeholder-slate-500
+                              focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                              transition-colors [color-scheme:dark]">
             </div>
 
             <!-- Submit -->
@@ -360,7 +344,7 @@
                     <i class="fa-solid fa-floppy-disk"></i>
                     Сохранить
                 </button>
-                <a href="{% url 'dlist' tip='classroom' %}"
+                <a href="{% url 'dlist' tip='potok' %}"
                    class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
                           transition-colors text-sm">
                     Отмена
@@ -389,60 +373,6 @@
             }
         }
         return cookieValue;
-    }
-
-    /* ─── Classroom selects for SUBJECT form ─── */
-    let classroomIdx = 2; // Начальное значение 2, т.к. 1 уже есть
-
-    function addClassRoom() {
-        const container = document.getElementById('classroomsField');
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2';
-        div.innerHTML = `
-            <select name="classroom_${classroomIdx}"
-                    class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
-                           text-white focus:outline-none focus:border-indigo-500 focus:ring-1
-                           focus:ring-indigo-500 transition-colors">
-                <option value="">-- Выберите класс --</option>
-                {% for class in classrooms %}
-                <option value="{{ class.id }}">{{ class.name }}</option>
-                {% endfor %}
-            </select>
-            <button type="button" onclick="this.parentElement.remove()"
-                    class="p-2.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
-                           rounded-xl transition-colors shrink-0">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        `;
-        container.appendChild(div);
-        classroomIdx++;
-    }
-
-    /* ─── Classroom selects for TEST form ─── */
-    let testClassroomIdx = 2;
-
-    function addTestClassroom() {
-        const container = document.getElementById('classrooms-test-container');
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2';
-        div.innerHTML = `
-            <select name="classroom_${testClassroomIdx}"
-                    class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
-                           text-white focus:outline-none focus:border-indigo-500 focus:ring-1
-                           focus:ring-indigo-500 transition-colors">
-                <option value="">-- Выберите класс --</option>
-                {% for classroom in classrooms %}
-                <option value="{{ classroom.id }}">{{ classroom.name }}</option>
-                {% endfor %}
-            </select>
-            <button type="button" onclick="this.parentElement.remove()"
-                    class="p-2.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
-                           rounded-xl transition-colors shrink-0">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        `;
-        container.appendChild(div);
-        testClassroomIdx++;
     }
 
     /* ─── Questions & Variants for TEST form ─── */

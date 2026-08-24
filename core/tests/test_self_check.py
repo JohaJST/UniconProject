@@ -3,10 +3,9 @@ core/tests/test_self_check.py ― Integration tests for Self Check CRUD.
 
 Coverage:
   1. Create valid question + answers
-  2. needs_review flag when translations are empty
-  3. Validation: no correct answer → 400
-  4. IDOR protection on answer edit
-  5. Delete question cleans image files
+  2. Validation: no correct answer -> 400
+  3. IDOR protection on answer edit
+  4. Delete question cleans image files
 """
 
 import io
@@ -98,7 +97,6 @@ class SelfCheckTests(TestCase):
 
         q = SelfQuestion.objects.filter(text_uz="2+2 nechiga teng?").first()
         self.assertIsNotNone(q)
-        self.assertFalse(q.needs_review)
         self.assertTrue(q.img)
         self.assertTrue(q.img.name.endswith(".webp"))
 
@@ -108,26 +106,6 @@ class SelfCheckTests(TestCase):
         self.assertFalse(answers[1].is_correct)
 
     # ── 2 ──────────────────────────────────────────────────────────
-    def test_needs_review_flag(self):
-        data = {
-            "question_text": "Python question",
-            "question_text_uz": "", "question_text_ru": "",
-            "question_text_en": "Python question",
-            "answer_text_0": "A", "answer_text_0_uz": "",
-            "answer_text_0_ru": "", "answer_text_0_en": "A",
-            "answer_correct_0": "1",
-            "answer_text_1": "B", "answer_text_1_uz": "",
-            "answer_text_1_ru": "", "answer_text_1_en": "B",
-        }
-
-        resp = self.client.post(reverse("self_check_create"), data)
-        self.assertRedirects(resp, reverse("dlist", kwargs={"tip": "selfquestion"}))
-
-        q = SelfQuestion.objects.filter(text_uz="Python question").first()
-        self.assertIsNotNone(q)
-        self.assertTrue(q.needs_review)
-
-    # ── 3 ──────────────────────────────────────────────────────────
     def test_form_validation_no_correct_answer(self):
         before = SelfQuestion.objects.count()
         data = {
@@ -143,7 +121,7 @@ class SelfCheckTests(TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(SelfQuestion.objects.count(), before)
 
-    # ── 4 ──────────────────────────────────────────────────────────
+    # ── 3 ──────────────────────────────────────────────────────────
     def test_idor_protection_on_edit(self):
         my_q = SelfQuestion.objects.create(
             text_uz="My q", text_ru="My ru", text_en="My en")
@@ -173,7 +151,7 @@ class SelfCheckTests(TestCase):
         self.assertTrue(
             SelfAnswer.objects.filter(question=my_q, text_uz="Hacked").exists())
 
-    # ── 5 ──────────────────────────────────────────────────────────
+    # ── 4 ──────────────────────────────────────────────────────────
     def test_delete_question_cleans_files(self):
         from core.media_utils import process_uploaded_image
 

@@ -3,16 +3,11 @@ from import_export.admin import ImportExportModelAdmin
 from modeltranslation.admin import TranslationAdmin
 
 from core.models import (
-    ClassRooms,
-    ClassRoomsSubjects,
-    OldResult,
+    Potok,
     Question,
     Result,
     Subject,
     Test,
-    TestClassRoom,
-    TestVarianta,
-    TG_User,
     User,
     Variant,
     Partners,
@@ -24,20 +19,15 @@ from core.models import (
     SelfQuestion,
     SelfResult,
     SelfStudy,
-    SelfImg,
+    SelfUser,
 )
 
 from .resource import (
-    CLassroomResource,
-    ClassRoomsSubjectsResource,
-    OldResulrResource,
+    PotokResource,
     QuestionResource,
     ResultResource,
     SUbjectResource,
-    TestClassRoomResource,
     TestResource,
-    TestVariantaResource,
-    TG_UserResource,
     UserResource,
     VariantResource,
     PartnersResource,
@@ -49,7 +39,7 @@ from .resource import (
     SelfQuestionResource,
     SelfResultResource,
     SelfStudyResource,
-    SelfImgResource,
+    SelfUserResource,
 )
 
 
@@ -57,28 +47,17 @@ class UserAdmin(ImportExportModelAdmin):
     resource_class = UserResource
 
 
-class TestClassRoomAdmin(ImportExportModelAdmin):
-    resource_class = TestClassRoomResource
 
-
-class ClassRoomSubjectAdmin(ImportExportModelAdmin):
-    resource_class = ClassRoomsSubjectsResource
-
-
-class TgUserAdmin(ImportExportModelAdmin):
-    resource_class = TG_UserResource
+class PotokSubjectAdmin(ImportExportModelAdmin):
+    resource_class = PotokResource
 
 
 class VariantAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = VariantResource
 
 
-class TestAdmin(TranslationAdmin, ImportExportModelAdmin):
+class TestAdmin(ImportExportModelAdmin):
     resource_class = TestResource
-
-
-class TestVariantaAdmin(ImportExportModelAdmin):
-    resource_class = TestVariantaResource
 
 
 class QuestionAdmin(TranslationAdmin, ImportExportModelAdmin):
@@ -89,12 +68,8 @@ class SubjectAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = SUbjectResource
 
 
-class ClassroomAdmin(ImportExportModelAdmin):
-    resource_class = CLassroomResource
-
-
-class OldAdmin(ImportExportModelAdmin):
-    resource_class = OldResulrResource
+class PotokAdmin(ImportExportModelAdmin):
+    resource_class = PotokResource
 
 
 class ResultAdmin(ImportExportModelAdmin):
@@ -131,30 +106,25 @@ class SelfQuestionAdmin(TranslationAdmin, ImportExportModelAdmin):
 class SelfStudyAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = SelfStudyResource
 
-class SelfImgAdmin(ImportExportModelAdmin):
-    resource_class = SelfImgResource
+class SelfUserAdmin(ImportExportModelAdmin):
+    resource_class = SelfUserResource
 
 
 admin.site.register(User, UserAdmin)
-admin.site.register(TG_User, TgUserAdmin)
-admin.site.register(TestClassRoom, TestClassRoomAdmin)
-admin.site.register(ClassRooms, ClassroomAdmin)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(Test, TestAdmin)
-admin.site.register(TestVarianta, TestVariantaAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Variant, VariantAdmin)
 admin.site.register(Result, ResultAdmin)
-admin.site.register(OldResult, OldAdmin)
-admin.site.register(ClassRoomsSubjects, ClassRoomSubjectAdmin)
+admin.site.register(Potok, PotokAdmin)
 admin.site.register(Partners, PartnersAdmin)
 admin.site.register(About, AboutAdmin)
 admin.site.register(Courses, CoursesAdmin)
 admin.site.register(Teachers, TeachersAdmin)
 admin.site.register(News, NewsAdmin)
 admin.site.register(SelfResult, SelfResultAdmin)
+admin.site.register(SelfUser, SelfUserAdmin)
 admin.site.register(SelfAnswer, SelfAnswerAdmin)
 admin.site.register(SelfQuestion, SelfQuestionAdmin)
 admin.site.register(SelfStudy, SelfStudyAdmin)
-admin.site.register(SelfImg, SelfImgAdmin)
 

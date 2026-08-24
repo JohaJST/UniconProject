@@ -126,12 +126,12 @@
                     <span>Результаты</span>
                 </a>
 
-                <a href="{% url 'dlist' tip='classroom' %}"
+                <a href="{% url 'dlist' tip='potok' %}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                           text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
                     <i class="fa-solid fa-school w-4 text-center text-slate-400
                                group-hover:text-indigo-400 transition-colors shrink-0"></i>
-                    <span>Классы</span>
+                    <span>Потоки</span>
                 </a>
 
                 <a href="{% url 'dlist' tip='subject' %}"
@@ -179,12 +179,12 @@
                     <span>Добавить ученика</span>
                 </a>
 
-                <a href="{% url 'action_no_pk' status='create' path='classroom' %}"
+                <a href="{% url 'action_no_pk' status='create' path='potok' %}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                           text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
                     <i class="fa-solid fa-plus w-4 text-center text-slate-400
                                group-hover:text-indigo-400 transition-colors shrink-0"></i>
-                    <span>Добавить класс</span>
+                    <span>Добавить поток</span>
                 </a>
 
                 <a href="{% url 'action_no_pk' status='create' path='subject' %}"

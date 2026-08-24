@@ -385,10 +385,9 @@ def main():
     with_img_q = SelfQuestion.objects.filter(img__isnull=False).count()
     with_img_a = SelfAnswer.objects.filter(img__isnull=False).count()
     with_t = SelfAnswer.objects.filter(text_uz__startswith="(T)").count()
-    review = SelfQuestion.objects.filter(needs_review=True).count()
     print(f"[6/6] DB check: questions={total_q}, answers={total_a}, "
           f"q_images={with_img_q}, a_images={with_img_a}, "
-          f"answers_with_(T)={with_t}, needs_review={review}")
+          f"answers_with_(T)={with_t}")
     assert created == 30, "not all questions created"
     print("DONE")
 

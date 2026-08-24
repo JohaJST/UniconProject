@@ -161,26 +161,24 @@ def create_or_edit_self_question(request, pk=None):
     # ═══════════════════════════════════════════════════════════════════════
     # 3. ПЕРЕВОДЫ И ЧЕКБОКСЫ ОЧИСТКИ ИЗОБРАЖЕНИЙ
     # ═══════════════════════════════════════════════════════════════════════
-    q_uz, q_ru, q_en, q_missing = _resolve_translation(
+    q_uz, q_ru, q_en, _ = _resolve_translation(
         question_text,
         post_data.get("question_text_uz"),
         post_data.get("question_text_ru"),
         post_data.get("question_text_en"),
     )
 
-    any_missing = q_missing
     question_img_clear = post_data.get("question_img_clear") == "1"
 
     resolved_answers = {}  # idx -> (uz, ru, en, is_correct, img_clear)
     for idx in answer_indexes:
         raw_answer_text = post_data.get(f"answer_text_{idx}")
-        a_uz, a_ru, a_en, a_missing = _resolve_translation(
+        a_uz, a_ru, a_en, _ = _resolve_translation(
             raw_answer_text,
             post_data.get(f"answer_text_{idx}_uz"),
             post_data.get(f"answer_text_{idx}_ru"),
             post_data.get(f"answer_text_{idx}_en"),
         )
-        any_missing = any_missing or a_missing
         resolved_answers[idx] = {
             "uz": a_uz,
             "ru": a_ru,
@@ -189,9 +187,11 @@ def create_or_edit_self_question(request, pk=None):
             "img_clear": post_data.get(f"answer_img_clear_{idx}") == "1",
         }
 
-    needs_review = any_missing
+    # Полнота переводов отслеживается в _resolve_translation (was_missing);
+    # поле needs_review удалено из модели SelfQuestion, поэтому флаг
+    # никуда не сохраняется.
 
-    # ═══════════════════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════════════
     # 4. СОХРАНЕНИЕ В ТРАНЗАКЦИИ
     # ═══════════════════════════════════════════════════════════════════════
     # Django не откатывает файлы на диске вместе с транзакцией БД — если
@@ -208,7 +208,6 @@ def create_or_edit_self_question(request, pk=None):
                     text_uz=q_uz,
                     text_ru=q_ru,
                     text_en=q_en,
-                    needs_review=needs_review,
                 )
                 if question_image_file:
                     question.img = question_image_file
@@ -221,7 +220,6 @@ def create_or_edit_self_question(request, pk=None):
                 question.text_uz = q_uz
                 question.text_ru = q_ru
                 question.text_en = q_en
-                question.needs_review = needs_review
 
                 if question_image_file:
                     question.img = question_image_file
