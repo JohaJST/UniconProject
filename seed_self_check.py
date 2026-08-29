@@ -30,6 +30,7 @@ from django.urls import reverse
 from PIL import Image, ImageDraw
 
 from core.models import SelfAnswer, SelfQuestion
+from core.models.self import SelfCtg
 
 ADMIN_ID = "8"
 ADMIN_PASS = "1"
@@ -293,6 +294,17 @@ assert len(QUESTIONS) == 30, f"expected 30 questions, got {len(QUESTIONS)}"
 def main():
     client = Client()
 
+    # ── 0. Категория для вопросов (ctg теперь обязателен) ───────────────
+    global seed_ctg
+    seed_ctg = SelfCtg.objects.first()
+    if seed_ctg is None:
+        seed_ctg = SelfCtg.objects.create(
+            name_uz="Umumiy asoslar",
+            name_ru="Общие основы",
+            name_en="General basics",
+        )
+    print(f"[0/6] Категория: {seed_ctg.name_uz} (id={seed_ctg.id})")
+
     # ── 1. Логин как админ ──────────────────────────────────────────────
     r = client.get(reverse("login"))
     assert r.status_code == 200, f"GET /login/ -> {r.status_code}"
@@ -353,6 +365,8 @@ def main():
         data["question_text_uz"] = tr.get("uz") or q["q"]
         data["question_text_ru"] = tr.get("ru") or ""
         data["question_text_en"] = tr.get("en") or ""
+        # Категория обязательна: берём первую существующую SelfCtg.
+        data["question_ctg"] = str(seed_ctg.id)
         if q["img"]:
             shape, colors = q["img"]
             data["question_image"] = up("q.png", make_png(colors[0], colors[1], shape))

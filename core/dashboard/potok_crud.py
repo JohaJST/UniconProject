@@ -12,7 +12,7 @@ from __future__ import annotations
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Avg, Count
-from django.db.models.fields import DateTimeField
+from django.db.models.fields import DateField
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.models import Potok, Test, User
@@ -72,18 +72,19 @@ def edit_potok(request, pk):
                 "post_data": request.POST,
             })
 
-        # Парсим ДО сохранения: DateTimeField.to_python принимает ISO-строку
-        # формы (datetime-local: 2026-05-22T09:00) и отклоняет мусор —
+        # Парсим ДО сохранения: Potok.start/end теперь DateField (только дата).
+        # DateField.to_python принимает и '2026-05-22', и legacy-строку
+        # '2026-05-22T09:00' (datetime-local), но отклоняет мусор —
         # без try/except здесь был бы 500 на ValidationError.
         try:
-            start_dt = DateTimeField().to_python(start)
-            end_dt = DateTimeField().to_python(end)
+            start_dt = DateField().to_python(start)
+            end_dt = DateField().to_python(end)
             if not start_dt or not end_dt:
-                raise ValueError("empty datetime")
+                raise ValueError("empty date")
         except (ValidationError, ValueError):
             return render(request, "pages/dashboard/potok_edit.html", {
                 "potok": potok,
-                "error": "Неверный формат дат. Используйте формат: 2026-05-22T09:00",
+                "error": "Неверный формат дат. Используйте формат: 2026-05-22",
                 "post_data": request.POST,
             })
 

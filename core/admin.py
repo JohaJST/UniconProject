@@ -20,6 +20,7 @@ from core.models import (
     SelfResult,
     SelfStudy,
     SelfUser,
+    SelfCtg
 )
 
 from .resource import (
@@ -40,6 +41,7 @@ from .resource import (
     SelfResultResource,
     SelfStudyResource,
     SelfUserResource,
+    SelfCtgResource
 )
 
 
@@ -106,6 +108,9 @@ class SelfQuestionAdmin(TranslationAdmin, ImportExportModelAdmin):
 class SelfStudyAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = SelfStudyResource
 
+class SelfCtgAdmin(TranslationAdmin, ImportExportModelAdmin):
+    resource_class = SelfCtgResource
+
 class SelfUserAdmin(ImportExportModelAdmin):
     resource_class = SelfUserResource
 
@@ -127,4 +132,5 @@ admin.site.register(SelfUser, SelfUserAdmin)
 admin.site.register(SelfAnswer, SelfAnswerAdmin)
 admin.site.register(SelfQuestion, SelfQuestionAdmin)
 admin.site.register(SelfStudy, SelfStudyAdmin)
+admin.site.register(SelfCtg, SelfCtgAdmin)
 

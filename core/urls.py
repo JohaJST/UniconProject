@@ -11,6 +11,7 @@ from core.quiz import (
     test_answer,
     test_result,
     user_profile,
+    v2_test,
 )
 
 from .dashboard import action, dlist, form, home, lock, ai_translate
@@ -31,16 +32,20 @@ urlpatterns = [
     path("test/", index, name="home"),
     path("logout/", sign_out, name="logout"),
     path("user/", user_profile, name="user_profile"),
+    path("v2/test/", v2_test, name="v2_test"),
     path("test/<int:test_id>/", test, name="test"),
     path("test/<int:test_id>/result/", test_result, name="test_result"),
     path("test/answer/", test_answer, name="test_answer"),
     path("test/create/", create_test, name="create_test"),
     path("dashboard/", home, name="dashboard"),
+    # ВАЖНО: ai-translate должен стоять ДО dashboard/<str:status>/ —
+    # иначе /dashboard/ai-translate/ перехватывается как status="ai-translate"
+    # и редиректится на /dashboard/ (AI-кнопки в формах перестают работать).
+    path("dashboard/ai-translate/", ai_translate, name="ai_translate"),
     path("dashboard/<str:status>/", home, name="dashboard_status"),
     path("dashboard/<str:status>/<int:subject_id>/", home, name="dashboard_subject"),
     path("dashboard/<str:status>/<int:subject_id>/<int:potok_id>/", home, name="dashboard_potok"),
     path("dashboard/<str:status>/<int:subject_id>/<int:potok_id>/<int:user_id>/", home, name="dashboard_user"),
-    path("dashboard/ai-translate/", ai_translate, name="ai_translate"),
     path("dashboard/list/<str:tip>/", dlist, name="dlist"),
     path("dashboard/self-check/create/", create_or_edit_self_question, name="self_check_create"),
     path("dashboard/self-check/<int:pk>/edit/", create_or_edit_self_question, name="self_check_edit"),

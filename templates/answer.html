@@ -53,7 +53,7 @@
                   text-white font-semibold py-3 rounded-2xl transition-all mb-3">
             Мои результаты
         </a>
-        <a href="{% url 'home' %}"
+        <a href="{% url 'about' %}"
            class="block text-sm text-slate-400 hover:text-slate-600 transition-colors">
             На главную
         </a>
@@ -73,7 +73,7 @@
                 const pct = state.total > 0 ? Math.round(state.score / state.total * 100) : 0;
                 const el = document.getElementById('ls-score-section');
                 el.classList.remove('hidden');
-                const color = pct >= 90 ? '#10b981' : pct >= 70 ? '#4f46e5' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                const color = pct >= 90 ? '#10b981' : pct >= 75 ? '#4f46e5' : pct >= 50 ? '#f59e0b' : '#ef4444';
                 document.getElementById('ls-score-pct').textContent = pct + '%';
                 document.getElementById('ls-score-pct').style.color = color;
                 document.getElementById('ls-correct').textContent = state.score + ' / ' + state.total;

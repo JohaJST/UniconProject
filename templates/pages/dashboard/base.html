@@ -158,6 +158,14 @@
                     <span>Результаты Self Check</span>
                 </a>
 
+                <a href="{% url 'dlist' tip='selfctg' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-tags w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Категории Self Check</span>
+                </a>
+
                 <div class="my-2 border-t border-slate-800/80"></div>
                 <p class="px-3 pt-1 pb-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
                     Создать
@@ -193,6 +201,14 @@
                     <i class="fa-solid fa-plus w-4 text-center text-slate-400
                                group-hover:text-indigo-400 transition-colors shrink-0"></i>
                     <span>Добавить предмет</span>
+                </a>
+
+                <a href="{% url 'action_no_pk' status='create' path='selfctg' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Добавить категорию</span>
                 </a>
 
                 <a href="{% url 'self_check_create' %}"

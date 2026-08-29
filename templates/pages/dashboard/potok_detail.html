@@ -52,7 +52,7 @@
                         <td class="px-4 py-3">
                             {% with score=student.avg_score|default:0 %}
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
-                                         {% if score >= 70 %}bg-emerald-500/20 text-emerald-400
+                                         {% if score >= 75 %}bg-emerald-500/20 text-emerald-400
                                          {% elif score >= 50 %}bg-amber-500/20 text-amber-400
                                          {% else %}bg-rose-500/20 text-rose-400{% endif %}">
                                 {{ score|floatformat:1 }}

@@ -17,7 +17,8 @@ from .models import (
     SelfQuestion,
     SelfResult,
     SelfStudy,
-    SelfUser
+    SelfUser, 
+    SelfCtg
 )
 
 
@@ -125,7 +126,15 @@ class SelfQuestionResource(resources.ModelResource):
     class Meta:
         model = SelfQuestion
         fields = (
-            'id', 'text_uz', 'text_ru', 'text_en', 'img',
+            'id', 'text_uz', 'text_ru', 'text_en', 'img', 'ctg',
+        )
+
+
+class SelfCtgResource(resources.ModelResource):
+    class Meta:
+        model = SelfCtg
+        fields = (
+            'id', 'name_uz', 'name_ru', 'name_en', 'created', 'updated',
         )
 
 class SelfStudyResource(resources.ModelResource):

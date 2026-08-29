@@ -32,7 +32,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.media_utils import InvalidImageError, process_uploaded_image
-from core.models.self import SelfAnswer, SelfQuestion
+from core.models.self import SelfAnswer, SelfCtg, SelfQuestion
 
 _ANSWER_TEXT_RE = re.compile(r"answer_text_(\d+)$")
 
@@ -53,7 +53,13 @@ def _build_error_context(post_data, question, answers, errors=None):
         }
         for idx in answer_indexes
     ]
-    ctx = {"question": question, "answers": answers, "post_data": post_data, "form_answers": form_answers}
+    ctx = {
+        "question": question,
+        "answers": answers,
+        "post_data": post_data,
+        "form_answers": form_answers,
+        "ctgs": SelfCtg.objects.all(),
+    }
     if errors:
         ctx["errors"] = errors
     return ctx
@@ -97,6 +103,7 @@ def create_or_edit_self_question(request, pk=None):
         return render(request, "pages/dashboard/self_check_form.html", {
             "question": question,
             "answers": answers,
+            "ctgs": SelfCtg.objects.all(),
         })
 
     post_data = request.POST
@@ -110,6 +117,13 @@ def create_or_edit_self_question(request, pk=None):
     question_text = (post_data.get("question_text") or "").strip()
     if not question_text:
         errors.append("Текст вопроса обязателен")
+
+    # Категория ОБЯЗАТЕЛЬНА: вопрос самопроверки всегда привязан к SelfCtg.
+    # Принимаем только id существующей категории; мусор/пусто — ошибка формы.
+    raw_ctg = (post_data.get("question_ctg") or "").strip()
+    ctg = SelfCtg.objects.filter(id=int(raw_ctg)).first() if raw_ctg.isdigit() else None
+    if ctg is None:
+        errors.append("Выберите категорию")
 
     # Индексы присланных ответов — по полю answer_text_{i}, отсортированные
     # по номеру, чтобы порядок отображения был стабильным.
@@ -202,12 +216,13 @@ def create_or_edit_self_question(request, pk=None):
 
     try:
         with transaction.atomic():
-            # ── Question ─────────────────────────────────────────────────
+            # ── Question (ctg уже провалидирована выше — обязательна) ─────
             if question is None:
                 question = SelfQuestion(
                     text_uz=q_uz,
                     text_ru=q_ru,
                     text_en=q_en,
+                    ctg=ctg,
                 )
                 if question_image_file:
                     question.img = question_image_file
@@ -220,6 +235,7 @@ def create_or_edit_self_question(request, pk=None):
                 question.text_uz = q_uz
                 question.text_ru = q_ru
                 question.text_en = q_en
+                question.ctg = ctg
 
                 if question_image_file:
                     question.img = question_image_file

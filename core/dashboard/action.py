@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
+from django.db.models.fields import DateField
 from django.shortcuts import redirect, render
 
 from core.dashboard.subject_crud import view_subject, edit_subject
 from core.dashboard.potok_crud import view_potok, edit_potok
 from core.dashboard.user_crud import view_user, edit_user
 from core.dashboard.quiz_crud import view_quiz, edit_quiz
+from core.dashboard.selfctg_crud import view_selfctg, edit_selfctg
 
 from core.models import (
     Potok,
@@ -16,7 +19,7 @@ from core.models import (
     User,
     Variant,
 )
-from core.models.self import SelfQuestion, SelfResult
+from core.models.self import SelfCtg, SelfQuestion, SelfResult
 
 
 @login_required(login_url="login")
@@ -54,16 +57,47 @@ def action(request, status, path, pk=None):
                 )
                 subject.save()
                 return redirect("dlist", tip=path)
+        elif path == "selfctg":
+            if request.method == "GET":
+                return render(
+                    request, "pages/dashboard/new.html", {"action": "selfctg"}
+                )
+            elif request.method == "POST":
+                raw_name = request.POST.get("selfctg_name", "")
+                ctg = SelfCtg.objects.create(
+                    name_uz=request.POST.get("selfctg_name_uz") or raw_name,
+                    name_ru=request.POST.get("selfctg_name_ru") or raw_name,
+                    name_en=request.POST.get("selfctg_name_en") or raw_name,
+                )
+                ctg.save()
+                return redirect("dlist", tip=path)
         elif path == "potok":
             if request.method == "GET":
                 return render(
                     request, "pages/dashboard/new.html", {"action": "potok"}
                 )
             elif request.method == "POST":
-                Potok.objects.create(
-                    start=request.POST.get("potok_start"),
-                    end=request.POST.get("potok_end"),
-                )
+                # Валидация ДО создания: start/end — DateField (только дата),
+                # мусорная строка не должна ронять 500 (ValidationError).
+                try:
+                    start = DateField().to_python(request.POST.get("potok_start"))
+                    end = DateField().to_python(request.POST.get("potok_end"))
+                    if not start or not end:
+                        raise ValueError("empty date")
+                    if end <= start:
+                        return render(
+                            request, "pages/dashboard/new.html",
+                            {"action": "potok",
+                             "error": "Дата конца потока должна быть позже даты начала"},
+                        )
+                except (ValidationError, ValueError):
+                    return render(
+                        request, "pages/dashboard/new.html",
+                        {"action": "potok",
+                         "error": "Неверный формат дат. Используйте формат: 2026-05-22"},
+                    )
+
+                Potok.objects.create(start=start, end=end)
                 return redirect("dlist", tip=path)
         return redirect("dlist", tip=path)
     elif status == "delete":
@@ -83,7 +117,9 @@ def action(request, status, path, pk=None):
             Variant.objects.get(id=pk).delete()
             return redirect("dlist", tip=path)
         elif path == "result":
-            Result.objects.get(id=pk).delete()
+            result = Result.objects.get(id=pk)
+            User.objects.filter(id=result.user.id).update(is_result=False)
+            result.delete()
             return redirect("dlist", tip=path)
         elif path == "user":
             User.objects.filter(id=pk).delete()
@@ -112,6 +148,11 @@ def action(request, status, path, pk=None):
         elif path == "selfresult":
             SelfResult.objects.get(id=pk).delete()
             return redirect("dlist", tip=path)
+        elif path == "selfctg":
+            # Вопросы категории не удаляются: FK SET_NULL — они остаются
+            # без категории, а не пропадают вместе с ней.
+            SelfCtg.objects.get(id=pk).delete()
+            return redirect("dlist", tip=path)
         else:
             return redirect("dlist", tip=path)
     elif status == "edit":
@@ -123,6 +164,8 @@ def action(request, status, path, pk=None):
             return edit_user(request, pk)
         elif path == "quiz":
             return edit_quiz(request, pk)
+        elif path == "selfctg":
+            return edit_selfctg(request, pk)
         return redirect("dlist", tip=path)
 
     elif status == "view":
@@ -134,6 +177,8 @@ def action(request, status, path, pk=None):
             return view_user(request, pk)
         elif path == "quiz":
             return view_quiz(request, pk)
+        elif path == "selfctg":
+            return view_selfctg(request, pk)
         return redirect("dlist", tip=path)
     else:
         return redirect("dlist", tip=path)

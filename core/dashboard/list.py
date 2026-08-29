@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 from django.shortcuts import render
 
 from core.models import Potok, Question, Result, Subject, Test, User, Variant
-from core.models.self import SelfQuestion, SelfResult
+from core.models.self import SelfCtg, SelfQuestion, SelfResult
 
 _QUERYSETS = {
     "subject":      lambda: Subject.objects.all().order_by('-created'),
@@ -12,7 +13,8 @@ _QUERYSETS = {
     "quiz":         lambda: Test.objects.select_related('subject').order_by('-created'),
     "variant":      lambda: Variant.objects.select_related('question').all().order_by('id'),
     "question":     lambda: Question.objects.select_related('test__subject').all().order_by('-created'),
-    "selfquestion": lambda: SelfQuestion.objects.prefetch_related('selfanswer_set').order_by('-id'),
+    "selfctg":      lambda: SelfCtg.objects.annotate(question_count=Count('selfquestion')).order_by('-created'),
+    "selfquestion": lambda: SelfQuestion.objects.prefetch_related('selfanswer_set').select_related('ctg').order_by('-id'),
     "selfresult":   lambda: SelfResult.objects.select_related('user').order_by('-created'),
 }
 
@@ -24,6 +26,7 @@ _DISPLAY_NAMES = {
     "quiz":         "Quiz",
     "variant":      "Variant",
     "question":     "Question",
+    "selfctg":      "SelfCtg",
     "selfquestion": "Self Question",
     "selfresult":   "Self Result",
 }

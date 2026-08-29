@@ -21,8 +21,8 @@ class Subject(models.Model):
 
 
 class Potok(models.Model):
-    start = models.DateTimeField()
-    end = models.DateTimeField()
+    start = models.DateField(null=True, blank=True)
+    end = models.DateField(null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
@@ -34,9 +34,14 @@ class Potok(models.Model):
                   "июля", "августа", "сентября", "октября", "ноября", "декабря")
 
         def fmt(dt):
+            if not dt:
+                return "—"
             return f"{dt.day} {months[dt.month - 1]} {dt.year}г"
 
         return f"{fmt(self.start)} - {fmt(self.end)}"
 
     def __str__(self):
         return self.date_range
+
+    class Meta:
+        ordering = ['-start']

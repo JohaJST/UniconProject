@@ -8,4 +8,9 @@ from django.conf import settings
 
 
 def APP_NAME(request):
+    # print(settings.ADMINID)
     return {"APP_NAME": settings.APP_NAME}
+
+def ADMINID(request):
+    # print(settings.ADMINID)
+    return {"ADMINID": settings.ADMINID}

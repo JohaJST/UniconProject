@@ -10,6 +10,8 @@ access_token cookie (см. core/auth_jwt/middleware.py).
 import hashlib
 import time
 import uuid
+from urllib.parse import urlsplit
+
 import jwt
 
 from django.conf import settings
@@ -19,7 +21,7 @@ from django.utils import translation
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import translate_url
 
-from core.models import Potok, User
+from core.models import Potok, User, Subject
 from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
 from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token, generate_tokens
@@ -62,11 +64,11 @@ def _set_language_cookie(response, lang):
 
 def sign_in(requests):
     if not requests.user.is_anonymous:
-        return redirect("home")
+        return redirect("about")
 
     ctx = {
-        "u": User.objects.all(),
-        "c": Potok.objects.all(),
+        "u": User.objects.filter(is_result=False),
+        "c": Subject.objects.all(),
     }
 
     if requests.POST:
@@ -85,7 +87,7 @@ def sign_in(requests):
             ctx["error"] = "Абитуриент(ка) не найден(а)"
             return render(requests, 'pages/auth/login.html', ctx)
 
-        if not user.is_active:
+        if not user.is_active or user.is_result:
             ctx["error"] = "Профиль не активен"
             return render(requests, 'pages/auth/login.html', ctx)
 
@@ -114,7 +116,7 @@ def sign_in(requests):
         AuthRedisService.clear_login_attempts(user.id)
         # Админов — сразу на форму пароля дашборда, остальных — на главную.
         # 
-        response = redirect("lock") if user.is_admin else redirect("home")
+        response = redirect("lock") if user.is_admin else redirect("v2_test")
 
         response.set_cookie(
             settings.JWT_ACCESS_COOKIE_NAME,
@@ -167,11 +169,11 @@ def refresh_token_view(request):
 
     # Валидация next против open redirect: внешний хост запрещён —
     # редиректим только на относительный путь собственного сайта.
-    next_url = request.GET.get('next', 'home')
+    next_url = request.GET.get('next', 'about')
     if not url_has_allowed_host_and_scheme(
         next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
-        next_url = "home"
+        next_url = "v2_test"
 
     response = redirect(next_url)
     response.set_cookie(
@@ -236,7 +238,7 @@ def change_account_language(request):
         что выставленной cookie.
     """
     if request.method != "POST":
-        return redirect("home")
+        return redirect("about")
 
     lang = request.POST.get("lang")
     valid_langs = dict(User._meta.get_field("lang").choices or [])
@@ -245,16 +247,32 @@ def change_account_language(request):
     if not next_url or not url_has_allowed_host_and_scheme(
         next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
-        next_url = "home"
+        next_url = "about"
 
     if lang not in valid_langs:
         return redirect(next_url)
 
     request.user.lang = lang
     request.user.save(update_fields=["lang"])
-    translation.activate(lang)
 
-    next_url = translate_url(next_url, lang)
+    # ИСПРАВЛЕНО (язык не менялся на about/self): translate_url внутри себя
+    # вызывает resolve() в ТЕКУЩЕМ активном языке. Раньше выше стоял
+    # translation.activate(lang) — после него resolve('/uz/') под активным
+    # 'ru' падал в Resolver404, URL оставался '/uz/', и страница
+    # перезагружалась на старом языке (в БД при этом lang уже был новым).
+    #
+    # Теперь резолвим next в языке ЕГО префикса (а если префикса нет —
+    # в текущем активном), и translate_url корректно перестраивает URL:
+    # /uz/ -> /ru/, /uz/self/ -> /ru/self/ и т.д. Новый язык активирует
+    # уже следующий запрос (LocaleMiddleware по префиксу + middleware по
+    # user.lang на не-i18n страницах).
+    current_lang = (
+        translation.get_language_from_path(urlsplit(next_url).path)
+        or translation.get_language()
+        or settings.LANGUAGE_CODE
+    )
+    with translation.override(current_lang):
+        next_url = translate_url(next_url, lang)
 
     response = redirect(next_url)
     _set_language_cookie(response, lang)

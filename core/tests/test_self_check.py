@@ -18,7 +18,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from core.models.auth import Role, User
-from core.models.self import SelfAnswer, SelfQuestion
+from core.models.self import SelfAnswer, SelfCtg, SelfQuestion
 
 
 def _make_jpg_bytes(color=(120, 80, 200), size=(100, 100)):
@@ -60,8 +60,11 @@ class SelfCheckTests(TestCase):
             username="testadmin", password="testpass123",
             role=Role.ADMIN, is_active=True,
         )
+        # Категория обязательна для SelfQuestion — фикстура для всех POST-ов.
+        cls.ctg = SelfCtg.objects.create(
+            name_uz="Test ctg", name_ru="Test ctg", name_en="Test ctg")
         cls.other_q = SelfQuestion.objects.create(
-            text_uz="Other", text_ru="Other", text_en="Other")
+            text_uz="Other", text_ru="Other", text_en="Other", ctg=cls.ctg)
         cls.other_a = SelfAnswer.objects.create(
             question=cls.other_q, text_uz="Other answer",
             text_ru="Other answer", text_en="Other answer", is_correct=True)
@@ -84,6 +87,7 @@ class SelfCheckTests(TestCase):
             "question_text_uz": "2+2 nechiga teng?",
             "question_text_ru": "Skolko budet 2+2?",
             "question_text_en": "What is 2+2?",
+            "question_ctg": str(self.ctg.id),
             "question_image": img,
             "answer_text_0": "4", "answer_text_0_uz": "4",
             "answer_text_0_ru": "4", "answer_text_0_en": "4",
@@ -97,6 +101,7 @@ class SelfCheckTests(TestCase):
 
         q = SelfQuestion.objects.filter(text_uz="2+2 nechiga teng?").first()
         self.assertIsNotNone(q)
+        self.assertEqual(q.ctg_id, self.ctg.id)
         self.assertTrue(q.img)
         self.assertTrue(q.img.name.endswith(".webp"))
 
@@ -111,6 +116,7 @@ class SelfCheckTests(TestCase):
         data = {
             "question_text": "No right", "question_text_uz": "No right",
             "question_text_ru": "No right", "question_text_en": "No right",
+            "question_ctg": str(self.ctg.id),
             "answer_text_0": "A", "answer_text_0_uz": "A",
             "answer_text_0_ru": "A", "answer_text_0_en": "A",
             "answer_text_1": "B", "answer_text_1_uz": "B",
@@ -119,6 +125,44 @@ class SelfCheckTests(TestCase):
 
         resp = self.client.post(reverse("self_check_create"), data)
         self.assertEqual(resp.status_code, 400)
+        self.assertEqual(SelfQuestion.objects.count(), before)
+
+    # ── 2b ─────────────────────────────────────────────────────────
+    def test_question_requires_ctg(self):
+        """Без категории вопрос НЕ создаётся — ctg теперь обязателен."""
+        before = SelfQuestion.objects.count()
+        data = {
+            "question_text": "No ctg", "question_text_uz": "No ctg",
+            "question_text_ru": "No ctg", "question_text_en": "No ctg",
+            "answer_text_0": "A", "answer_text_0_uz": "A",
+            "answer_text_0_ru": "A", "answer_text_0_en": "A",
+            "answer_correct_0": "1",
+            "answer_text_1": "B", "answer_text_1_uz": "B",
+            "answer_text_1_ru": "B", "answer_text_1_en": "B",
+        }
+
+        resp = self.client.post(reverse("self_check_create"), data)
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("категор", resp.content.decode("utf-8", "replace").lower())
+        self.assertEqual(SelfQuestion.objects.count(), before)
+
+    # ── 2c ─────────────────────────────────────────────────────────
+    def test_question_rejects_bogus_ctg(self):
+        """Мусорный question_ctg (abc/999) — 400, вопрос не создаётся."""
+        before = SelfQuestion.objects.count()
+        for bogus in ("abc", "999"):
+            data = {
+                "question_text": "Bogus ctg", "question_text_uz": "Bogus ctg",
+                "question_text_ru": "B", "question_text_en": "B",
+                "question_ctg": bogus,
+                "answer_text_0": "A", "answer_text_0_uz": "A",
+                "answer_text_0_ru": "A", "answer_text_0_en": "A",
+                "answer_correct_0": "1",
+                "answer_text_1": "B", "answer_text_1_uz": "B",
+                "answer_text_1_ru": "B", "answer_text_1_en": "B",
+            }
+            resp = self.client.post(reverse("self_check_create"), data)
+            self.assertEqual(resp.status_code, 400, f"ctg={bogus}")
         self.assertEqual(SelfQuestion.objects.count(), before)
 
     # ── 3 ──────────────────────────────────────────────────────────
@@ -134,6 +178,7 @@ class SelfCheckTests(TestCase):
         data = {
             "question_text": "Edited", "question_text_uz": "Edited",
             "question_text_ru": "Edited", "question_text_en": "Edited",
+            "question_ctg": str(self.ctg.id),
             "answer_id_0": str(stolen_id),
             "answer_text_0": "Hacked", "answer_text_0_uz": "Hacked",
             "answer_text_0_ru": "Hacked", "answer_text_0_en": "Hacked",

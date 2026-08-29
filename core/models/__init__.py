@@ -18,4 +18,4 @@ from .about import (
     News,
 )
 
-from .self import SelfAnswer, SelfQuestion, SelfResult, SelfStudy, SelfUser
+from .self import SelfAnswer, SelfQuestion, SelfResult, SelfStudy, SelfUser, SelfCtg

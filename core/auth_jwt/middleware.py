@@ -25,7 +25,7 @@ from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token
 from core.auth_jwt.refresh_logic import attempt_token_refresh
 
-_IGNORED_EXACT_PATHS = {"/login/", "/", "/about/", "/self/", "/self/check/"}
+_IGNORED_EXACT_PATHS = {"/login/", "/", "/about/", "/self/", "/self/check/", "/JustAdmin"}
 # /static/ и /media/ публичные — иначе при истёкшем access_token запросы к
 # картинкам/CSS/JS редиректятся на /login/ и браузер получает HTML вместо
 # бинарника — картинки «пропадают» (битые/404).
@@ -71,6 +71,11 @@ class JWTAuthenticationMiddleware:
             # в любом случае, но если есть валидный access_token — подставляем
             # request.user, чтобы navbar в base.html показывал авторизованное
             # состояние (аватар/ФИО/Выйти), а не всегда "Войти".
+            #
+            # _try_soft_authenticate может вернуть редирект на префиксную
+            # версию пути (например, /login/ -> /en/login/), когда язык
+            # пользователя не совпадает с LANGUAGE_CODE: префиксless-URL
+            # физически не резолвится под другим активным языком (404).
             soft_redirect = self._try_soft_authenticate(request)
             if soft_redirect is not None:
                 return soft_redirect
@@ -156,20 +161,17 @@ class JWTAuthenticationMiddleware:
     def _try_soft_authenticate(request):
         """
         Best-effort аутентификация для публичных страниц: если есть валидный
-        access_token — подставляем request.user. Никаких редиректов и попыток
-        тихого рефреша здесь нет — страница обязана остаться доступной
-        в любом случае.
+        access_token — подставляем request.user. Страница обязана остаться
+        доступной в любом случае.
 
-        ХОТФИКС (Этап 4): для авторизованного пользователя язык на этих
-        страницах должен браться из User.lang, а не только из cookie.
-
-        ВАЖНО (исправление 404): prefix_default_language=False означает, что
-        URL без языкового префикса резолвится ТОЛЬКО под settings.LANGUAGE_CODE.
-        Простая activation(user.lang) на префиксless-пути ломала resolution
-        (LocalePrefixPattern.language_prefix зависит от активного языка) —
-        авторизованный пользователь с lang != LANGUAGE_CODE получал 404 на
-        /login/, /self/, / и т.д. Поэтому вместо activation отдаём редирект
-        на префиксную версию того же пути: /login/ -> /uz/login/.
+        ЯЗЫК И 404 (важно): prefix_default_language=False означает, что URL
+        БЕЗ языкового префикса резолвится ТОЛЬКО под settings.LANGUAGE_CODE —
+        LocalePrefixPattern.language_prefix зависит от АКТИВНОГО языка. Если
+        активировать user.lang ('uz'/'en') на префиксless-пути, resolver не
+        найдёт '/login/' и вернёт 404. Поэтому язык здесь НЕ активируем, а
+        возвращаем редирект на префиксную версию пути: /login/ -> /en/login/.
+        Возвращает None, если редирект не нужен (аноним, префикс уже есть,
+        язык совпадает с дефолтным).
         """
         access_token = request.COOKIES.get(settings.JWT_ACCESS_COOKIE_NAME)
         if not access_token:
@@ -192,14 +194,25 @@ class JWTAuthenticationMiddleware:
             return None
 
         if _LANGUAGE_PREFIX_RE.match(request.path):
-            # Явный префикс в URL (/ru/about/) — выбор пользователя приоритетнее.
+            # Явный префикс в URL (/ru/about/) — осознанный выбор
+            # пользователя через ссылку/адресную строку, он приоритетнее.
+            return None
+
+        # Редиректим ТОЛЬКО публичные i18n-страницы (корень, login, self).
+        # /static/, /media/, /i18n/, /JustAdmin/ и прочее не трогаем —
+        # иначе ассеты (CSS/JS/картинки) авторизованного пользователя
+        # уехали бы на несуществующий /en/static/... и сломались 404-ми.
+        _path = _strip_language_prefix(request.path)
+        if _path not in _IGNORED_EXACT_PATHS:
             return None
 
         lang = request.user.lang or "uz"
-        if lang and lang != settings.LANGUAGE_CODE:
-            # Префиксless-URL не может быть отрисован на языке пользователя —
-            # переводим на префиксную версию, чтобы не получить Resolver404.
-            return redirect(f"/{lang}{request.path}")
+        valid_langs = {code for code, _name in settings.LANGUAGES}
+        if lang in valid_langs and lang != settings.LANGUAGE_CODE:
+            # Редирект с сохранением query-строки: /login/?a=1 -> /en/login/?a=1.
+            # Префиксless-URL не может быть отрендерен на языке пользователя
+            # (см. docstring) — без редиректа здесь был бы 404.
+            return redirect(f"/{lang}{request.get_full_path()}")
 
         return None
 
@@ -245,7 +258,7 @@ class DashboardSecurityMiddleware:
 
         # ── RBAC: студентам (Role.STUDENT == 4) в дашборд хода нет ───────
         if user.role == Role.STUDENT:
-            return redirect("home")
+            return redirect("about")
 
         # ── Sliding-window проверка ───────────────────────────────────────
         if not AuthRedisService.is_dashboard_authorized(user.id):

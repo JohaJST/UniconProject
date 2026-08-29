@@ -68,10 +68,13 @@ dash = [
     "/dashboard/list/result/", "/dashboard/list/user/",
     "/dashboard/list/quiz/", "/dashboard/list/variant/",
     "/dashboard/list/question/", "/dashboard/list/selfquestion/",
+    "/dashboard/list/selfquestion/",
     "/dashboard/list/selfresult/", "/dashboard/list/new/",
+    "/dashboard/list/selfctg/",
     "/dashboard/self-check/create/", "/dashboard/self-check/1/edit/",
     "/form/user/",
-    "/action/view/potok/1/", "/action/edit/potok/1/",
+    "/action/view/selfctg/1/", "/action/edit/selfctg/1/",
+    "/action/view/potok/6/", "/action/edit/potok/6/",
     "/action/view/subject/1/", "/action/edit/subject/1/",
     "/action/view/user/8/", "/action/edit/user/8/",
     "/action/view/quiz/1/", "/action/edit/quiz/1/",
@@ -84,9 +87,10 @@ check("GET /dashboard/subject/1/", admin_c.get("/dashboard/subject/1/"))
 check("GET /dashboard/subject/1/1/", admin_c.get("/dashboard/subject/1/1/"))
 check("GET /dashboard/subject/1/1/8/", admin_c.get("/dashboard/subject/1/1/8/"))
 
-# несуществующие объекты (не должны давать 500)
+    # несуществующие объекты (не должны давать 500)
 check("GET /action/view/potok/999/", admin_c.get("/action/view/potok/999/"))
 check("GET /action/edit/user/999/", admin_c.get("/action/edit/user/999/"))
+check("GET /action/view/selfctg/999/", admin_c.get("/action/view/selfctg/999/"))
 check("GET /dashboard/self-check/999/edit/", admin_c.get("/dashboard/self-check/999/edit/"))
 
 # ═══ 4. Студент ══════════════════════════════════════════════════════════════
@@ -128,15 +132,16 @@ tmp_stud = User.objects.create_user(
     last_name="Tmp",
     position="QA Engineer",
     company_name="Unicon",
-    potok_id=2,
+    potok_id=6,
 )
 
 tmp_c = Client(raise_request_exception=False)
 r = tmp_c.post("/login/", {"user": str(tmp_stud.id)})
 check("POST /login/ tmp_student", r, expected=302)
 check("GET /test/ (профиль заполнен)", tmp_c.get("/test/"), expected=200)
-check("GET /test/1/ (свой поток)", tmp_c.get("/test/1/"), expected=200)
-check("POST /test/answer/", tmp_c.post("/test/answer/", {"test_id": "1"}), expected=200)
+# тест 3 принадлежит потоку 6 — "свой" поток; тест 14 — потоку 9
+check("GET /test/3/ (свой поток)", tmp_c.get("/test/3/"), expected=200)
+check("POST /test/answer/", tmp_c.post("/test/answer/", {"test_id": "3"}), expected=200)
 check("GET /test/14/ (чужой поток)", tmp_c.get("/test/14/"), expected=302)
 # POST в чужой тест — должен получить 403, а не создать Result
 r = tmp_c.post("/test/14/", data='{"answers": []}', content_type="application/json")

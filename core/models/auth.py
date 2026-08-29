@@ -59,7 +59,7 @@ class User(AbstractBaseUser):
     """
 
     # ── Личные данные ─────────────────────────────────────
-    username = models.CharField(max_length=256, unique=True)
+    username = models.CharField(max_length=256, unique=True, null=True, blank=True)
     name = models.CharField(max_length=256, default=" ", null=True)
     last_name = models.CharField(max_length=256, null=True)
     potok = models.ForeignKey(Potok, on_delete=models.SET_NULL, null=True)

@@ -30,7 +30,7 @@
 
             <div class="nav-links">
                 <a href="{% url 'about' %}" class="nav-link">{% trans "about" %}</a>
-                <a href="{% url 'home' %}" class="nav-link">{% trans "Тесты" %}</a>
+                <a href="{% url 'v2_test' %}" class="nav-link">{% trans "Тесты" %}</a>
                 <a href="{% url 'self' %}" class="nav-link">{% trans "SelfStudy" %}</a>
                 {% if user.is_admin %}
                 <a href="{% url 'dashboard' %}" class="nav-link admin">

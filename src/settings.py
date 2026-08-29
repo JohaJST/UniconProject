@@ -49,6 +49,7 @@ ALLOWED_HOSTS = [
 ]
 
 APP_NAME = "Unicon Project"
+ADMINID = os.getenv("ADMINID")
 
 # Application definition
 
@@ -114,6 +115,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "src.context_processors.APP_NAME",
+                "src.context_processors.ADMINID",
             ],
         },
     },
@@ -249,7 +251,7 @@ JWT_ACCESS_COOKIE_NAME = "access_token"
 JWT_REFRESH_COOKIE_NAME = "refresh_token"
 
 # Время жизни токенов в секундах (TTL)
-JWT_ACCESS_TOKEN_TTL = 90000        # 15 минут
+JWT_ACCESS_TOKEN_TTL = 90000        # 15 минут  НЕ ТРОГАЙ Я САМ ТАК ПОСТАВИЛ
 JWT_REFRESH_TOKEN_TTL = 604800    # 7 дней
 
 # Общие флаги безопасности для обеих кук (access и refresh)

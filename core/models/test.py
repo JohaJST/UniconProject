@@ -52,7 +52,8 @@ class Question(models.Model):
         related_name='questions',
         db_column='test_id',
     )
-    created = models.DateTimeField(auto_now_add=True, editable=False)
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Вопрос'
@@ -77,6 +78,8 @@ class Variant(models.Model):
     )
     # created удалён: дата создания варианта ответа нигде не используется
     # и только увеличивает размер таблицы.
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Вариант ответа'
@@ -97,6 +100,7 @@ class Result(models.Model):
     result = models.PositiveSmallIntegerField(null=True)
     foyiz = models.PositiveSmallIntegerField(null=True)
     totalQuestions = models.PositiveSmallIntegerField(null=True)
+    time = models.PositiveSmallIntegerField(null=True)
     user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -109,7 +113,8 @@ class Result(models.Model):
         null=True,
         related_name='results',
     )
-    created = models.DateField(auto_now_add=True, editable=False)
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Результат'

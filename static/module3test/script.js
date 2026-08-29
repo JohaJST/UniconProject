@@ -138,7 +138,7 @@ function showResult(){
 
     let percentage = (userScore / questions.length) * 100;
     
-    if (percentage >= 80) {
+    if (percentage >= 75) {
         statusText.innerHTML = statusNice;
         resultIcon.innerHTML = '<i class="fas fa-crown" style="color: gold;"></i>';
         fireConfetti();

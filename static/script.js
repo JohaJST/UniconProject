@@ -149,11 +149,11 @@ function showResult(){
         //creating a new span tag and passing the user score number and total question number
     let foyiz = userScore * 100 / questions.length
     console.log(foyiz);
-    if (foyiz > 80) {
+    if (foyiz > 75) {
         let scoreTag = '<center><h3>Здорово</h3><span>Вы набрали <p>'+ userScore +'</p> из <p>'+ questions.length +'</p></span></center>';
             scoreText.innerHTML = scoreTag;  //adding new span tag inside score_Text
     }
-    else if (80 > foyiz && foyiz >= 50) {
+    else if (75 > foyiz && foyiz >= 50) {
         let scoreTag = '<center><h3>Нормально</h3><span>Вы набрали <p>'+ userScore +'</p> из <p>'+ questions.length +'</p></span></center>';
             scoreText.innerHTML = scoreTag;  //adding new span tag inside score_Text
     }

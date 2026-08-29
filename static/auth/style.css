@@ -13,7 +13,9 @@
     --grid-cell: #1a2540;
     --grid-hover: #4e75ad;
     --accent: #4e75ad;
+    --accent-2: rgba(100, 250, 80);
     --accent-light: #6b93cc;
+    --accent-light-2: rgba(78, 180, 100);
     --card-bg: #16213e;
     --card-border: rgba(78, 117, 173, 0.45);
     --text: #f1f5f9;
@@ -275,6 +277,44 @@ body {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(78, 117, 173, 0.3);
 }
+
+
+.auth-btn-2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.9375rem 1.5rem;
+    margin-top: 0.25rem;
+    background: var(--accent-light-2);
+    color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(78, 117, 173, 0.4);
+    transition:
+        background var(--dur) var(--ease),
+        transform var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease);
+    margin-top: 20px;
+}
+
+.auth-btn-2:hover {
+    background: var(--accent-2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(78, 117, 173, 0.55);
+}
+
+.auth-btn-2:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(78, 117, 173, 0.3);
+}
+
 
 /* ───────────────────────────────
    Responsive

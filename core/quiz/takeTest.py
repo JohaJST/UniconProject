@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
-from core.models import Test, Question, Variant, Result
+from core.models import Test, Question, Variant, Result, User
 
 
 @login_required(login_url="login")
@@ -26,8 +26,9 @@ def test(request, test_id):
         # Те же ограничения, что и на GET: профиль должен быть заполнен,
         # тест — принадлежать потоку студента, и повторное прохождение
         # запрещено (не даём наплодить дублирующихся Result).
-        if not request.user.position or not request.user.company_name:
-            return JsonResponse({"success": False, "error": "profile_incomplete"}, status=403)
+        # 
+        # if not request.user.position or not request.user.company_name:
+        #     return JsonResponse({"success": False, "error": "profile_incomplete"}, status=403)
 
         if test.potok_id and test.potok_id != request.user.potok_id:
             return JsonResponse({"success": False, "error": "not_allowed"}, status=403)
@@ -38,13 +39,26 @@ def test(request, test_id):
         try:
             data = json.loads(request.body)
             user_answers = data.get('answers', [])
+            raw_time = data.get('time')
         except (json.JSONDecodeError, TypeError):
-            return redirect("home")
+            return redirect("about")
+
+        # Время прохождения (сек): клиент пока не шлёт, но поле в модели
+        # есть (Result.time, PositiveSmallIntegerField). Принимаем только
+        # числовое значение в диапазоне 0..32767, иначе — NULL.
+        time_value = None
+        if isinstance(raw_time, (int, float)):
+            try:
+                t = int(raw_time)
+                if 0 <= t < 32768:
+                    time_value = t
+            except (TypeError, ValueError):
+                time_value = None
 
         # Вопросы теперь привязаны напрямую к Test (без TestVarianta).
         total_questions = Question.objects.filter(test_id=test.id).count()
         if total_questions == 0:
-            return redirect("home")
+            return redirect("about")
 
         correct_variants_ids = set(
             Variant.objects.filter(
@@ -67,7 +81,10 @@ def test(request, test_id):
             result=result,
             foyiz=round(foyiz),
             totalQuestions=total_questions,
+            time=time_value,
         )
+
+        User.objects.filter(id=request.user.id).update(is_result=True)
         redirect_url = reverse("test_result", kwargs={"test_id": test_id})
 
         return JsonResponse({
@@ -89,11 +106,11 @@ def test(request, test_id):
             .get(id=test_id)
         )
     except Test.DoesNotExist:
-        return redirect("home")
+        return redirect("v2_test")
 
     # Тест доступен только студентам своего потока.
     if test.potok_id and test.potok_id != request.user.potok_id:
-        return redirect("home")
+        return redirect("v2_test")
 
     questions_list = []
     for question in test.questions.all():
@@ -120,6 +137,17 @@ def test(request, test_id):
         "questions": questions_list
     }
     return render(request, "new_test_page.html", ctx)
+
+
+@login_required(login_url="login")
+def v2_test(req):
+    # print(1)
+    user = User.objects.filter(id=req.user.id).first()
+    # print(user)
+    test = Test.objects.filter(subject=user.subject, potok=user.potok).first()
+    if not test:
+        return redirect("about")
+    return redirect("test", test_id=test.id)
 
 
 @login_required(login_url="login")

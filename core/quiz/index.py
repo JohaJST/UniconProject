@@ -66,7 +66,7 @@ def required(request):
             u.position = request.POST['position']
             u.company_name = request.POST['company_name']
             u.save()
-            return redirect("home")
+            return redirect("v2_test")
         except Exception:
             return render(request, 'pages/reqPB.html', {'error': 'Проверьте данные пожалуйста'})
     return render(request, 'pages/reqPB.html')

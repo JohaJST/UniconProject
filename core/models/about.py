@@ -20,6 +20,10 @@ class About(models.Model):
     footer_info = models.CharField(max_length=255)
     partners = models.BooleanField(default=False)
 
+
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
+
     def __str__(self):
         return f"{self.id} // About info"
 
@@ -28,6 +32,10 @@ class Courses(models.Model):
     name = models.CharField(max_length=255)
     desc = models.TextField()
     photo = models.ImageField(upload_to='courses/')
+
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
+
 
     def __str__(self):
         return self.name
@@ -41,6 +49,8 @@ class Teachers(models.Model):
     position = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
 
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
     
     def __str__(self):
         return self.fio
@@ -52,6 +62,9 @@ class News(models.Model):
     photo = models.ImageField(upload_to='news/')
     date = models.DateField()
 
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
+
     def __str__(self):
         return self.title
 
@@ -59,6 +72,10 @@ class Partners(models.Model):
     name = models.CharField(max_length=255)
     photo = models.ImageField(upload_to='partners/')
     link = models.URLField()
-    
+
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
+
+
     def __str__(self):
         return self.name
