@@ -69,7 +69,9 @@ def self_check(request):
         .filter(question_count__gt=0)
         .order_by('name_uz')
     )
-
+    print(ctgs)
+    # print(request.GET)
+    # print(1)
     return render(request, 'module 3 test/test.html', {
         'ctgs': ctgs,
     })
