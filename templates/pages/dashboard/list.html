@@ -88,8 +88,8 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Результат</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">%</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Вопросов</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Дата</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Тест</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Дата и время</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Время прохождения</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% elif name == "Quiz" %}
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
@@ -219,8 +219,8 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-slate-400">{{ i.totalQuestions }}</td>
-                            <td class="px-4 py-3 text-slate-400">{{ i.created|date:"d.m.Y" }}</td>
-                            <td class="px-4 py-3 text-slate-300 max-w-xs truncate">{{ i.test }}</td>
+                            <td class="px-4 py-3 text-slate-400">{{ i.created|date:"d.m.Y, H:i" }}</td>
+                            <td class="px-4 py-3 text-slate-300 max-w-xs truncate time-display" data-seconds="{{ i.time|default:"0" }}"></td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{% url 'action' status='delete' path='result' pk=i.id %}"
                                    class="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
@@ -229,7 +229,38 @@
                                 </a>
                             </td>
                         </tr>
-
+                        <script>
+                        function formatSeconds(totalSeconds) {
+                            // Вычисляем часы, минуты и оставшиеся секунды
+                            const hours = Math.floor(totalSeconds / 3600);
+                            const minutes = Math.floor((totalSeconds % 3600) / 60);
+                            const seconds = Math.floor(totalSeconds % 60);
+                            
+                            // Форматируем секунды с ведущим нулем (например, "05")
+                            const formattedSeconds = seconds.toString().padStart(2, '0');
+                        
+                            if (hours > 0) {
+                                // Если есть часы, добавляем ведущий ноль и к минутам (например, "1:05:30")
+                                const formattedMinutes = minutes.toString().padStart(2, '0');
+                                return `${hours}:${formattedMinutes}:${formattedSeconds}`;
+                            } else {
+                                // Если часов нет, минуты отображаются без лишних нулей в начале (например, "5:30")
+                                return `${minutes}:${formattedSeconds}`;
+                            }
+                        }
+                        
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const timeElements = document.querySelectorAll('.time-display');
+                        
+                            timeElements.forEach(el => {
+                                const seconds = parseInt(el.getAttribute('data-seconds'), 10);
+                                
+                                if (!isNaN(seconds)) {
+                                    el.textContent = formatSeconds(seconds);
+                                }
+                            });
+                        });
+                        </script>
                         {% elif name == "Quiz" %}
                         <tr class="hover:bg-slate-750 transition-colors">
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.id }}</td>
@@ -255,7 +286,6 @@
                                 </a>
                             </td>
                         </tr>
-
                         {% elif name == "Question" %}
                         <tr class="hover:bg-slate-750 transition-colors">
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.id }}</td>

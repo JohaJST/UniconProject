@@ -231,9 +231,12 @@
               });
               return answers;
           }
-
-          @param {boolean}
           
+          /**
+           * @param {boolean} auto — true, если вызов автоматический (по достижении
+           *                         лимита времени): без confirm() и без возможности отмены.
+           */
+           
           async function submitExam(auto = false) {
               if (examSubmitted) return;
               if (!auto && !confirm('Отправить ответы?')) return;
