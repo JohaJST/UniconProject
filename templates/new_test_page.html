@@ -48,6 +48,10 @@
             
             <a href="/" class="text-2xl font-black italic tracking-tighter text-blue-600">{{ APP_NAME }}</a>
         </div>
+        <!-- Секундомер -->
+        <div id="stopwatch" class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-slate-700 font-bold font-mono text-sm tabular-nums">
+            <span id="stopwatch-display">00:00</span>
+        </div>
         <div class="flex items-center gap-4">
             <form action="{% url 'change_language' %}" method="post"
                   class="flex items-center gap-1 bg-slate-100 rounded-full p-1">
@@ -166,7 +170,40 @@
         // }
 
         // startTimer();
+        const MAX_TEST_SECONDS = 32000;
 
+        let elapsedSeconds = 0;
+        let stopwatchInterval = null;
+        let examSubmitted = false;
+
+        function formatElapsed(totalSeconds) {
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            const pad = (n) => String(n).padStart(2, '0');
+            return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+        }
+
+        function updateStopwatchDisplay() {
+            const el = document.getElementById('stopwatch-display');
+            if (el) el.textContent = formatElapsed(elapsedSeconds);
+        }
+
+        function startStopwatch() {
+            stopwatchInterval = setInterval(() => {
+                elapsedSeconds++;
+                updateStopwatchDisplay();
+        
+                if (elapsedSeconds >= MAX_TEST_SECONDS) {
+                    clearInterval(stopwatchInterval);
+                    // Лимит достигнут — отправляем текущие ответы без подтверждения.
+                    submitExam(true);
+                }
+            }, 1000);
+        }
+        
+        startStopwatch();
+        
           // Функция получения CSRF-токена из cookie (стандарт для Django)
           function getCookie(name) {
               let cookieValue = null;
@@ -195,9 +232,14 @@
               return answers;
           }
 
+          @param {boolean}
           
-          async function submitExam() {
-              if (!confirm('Отправить ответы?')) return;
+          async function submitExam(auto = false) {
+              if (examSubmitted) return;
+              if (!auto && !confirm('Отправить ответы?')) return;
+          
+              examSubmitted = true;
+              clearInterval(stopwatchInterval);
           
               document.getElementById('loading-overlay').classList.remove('hidden');
               document.getElementById('loading-overlay').classList.add('flex');
@@ -205,36 +247,37 @@
               const answers = collectAnswers();
           
               const payload = {
-                  answers: answers
+                  answers: answers,
+                  time: elapsedSeconds
               };
           
               try {
                   const res = await fetch("{% url 'test' test_id=test_id %}", {
                       method: 'POST',
-                      headers: { 
+                      headers: {
                           'Content-Type': 'application/json',
                           'X-CSRFToken': getCookie('csrftoken')
                       },
                       body: JSON.stringify(payload)
                   });
           
-                  // Получаем наш JSON-ответ
                   const data = await res.json();
           
                   if (!res.ok) {
                       alert(data.error || 'Ошибка отправки');
                       document.getElementById('loading-overlay').classList.add('hidden');
                       document.getElementById('loading-overlay').classList.remove('flex');
+                      examSubmitted = false; // даём повторить попытку при ошибке сети/сервера
                       return;
                   }
           
-                  // РЕДИРЕКТ: Заставляем браузер перейти на страницу результатов, присланную бэкендом
                   window.location.href = data.redirect_url;
           
               } catch (e) {
                   alert('Ошибка соединения: ' + e.message);
                   document.getElementById('loading-overlay').classList.add('hidden');
                   document.getElementById('loading-overlay').classList.remove('flex');
+                  examSubmitted = false;
               }
           }
     </script>
