@@ -1,8 +1,10 @@
+from django.db.models import Count
+from django.http import JsonResponse
 from django.shortcuts import render
 
 from core.models import About, Courses, News, Partners, Teachers, Test, SelfQuestion
 import random
-from core.models.self import SelfQuestion
+from core.models.self import SelfQuestion, SelfCtg
 
 def about(request):
     # singleton-паттерн: одна запись About описывает всю страницу "О нас".
@@ -36,62 +38,84 @@ def self(request):
     return render(request, "module 3 test/self.html")
 
 
-# def self_check(request):
-#     if request.method == "POST":
-#         print(request.POST)
-        
-#     test = (
-#                 Test.objects
-#                 .only('id', 'name', 'desc')
-#                 .prefetch_related('variantas__questions__answers')
-#                 .get(id=10)
-#             )
-
-#     questions_list = []
-#     for v_test in test.variantas.all():
-#         for question in v_test.questions.all():
-#             questions_list.append({
-#                 "id": question.id,
-#                 "text": question.text,
-#                 "img": question.img.url if question.img else None,
-#                 # "answer": question.answers.text if question.answers.is_answer else None,
-#                 "answers": [
-#                     {
-#                         "id": answer.id,
-#                         "text": answer.text,
-#                         "is_correct": answer.is_answer,
-#                         # "img": answer.img.url if answer.img else None,
-#                     }
-#                     for answer in question.answers.all()
-#                 ]
-#             })
-    
-#     ctx = {
-#         "questions": questions_list
-#     }
-#     print(ctx)
-#     return render(request, "module 3 test/test.html", ctx)
-    
-
 def self_check(request):
-    # 1. Достаем 20 случайных вопросов. 
-    # order_by('?') дает команду БД перемешать записи перед выдачей.
-    random_questions = list(SelfQuestion.objects.order_by('?')[:2])
-    
-    # 2. Для каждого вопроса достаем его варианты ответов и перемешиваем
-    for q in random_questions:
-        # q.selfanswer_set.all() достает все ответы, привязанные к этому вопросу
-        answers = list(q.selfanswer_set.all())
-        
-        # Перемешиваем ответы случайным образом
-        random.shuffle(answers)
-        
-        # Присваиваем перемешанный список атрибуту `answers`.
-        # Именно этот атрибут вы используете в test.html: {% for a in q.answers %}
-        q.answers = answers
-        
-    # 3. Отдаем в ваш шаблон test.html
+    """
+    Self-Check тест.
+
+    ХОТФИК/ФИЧА: раньше сюда сразу подставлялось 2 случайных вопроса из
+    ВСЕХ категорий разом. Теперь пользователь сперва выбирает категорию
+    (SelfCtg) на клиенте, и только после выбора сюда же летит AJAX-запрос
+    с ?ctg=<id> — тем же самым URL 'self_check' (core/urls.py — no-touch
+    zone, поэтому НЕ заводим отдельный роут, а разруливаем через query-
+    параметр прямо в этом view).
+
+    GET  (без ?ctg)  -> обычный HTML: форма ФИО + список категорий.
+    GET  ?ctg=<id>   -> JsonResponse: до 20 случайных вопросов ИМЕННО этой
+                        категории с перемешанными вариантами ответов —
+                        та же логика рандомизации, что была раньше
+                        (order_by('?') + random.shuffle), просто теперь
+                        она масштабируется на категорию, а не на всю таблицу
+                        (быстрее: меньше строк до сортировки RANDOM()).
+    """
+    ctg_id = request.GET.get('ctg')
+    if ctg_id is not None:
+        return _self_check_questions_json(ctg_id)
+
+    # Только непустые категории — нет смысла показывать пользователю
+    # категорию, в которой нет ни одного вопроса.
+    ctgs = (
+        SelfCtg.objects
+        .annotate(question_count=Count('selfquestion'))
+        .filter(question_count__gt=0)
+        .order_by('name_uz')
+    )
+
     return render(request, 'module 3 test/test.html', {
-        'questions': random_questions
+        'ctgs': ctgs,
     })
-    
+
+
+def _self_check_questions_json(ctg_id):
+    """
+    Возвращает до 20 случайных вопросов категории ``ctg_id`` вместе
+    с перемешанными вариантами ответов, в формате, который напрямую
+    скармливается JS-массиву ``questions`` в module3test/script.js
+    (см. showQuetions/optionSelected — они не тронуты и продолжают
+    работать с этим же форматом объектов).
+    """
+    if not str(ctg_id).isdigit():
+        return JsonResponse({"ok": False, "error": "invalid_ctg"}, status=400)
+
+    ctg = SelfCtg.objects.filter(id=int(ctg_id)).first()
+    if ctg is None:
+        return JsonResponse({"ok": False, "error": "not_found"}, status=404)
+
+    # Фильтр по категории ДО случайной сортировки — меньше строк для
+    # ORDER BY RANDOM(), поэтому быстрее, чем прежний вариант без фильтра.
+    random_questions = list(
+        SelfQuestion.objects
+        .filter(ctg=ctg)
+        .prefetch_related('selfanswer_set')
+        .order_by('?')[:20]
+    )
+
+    data = []
+    for q in random_questions:
+        answers = list(q.selfanswer_set.all())
+        random.shuffle(answers)
+        correct = next((a for a in answers if a.is_correct), None)
+
+        data.append({
+            "numb": q.id,
+            "question": q.text,
+            "img": q.img.url if q.img else None,
+            "options": [
+                {"text": a.text, "img": a.img.url if a.img else None}
+                for a in answers
+            ],
+            # answer сопоставляется по тексту в script.js (optionSelected) —
+            # сохраняем тот же контракт, что был раньше.
+            "answer": correct.text if correct else None,
+        })
+
+    return JsonResponse({"ok": True, "questions": data})

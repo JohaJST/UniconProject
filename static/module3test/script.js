@@ -1,6 +1,6 @@
 // Элементы
 const start_btn = document.querySelector(".start_btn button");
-const info_box = document.querySelector(".info_box");
+const info_box = document.getElementById("info_box");
 const exit_btn = info_box.querySelector(".buttons .quit");
 const start_quiz_btn = document.getElementById("start_quiz_btn");
 const quiz_box = document.querySelector(".quiz_box");
@@ -11,6 +11,12 @@ const bottom_ques_counter = document.querySelector("footer .total_que");
 
 const retake_btn = document.getElementById("retake_btn");
 const final_quit_btn = document.getElementById("final_quit_btn");
+
+// Элементы окна выбора категории (SelfCtg)
+const ctg_box = document.getElementById("ctg_box");
+const ctg_list = document.getElementById("ctg_list");
+const ctg_back_btn = document.getElementById("ctg_back_btn");
+let ctgLoading = false; // защита от повторного клика, пока летит fetch
 
 // Данные пользователя
 let firstName = "";
@@ -36,7 +42,9 @@ exit_btn.onclick = ()=>{
     info_box.classList.remove("activeInfo");
 }
 
-// Старт теста (с проверкой имени)
+// Ввод ФИО подтверждён -> открываем выбор категории (SelfCtg),
+// а НЕ сразу тест: вопросы конкретной категории подгружаются позже,
+// по клику на неё (loadCategoryQuestions).
 start_quiz_btn.onclick = ()=>{
     if(fNameInput.value.trim() === "" || lNameInput.value.trim() === ""){
         alert(fioReq);
@@ -46,9 +54,77 @@ start_quiz_btn.onclick = ()=>{
     lastName = lNameInput.value.trim();
 
     info_box.classList.remove("activeInfo");
-    quiz_box.classList.add("activeQuiz");
-    showQuetions(0);
-    queCounter(1);
+    if (ctg_box) {
+        ctg_box.classList.add("activeCtg");
+    }
+}
+
+// Кнопка "Назад" в окне выбора категории — возврат к вводу ФИО
+if (ctg_back_btn) {
+    ctg_back_btn.onclick = () => {
+        ctg_box.classList.remove("activeCtg");
+        info_box.classList.add("activeInfo");
+    };
+}
+
+// Клик по категории -> подгружаем её вопросы и стартуем тест.
+// Делегирование на контейнер: список категорий рендерится один раз
+// сервером и не меняется, но так проще и надёжнее, чем вешать
+// обработчик на каждый .ctg-item по отдельности.
+if (ctg_list) {
+    ctg_list.addEventListener("click", (e) => {
+        const item = e.target.closest(".ctg-item");
+        if (!item || ctgLoading) return;
+        const ctgId = item.getAttribute("data-ctg-id");
+        if (!ctgId) return;
+        loadCategoryQuestions(ctgId);
+    });
+}
+
+function loadCategoryQuestions(ctgId) {
+    if (typeof CTG_QUESTIONS_URL_TEMPLATE === "undefined") return;
+
+    ctgLoading = true;
+    // Лёгкая визуальная блокировка на время запроса — без тяжёлых
+    // спиннеров и лишней разметки, чтобы не трогать дизайн.
+    ctg_list.style.opacity = "0.5";
+    ctg_list.style.pointerEvents = "none";
+
+    const url = CTG_QUESTIONS_URL_TEMPLATE.replace("999999", encodeURIComponent(ctgId));
+
+    fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then((res) => {
+            if (!res.ok) throw new Error("bad_status");
+            return res.json();
+        })
+        .then((data) => {
+            if (!data.ok || !Array.isArray(data.questions) || data.questions.length === 0) {
+                alert("В этой категории пока нет вопросов");
+                return;
+            }
+
+            // Тот же контракт объекта, что и раньше (numb/question/img/options/answer) —
+            // showQuetions/optionSelected ниже никак не меняются.
+            questions = data.questions;
+
+            ctg_box.classList.remove("activeCtg");
+            quiz_box.classList.add("activeQuiz");
+
+            que_count = 0;
+            que_numb = 1;
+            userScore = 0;
+
+            showQuetions(que_count);
+            queCounter(que_numb);
+        })
+        .catch(() => {
+            alert("Не удалось загрузить вопросы. Проверьте соединение и попробуйте ещё раз.");
+        })
+        .finally(() => {
+            ctgLoading = false;
+            ctg_list.style.opacity = "";
+            ctg_list.style.pointerEvents = "";
+        });
 }
 
 // Кнопка "Следующий вопрос"
@@ -168,7 +244,9 @@ function queCounter(index){
     bottom_ques_counter.innerHTML = totalQueCounTag;
 }
 
-// Кнопка рестарта
+// Кнопка рестарта — переигрывает ТОТ ЖЕ набор вопросов, что был загружен
+// для выбранной категории (так же вело себя и раньше — без повторного
+// рандома с сервера).
 retake_btn.onclick = ()=>{
     quiz_box.classList.add("activeQuiz");
     result_box.classList.remove("activeResult");

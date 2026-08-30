@@ -19,7 +19,8 @@ body{
 .start_btn,
 .info_box,
 .quiz_box,
-.result_box{
+.result_box,
+.ctg_box{
     position: absolute;
     top: 50%;
     left: 50%;
@@ -30,7 +31,8 @@ body{
 
 .info_box.activeInfo,
 .quiz_box.activeQuiz,
-.result_box.activeResult{
+.result_box.activeResult,
+.ctg_box.activeCtg{
     opacity: 1;
     z-index: 5;
     pointer-events: auto;
@@ -106,6 +108,66 @@ body{
     border-radius: 5px;
     border: 1px solid #007bff;
     transition: all 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CATEGORY BOX (SelfCtg selection) — та же "рамка" что и у .info_box
+   (мы вешаем на элемент оба класса: class="info_box ctg_box"), поэтому
+   позиционирование/скрытие по умолчанию наследуется бесплатно, а тут
+   переопределяем только то, что реально отличается: сетку категорий.
+   ═══════════════════════════════════════════════════════════════════════ */
+.ctg_box {
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.ctg_box .ctg-list {
+    padding: 15px 30px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.ctg_box .ctg-item {
+    background: #f8faff;
+    border: 2px solid #dbeafe;
+    border-radius: 12px;
+    padding: 16px 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ctg_box .ctg-item:hover {
+    background: #eef5ff;
+    border-color: #84c5fe;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 123, 255, 0.1);
+}
+
+.ctg_box .ctg-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.ctg_box .ctg-count {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.ctg_box .ctg-empty {
+    grid-column: 1 / -1;
+    padding: 20px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 15px;
 }
 
 .quiz_box {
@@ -532,12 +594,16 @@ section .option_list .option:hover .opt_img {
         /* Делаем колонки чуть уже, чтобы на планшете точно влезало 2 в ряд */
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
     }
+
+    .ctg_box .ctg-list {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
 }
 
 /* --- ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ (экраны меньше 480px) --- */
 @media (max-width: 480px) {
     /* Контейнеры занимают почти весь экран */
-    .info_box, .quiz_box, .result_box {
+    .info_box, .quiz_box, .result_box, .ctg_box {
         width: 98%; 
         max-height: 95vh;
         border-radius: 10px; /* Скругления чуть меньше */
@@ -630,5 +696,9 @@ section .option_list .option:hover .opt_img {
         font-size: 15px;
         padding: 0 15px;
         margin: 0 5px; /* Чтобы две кнопки поместились рядом */
+    }
+
+    .ctg_box .ctg-list {
+        grid-template-columns: 1fr;
     }
 }

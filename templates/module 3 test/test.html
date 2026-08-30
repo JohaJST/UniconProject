@@ -17,7 +17,7 @@
     <div class="start_btn"><button>{% trans 'startQuiz' %}</button></div>
     
     <!-- Info Box (теперь с полями для ввода) -->
-    <div class="info_box">
+    <div class="info_box" id="info_box">
         <div class="info-title"><span>{% trans 'infoTitle' %}</span></div>
         <div class="info-list">
             <div class="input-group">
@@ -32,6 +32,27 @@
         <div class="buttons">
             <button class="quit"><a href="{% url 'about' %}" style="text-decoration:none; color:inherit;">{% trans 'quit' %}</a></button>
             <button class="restart" id="start_quiz_btn">{% trans 'next' %}</button>
+        </div>
+    </div>
+
+    <!-- Category Box (SelfCtg selection) — открывается после ввода ФИО.
+         Категории рендерятся сразу (это дёшево — просто названия и
+         счётчики), а сами вопросы подгружаются AJAX-ом только для
+         ВЫБРАННОЙ категории (см. loadCategoryQuestions в script.js). -->
+    <div class="info_box ctg_box" id="ctg_box">
+        <div class="info-title"><span>Выберите категорию</span></div>
+        <div class="ctg-list" id="ctg_list">
+            {% for c in ctgs %}
+            <div class="ctg-item" data-ctg-id="{{ c.id }}">
+                <span class="ctg-name">{{ c.name }}</span>
+                <span class="ctg-count">{{ c.question_count }} вопросов</span>
+            </div>
+            {% empty %}
+            <div class="ctg-empty">Категории пока не добавлены</div>
+            {% endfor %}
+        </div>
+        <div class="buttons">
+            <button class="quit" id="ctg_back_btn">Назад</button>
         </div>
     </div>
     
@@ -84,47 +105,17 @@
     const subtitleTemplate = "{% trans 'resultText'|escapejs %}";
     </script>
     <script>
-        // Генерируем массив вопросов из данных, пришедших из Python (questions_list)
-        let questions = [
-            {% for q in questions %}
-            {
-                numb: {{ q.id }},
-                question: "{{ q.text|escapejs }}",
-                img: {% if q.img %}"{{ q.img.url }}"{% else %}null{% endif %},
-                
-                options: [
-                    {% for a in q.answers %}
-                    {
-                        text: "{{ a.text|escapejs }}",
-                        img: {% if a.img %}"{{ a.img.url }}"{% else %}null{% endif %}
-                    }{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ],
-                
-                {% for a in q.answers %}
-                    {% if a.is_correct %}
-                        answer: "{{ a.text|escapejs }}"
-                    {% endif %}
-                {% endfor %}
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
-    
-  // you can uncomment the below codes and make duplicate as more as you want to add question
-  // but remember you need to give the numb value serialize like 1,2,3,5,6,7,8,9.....
+        // Вопросы больше НЕ рендерятся сервером на первой загрузке страницы —
+        // это была бы лишняя нагрузка (и на сервер, и на клиента) для того,
+        // что пользователь ещё даже не выбрал. Массив заполняется AJAX-ом
+        // после выбора категории (см. loadCategoryQuestions в script.js),
+        // сохраняя ровно тот же формат объектов, что и раньше.
+        let questions = [];
 
-  //   {
-  //   numb: 6,
-  //   question: "Your Question is Here",
-  //   answer: "Correct answer of the question is here",
-  //   options: [
-  //     "Option 1",
-  //     "option 2",
-  //     "option 3",
-  //     "option 4"
-  //   ]
-  // },
-
+        // Тот же самый URL 'self_check' (core/urls.py трогать нельзя),
+        // просто с query-параметром ?ctg=<id> — view сам различает
+        // обычный GET (рендер страницы) и AJAX GET (JSON с вопросами).
+        const CTG_QUESTIONS_URL_TEMPLATE = "{% url 'self_check' %}?ctg=999999";
     </script>
 </body>
 </html>
