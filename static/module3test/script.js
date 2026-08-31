@@ -32,6 +32,7 @@ let userScore = 0;
 let tickIconTag = '<div class="icon tick"><i class="fas fa-check"></i></div>';
 let crossIconTag = '<div class="icon cross"><i class="fas fa-times"></i></div>';
 
+let currentCtgId = "";
 // Открытие правил
 start_btn.onclick = () => {
     info_box.classList.add("activeInfo");
@@ -75,6 +76,7 @@ if (ctg_list) {
         if (!item || ctgLoading) return;
         const ctgId = item.getAttribute("data-ctg-id");
         if (ctgId === null || ctgId === "") return;
+        currentCtgId = ctgId;
         loadCategoryQuestions(ctgId);
     });
 }
@@ -267,10 +269,12 @@ function fireConfetti() {
 function sendResultToBackend() {
     const form = document.getElementById("results-id");
     const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
-
+ 
+    
     let formData = new FormData();
     formData.append('first_name', firstName);
     formData.append('last_name', lastName);
+    formData.append('ctg', currentCtgId);
     formData.append('score', userScore);
     formData.append('total', questions.length);
     formData.append('percentage', (userScore / questions.length) * 100);

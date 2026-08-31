@@ -59,11 +59,17 @@ def self_check(request):
                         (быстрее: меньше строк до сортировки RANDOM()).
     """
     if request.method == "POST":
+        print(1)
         data = request.POST
-        # print(data)
+        print(data)
         user, flag = SelfUser.objects.get_or_create(first_name=data['first_name'], last_name=data['last_name'])  
-        result = SelfResult.objects.create(user=user, score=data['score'], foiz=data['percentage'])
-        # print(result)
+        result = SelfResult.objects.create(
+            user=user, ctg_id=int(data['ctg']), 
+            score=int(data['score']), foiz=data['percentage'],
+            totalQuestions=int(data['total']),
+        )
+        
+        print(result)
         # print(user)
         return JsonResponse({'message': 'success'})
         

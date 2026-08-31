@@ -19,7 +19,8 @@ from core.models import (
     User,
     Variant,
 )
-from core.models.self import SelfCtg, SelfQuestion, SelfResult
+from core.dashboard.selfuser_crud import view_selfuser
+from core.models.self import SelfCtg, SelfQuestion, SelfResult, SelfUser
 
 
 @login_required(login_url="login")
@@ -146,13 +147,25 @@ def action(request, status, path, pk=None):
 
             return redirect("dlist", tip=path)
         elif path == "selfresult":
-            SelfResult.objects.get(id=pk).delete()
-            return redirect("dlist", tip=path)
+            # После удаления одной попытки возвращаем не на плоский список
+            # (его больше нет), а обратно на карточку участника, которому
+            # принадлежала эта попытка.
+            result = SelfResult.objects.select_related("user").get(id=pk)
+            redirect_user_id = result.user_id
+            result.delete()
+            if redirect_user_id:
+                return redirect("action", status="view", path="selfuser", pk=redirect_user_id)
+            return redirect("dlist", tip="selfresult")
         elif path == "selfctg":
             # Вопросы категории не удаляются: FK SET_NULL — они остаются
             # без категории, а не пропадают вместе с ней.
             SelfCtg.objects.get(id=pk).delete()
             return redirect("dlist", tip=path)
+        elif path == "selfuser":
+                    target = SelfUser.objects.get(id=pk)
+                    SelfResult.objects.filter(user=target).delete()
+                    target.delete()
+                    return redirect("dlist", tip="selfresult")
         else:
             return redirect("dlist", tip=path)
     elif status == "edit":
@@ -179,6 +192,8 @@ def action(request, status, path, pk=None):
             return view_quiz(request, pk)
         elif path == "selfctg":
             return view_selfctg(request, pk)
+        elif path == "selfuser":
+            return view_selfuser(request, pk)
         return redirect("dlist", tip=path)
     else:
         return redirect("dlist", tip=path)

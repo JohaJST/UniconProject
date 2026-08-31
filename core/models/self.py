@@ -54,12 +54,14 @@ class SelfUser(models.Model):
         
 class SelfResult(models.Model):
     user = models.ForeignKey(SelfUser, on_delete=models.SET_NULL, null=True, blank=True)
-    score = models.IntegerField(default=0)
+    score = models.SmallIntegerField(default=0)
     created = models.DateField(
         auto_now_add=True, auto_now=False, null=True, editable=False
     )
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True)
     foiz = models.FloatField(default=0.0)
+    ctg = models.ForeignKey(SelfCtg, on_delete=models.SET_NULL, null=True, blank=True)
+    totalQuestions = models.SmallIntegerField(default=0)
 
     # def save(self, *args, **kwargs):
     #     self.foiz = (self.score / 20) * 100

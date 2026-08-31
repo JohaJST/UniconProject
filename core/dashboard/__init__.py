@@ -8,3 +8,4 @@ from .potok_crud import view_potok, edit_potok
 from .user_crud import view_user, edit_user
 from .quiz_crud import view_quiz, edit_quiz
 from .selfctg_crud import view_selfctg, edit_selfctg
+from .selfuser_crud import list_selfuser, view_selfuser

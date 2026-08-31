@@ -3,7 +3,9 @@ from django.db.models import Count
 from django.shortcuts import render
 
 from core.models import Potok, Question, Result, Subject, Test, User, Variant
-from core.models.self import SelfCtg, SelfQuestion, SelfResult
+from core.models.self import SelfCtg, SelfQuestion
+
+from .selfuser_crud import list_selfuser
 
 _QUERYSETS = {
     "subject":      lambda: Subject.objects.all().order_by('-created'),
@@ -15,7 +17,6 @@ _QUERYSETS = {
     "question":     lambda: Question.objects.select_related('test__subject').all().order_by('-created'),
     "selfctg":      lambda: SelfCtg.objects.annotate(question_count=Count('selfquestion')).order_by('-created'),
     "selfquestion": lambda: SelfQuestion.objects.prefetch_related('selfanswer_set').select_related('ctg').order_by('-id'),
-    "selfresult":   lambda: SelfResult.objects.select_related('user').order_by('-created'),
 }
 
 _DISPLAY_NAMES = {
@@ -28,7 +29,6 @@ _DISPLAY_NAMES = {
     "question":     "Question",
     "selfctg":      "SelfCtg",
     "selfquestion": "Self Question",
-    "selfresult":   "Self Result",
 }
 
 
@@ -41,6 +41,13 @@ def dlist(request, tip=None):
             "subjects": Subject.objects.all(),
             "potoks": Potok.objects.all(),
         })
+
+    # "selfresult" — теперь не плоский список результатов, а агрегированный
+    # список участников (SelfUser) с их статистикой Self Check; клик по
+    # участнику открывает подробную карточку с историей попыток
+    # (см. core/dashboard/selfuser_crud.py).
+    if tip == "selfresult":
+        return list_selfuser(request)
 
     qs_factory = _QUERYSETS.get(tip)
     if qs_factory is None:
