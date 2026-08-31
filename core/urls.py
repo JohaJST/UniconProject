@@ -13,8 +13,11 @@ from core.quiz import (
     user_profile,
     v2_test,
 )
-
-from .dashboard import action, dlist, form, home, lock, ai_translate
+from .dashboard import (
+    action, dlist, form, home, lock, ai_translate,
+    export_hub, export_result_excel, export_result_word,
+    export_selfresult_excel, export_selfresult_word,
+)
 from .dashboard.self_check import create_or_edit_self_question
 
 # ── Пути, которые должны попадать под языковой префикс (/uz/..., /en/...) ──
@@ -42,6 +45,11 @@ urlpatterns = [
     # иначе /dashboard/ai-translate/ перехватывается как status="ai-translate"
     # и редиректится на /dashboard/ (AI-кнопки в формах перестают работать).
     path("dashboard/ai-translate/", ai_translate, name="ai_translate"),
+    path("dashboard/export/", export_hub, name="export_hub"),
+    path("dashboard/export/result/excel/", export_result_excel, name="export_result_excel"),
+    path("dashboard/export/result/word/", export_result_word, name="export_result_word"),
+    path("dashboard/export/selfresult/excel/", export_selfresult_excel, name="export_selfresult_excel"),
+    path("dashboard/export/selfresult/word/", export_selfresult_word, name="export_selfresult_word"),
     path("dashboard/<str:status>/", home, name="dashboard_status"),
     path("dashboard/<str:status>/<int:subject_id>/", home, name="dashboard_subject"),
     path("dashboard/<str:status>/<int:subject_id>/<int:potok_id>/", home, name="dashboard_potok"),

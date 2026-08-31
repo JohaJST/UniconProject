@@ -9,3 +9,10 @@ from .user_crud import view_user, edit_user
 from .quiz_crud import view_quiz, edit_quiz
 from .selfctg_crud import view_selfctg, edit_selfctg
 from .selfuser_crud import list_selfuser, view_selfuser
+from .export import (
+    export_hub,
+    export_result_excel,
+    export_result_word,
+    export_selfresult_excel,
+    export_selfresult_word,
+)

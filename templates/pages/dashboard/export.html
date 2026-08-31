@@ -1,0 +1,105 @@
+{% extends 'pages/dashboard/base.html' %}
+
+{% block title %}Экспорт отчётов{% endblock %}
+{% block page_title %}Экспорт отчётов{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <div class="mb-2">
+        <h1 class="text-2xl font-bold text-white">Экспорт отчётов</h1>
+        <p class="text-sm text-slate-400 mt-1">
+            Выгрузка результатов в Excel или Word со всеми связанными данными
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Result (обычные тесты)
+    ══════════════════════════════════════════════════ -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-6 lg:p-8">
+        <div class="flex items-center gap-3 mb-1">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-clipboard-list text-indigo-400"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-white">Результаты тестов (Result)</h2>
+                <p class="text-xs text-slate-400">Ученик, поток, предмет, тест, % и время прохождения</p>
+            </div>
+        </div>
+
+        <form method="get" class="mt-5 flex flex-col sm:flex-row sm:items-end gap-4">
+            <div class="flex-1">
+                <label class="text-xs font-medium text-slate-400 mb-1.5 block">
+                    Фильтр по потоку (необязательно)
+                </label>
+                <select name="potok_id"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                               text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                               focus:ring-indigo-500 transition-colors">
+                    <option value="">Все потоки</option>
+                    {% for p in potoks %}
+                    <option value="{{ p.id }}">{{ p.date_range }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-3 shrink-0">
+                <button type="submit" formaction="{% url 'export_result_excel' %}"
+                        class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500
+                               text-white px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
+                    <i class="fa-solid fa-file-excel"></i> Excel
+                </button>
+                <button type="submit" formaction="{% url 'export_result_word' %}"
+                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500
+                               text-white px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
+                    <i class="fa-solid fa-file-word"></i> Word
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SelfResult (Self Check)
+    ══════════════════════════════════════════════════ -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-6 lg:p-8">
+        <div class="flex items-center gap-3 mb-1">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-circle-check text-amber-400"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-white">Результаты Self Check (SelfResult)</h2>
+                <p class="text-xs text-slate-400">Участник, категория, баллы и % прохождения</p>
+            </div>
+        </div>
+
+        <form method="get" class="mt-5 flex flex-col sm:flex-row sm:items-end gap-4">
+            <div class="flex-1">
+                <label class="text-xs font-medium text-slate-400 mb-1.5 block">
+                    Фильтр по категории (необязательно)
+                </label>
+                <select name="ctg_id"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5
+                               text-white focus:outline-none focus:border-indigo-500 focus:ring-1
+                               focus:ring-indigo-500 transition-colors">
+                    <option value="">Все категории</option>
+                    {% for c in ctgs %}
+                    <option value="{{ c.id }}">{{ c.name_uz|default:c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-3 shrink-0">
+                <button type="submit" formaction="{% url 'export_selfresult_excel' %}"
+                        class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500
+                               text-white px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
+                    <i class="fa-solid fa-file-excel"></i> Excel
+                </button>
+                <button type="submit" formaction="{% url 'export_selfresult_word' %}"
+                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500
+                               text-white px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
+                    <i class="fa-solid fa-file-word"></i> Word
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
