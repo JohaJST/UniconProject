@@ -61,9 +61,9 @@ class SelfResult(models.Model):
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True)
     foiz = models.FloatField(default=0.0)
 
-    def save(self, *args, **kwargs):
-        self.foiz = (self.score / 20) * 100
-        return super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.foiz = (self.score / 20) * 100
+    #     return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user} // {self.score} // {self.created}"

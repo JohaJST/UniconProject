@@ -1,10 +1,11 @@
+
 from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import render
 
 from core.models import About, Courses, News, Partners, Teachers, Test, SelfQuestion
 import random
-from core.models.self import SelfQuestion, SelfCtg
+from core.models.self import SelfQuestion, SelfCtg, SelfResult, SelfUser
 
 def about(request):
     # singleton-паттерн: одна запись About описывает всю страницу "О нас".
@@ -57,6 +58,15 @@ def self_check(request):
                         она масштабируется на категорию, а не на всю таблицу
                         (быстрее: меньше строк до сортировки RANDOM()).
     """
+    if request.method == "POST":
+        data = request.POST
+        # print(data)
+        user, flag = SelfUser.objects.get_or_create(first_name=data['first_name'], last_name=data['last_name'])  
+        result = SelfResult.objects.create(user=user, score=data['score'], foiz=data['percentage'])
+        # print(result)
+        # print(user)
+        return JsonResponse({'message': 'success'})
+        
     ctg_id = request.GET.get('ctg')
     if ctg_id is not None:
         return _self_check_questions_json(ctg_id)
@@ -69,7 +79,7 @@ def self_check(request):
         .filter(question_count__gt=0)
         .order_by('name_uz')
     )
-    print(ctgs)
+    # print(ctgs)
     # print(request.GET)
     # print(1)
     return render(request, 'module 3 test/test.html', {

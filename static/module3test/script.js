@@ -187,7 +187,10 @@ function optionSelected(answer) {
     next_btn.classList.add("show");
 }
 
-// Показ результатов
+// Показ результатов.
+// Результат отправляется на бэкенд СРАЗУ здесь, как только пользователь
+// ответил на последний вопрос — не дожидаясь нажатия кнопок "Пройти
+// заново"/"Выйти". Кнопки ниже отвечают только за навигацию.
 function showResult() {
     info_box.classList.remove("activeInfo");
     quiz_box.classList.remove("activeQuiz");
@@ -208,7 +211,10 @@ function showResult() {
         resultIcon.innerHTML = '<i class="fas fa-thumbs-up" style="color: #007bff;"></i>';
     } else {
         statusText.innerHTML = statusBad;
-        resultIcon.innerHTML = '<i class="fas fa-dumbbell" style="color: #dc3545;"></i>';
+        // Штанга заменена на открытую книгу — тот же смысл ("нужно
+        // подтянуться"/поучиться), но нагляднее и понятнее для теста
+        // по кибербезопасности. Цвет оставлен прежним (#dc3545).
+        resultIcon.innerHTML = '<i class="fas fa-book-open" style="color: #dc3545;"></i>';
     }
 
     let finalSubtitle = subtitleTemplate
@@ -228,19 +234,15 @@ function queCounter(index) {
     bottom_ques_counter.innerHTML = totalQueCounTag;
 }
 
-// Кнопка рестарта
+// Кнопка рестарта — результат уже отправлен в showResult(), здесь только
+// настоящая перезагрузка страницы (аналог Ctrl+R), а не мягкий сброс
+// JS-состояния, как было раньше.
 retake_btn.onclick = () => {
-    quiz_box.classList.add("activeQuiz");
-    result_box.classList.remove("activeResult");
-    que_count = 0;
-    que_numb = 1;
-    userScore = 0;
-    showQuetions(que_count);
-    queCounter(que_numb);
-    next_btn.classList.remove("show");
+    window.location.reload();
 };
 
-// Кнопка финального выхода
+// Кнопка финального выхода — результат уже отправлен в showResult(),
+// здесь только редирект на главную (тот же смысл, что redirect("about")).
 final_quit_btn.onclick = () => {
     window.location.href = homelink;
 };
