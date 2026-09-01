@@ -186,3 +186,6 @@ templates/t/
 static/nouse
 .idea/
 /media/
+
+.zip
+*.zip

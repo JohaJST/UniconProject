@@ -1,0 +1,158 @@
+"""
+core/dashboard/pagination/registry.py
+────────────────────────────────────────
+Реестр спецификаций списков дашборда для пагинации.
+
+Каждый список (tip), доступный через /dashboard/list/<tip>/, описывается
+одной ListSpec — она фиксирует, каким движком пагинации он обслуживается
+и (для offset/keyset) по какому полю идёт сортировка.
+
+ВАЖНО (этот этап): для ВСЕХ списков engine="none" — это чистый рефакторинг,
+переносящий существующие _QUERYSETS-лямбды (core/dashboard/list.py) под
+единый реестр без изменения поведения. Подключение offset/keyset-движков
+к конкретным спискам — отдельные последующие этапы (см. будущий
+core/dashboard/pagination/facade.py).
+
+sort_field/sort_direction уже проставлены корректно даже для engine="none" —
+они сверены с текущими order_by() в _QUERYSETS и служат подготовкой на
+будущее: когда какой-то список переключат на "keyset"/"offset", реестр
+трогать повторно не придётся.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Callable, Dict, Literal, Optional
+
+from django.db.models import QuerySet
+
+from core.dashboard.list import _QUERYSETS
+
+Engine = Literal["none", "offset", "keyset"]
+SortDirection = Literal["asc", "desc"]
+
+
+@dataclass(frozen=True)
+class ListSpec:
+    """
+    Спецификация одного списка дашборда для пагинации.
+
+    :param queryset_factory: без-аргументная функция, возвращающая базовый
+        QuerySet списка (со всеми select_related/prefetch_related/annotate) —
+        переиспользуется 1-в-1 из core.dashboard.list._QUERYSETS, чтобы
+        логика построения queryset жила в одном месте и не расходилась
+        между обычным списком и его пагинированной версией.
+    :param engine:
+        "none"   — пагинация не применяется, список рендерится целиком,
+                   как сейчас (текущее поведение всех 9 списков).
+        "offset" — LIMIT/OFFSET с COUNT() (для списков с невычислимой
+                   через индекс сортировкой, напр. агрегаты/Subquery).
+        "keyset" — курсорная пагинация по (sort_field, id).
+    :param sort_field: поле сортировки. Для списков, сортируемых
+        напрямую по id (variant, selfquestion) — это "id", и отдельный
+        tie-breaker не нужен: id уникален и уже проиндексирован как PK.
+        Для engine="none" это поле пока чисто информационное (описывает
+        текущую сортировку queryset) — движками ещё не используется.
+    :param sort_direction: направление сортировки — ДОЛЖНО совпадать
+        с order_by() внутри соответствующей лямбды _QUERYSETS.
+    :param page_size: размер страницы для offset/keyset-движков
+        (используется только когда engine != "none").
+    """
+    queryset_factory: Callable[[], QuerySet]
+    engine: Engine
+    sort_field: Optional[str]
+    sort_direction: SortDirection
+    page_size: int = 20
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Реестр
+# ─────────────────────────────────────────────────────────────────────────────
+# sort_field/sort_direction сверены с order_by() в core/dashboard/list.py::
+# _QUERYSETS на момент написания этого файла:
+#
+#   subject      -> order_by('-created')
+#   potok        -> order_by('-start')      (НЕ 'created' — см. комментарий ниже)
+#   result       -> order_by('-created')
+#   user         -> order_by('-created')
+#   quiz         -> order_by('-created')
+#   variant      -> order_by('id')
+#   question     -> order_by('-created')
+#   selfctg      -> order_by('-created')
+#   selfquestion -> order_by('-id')
+#
+# Если order_by() в _QUERYSETS изменится — обнови и здесь, иначе при
+# будущем переключении engine на "keyset"/"offset" курсор/страница будут
+# считаться по неверному полю.
+LIST_REGISTRY: Dict[str, ListSpec] = {
+    "subject": ListSpec(
+        queryset_factory=_QUERYSETS["subject"],
+        engine="none",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "potok": ListSpec(
+        queryset_factory=_QUERYSETS["potok"],
+        engine="none",
+        # ВАЖНО: Potok сортируется по 'start' (дата начала потока), а не
+        # по 'created' — это осознанная бизнес-сортировка, сохраняем как
+        # есть, а не унифицируем с остальными списками "для красоты".
+        sort_field="start",
+        sort_direction="desc",
+    ),
+    "result": ListSpec(
+        queryset_factory=_QUERYSETS["result"],
+        engine="none",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "user": ListSpec(
+        queryset_factory=_QUERYSETS["user"],
+        engine="none",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "quiz": ListSpec(
+        queryset_factory=_QUERYSETS["quiz"],
+        engine="none",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "variant": ListSpec(
+        queryset_factory=_QUERYSETS["variant"],
+        engine="none",
+        # Сортировка напрямую по id (см. _QUERYSETS['variant']) — id уже
+        # уникален и уже проиндексирован как PK, отдельный tie-breaker
+        # не понадобится даже при переключении на keyset.
+        sort_field="id",
+        sort_direction="asc",
+    ),
+    "question": ListSpec(
+        queryset_factory=_QUERYSETS["question"],
+        engine="none",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "selfctg": ListSpec(
+        queryset_factory=_QUERYSETS["selfctg"],
+        engine="none",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "selfquestion": ListSpec(
+        queryset_factory=_QUERYSETS["selfquestion"],
+        engine="none",
+        # Сортировка напрямую по id (см. _QUERYSETS['selfquestion']).
+        sort_field="id",
+        sort_direction="desc",
+    ),
+}
+
+
+def get_list_spec(tip: str) -> Optional[ListSpec]:
+    """
+    Возвращает ListSpec для данного tip, либо None, если tip не
+    зарегистрирован. "new" сюда не входит намеренно — он обрабатывается
+    в dlist() отдельной веткой ДО обращения к реестру и не является
+    списком в смысле пагинации.
+    """
+    return LIST_REGISTRY.get(tip)

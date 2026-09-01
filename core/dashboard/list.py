@@ -49,11 +49,17 @@ def dlist(request, tip=None):
     if tip == "selfresult":
         return list_selfuser(request)
 
-    qs_factory = _QUERYSETS.get(tip)
-    if qs_factory is None:
+    from core.dashboard.pagination.registry import get_list_spec
+
+    spec = get_list_spec(tip)
+    if spec is None:
         return render(request, 'pages/dashboard/list.html')
 
+    # Этот этап: у всех списков engine="none" — поведение идентично
+    # прежнему (весь queryset целиком, без пагинации). Подключение
+    # offset/keyset-движков — отдельные последующие этапы, см.
+    # core/dashboard/pagination/facade.py.
     return render(request, 'pages/dashboard/list.html', {
         "name": _DISPLAY_NAMES[tip],
-        "root": qs_factory(),
+        "root": spec.queryset_factory(),
     })
