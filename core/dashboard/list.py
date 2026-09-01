@@ -49,17 +49,17 @@ def dlist(request, tip=None):
     if tip == "selfresult":
         return list_selfuser(request)
 
-    from core.dashboard.pagination.registry import get_list_spec
+    from core.dashboard.pagination.facade import paginate_list
 
-    spec = get_list_spec(tip)
-    if spec is None:
+    page = paginate_list(tip, request)
+    if page is None:
         return render(request, 'pages/dashboard/list.html')
 
-    # Этот этап: у всех списков engine="none" — поведение идентично
-    # прежнему (весь queryset целиком, без пагинации). Подключение
-    # offset/keyset-движков — отдельные последующие этапы, см.
-    # core/dashboard/pagination/facade.py.
+    # Этот этап: у всех списков engine="none" — paginate_list() отдаёт
+    # весь queryset целиком через page.items, идентично прежнему
+    # поведению. page.pagination намеренно НЕ прокидывается в контекст —
+    # list.html про него не знает и ничего лишнего не отрендерит.
     return render(request, 'pages/dashboard/list.html', {
         "name": _DISPLAY_NAMES[tip],
-        "root": spec.queryset_factory(),
+        "root": page.items,
     })
