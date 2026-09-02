@@ -101,10 +101,13 @@ class StartNextPrevLastTests(KeysetEngineTestCase):
     def test_last_page(self):
         request = self._get(dir="last")
         page = paginate_keyset(Question.objects.all(), self.spec, request)
-
-        self.assertEqual([q.id for q in page.items], [self.questions[0].id])
+    
+        self.assertEqual(
+            [q.id for q in page.items],
+            [self.questions[1].id, self.questions[0].id],  # tail block: q1, q0
+        )
         self.assertFalse(page.has_next)
-        self.assertTrue(page.has_prev)  # 5 записей, page_size=2 — до последней есть страницы
+        self.assertTrue(page.has_prev)  # q2, q3, q4 still exist before this block
 
     def test_prev_reconstructs_previous_page(self):
         start_page = paginate_keyset(Question.objects.all(), self.spec, self._get())
