@@ -95,8 +95,6 @@ class Variant(models.Model):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class Result(models.Model):
-    # PositiveSmallIntegerField вместо IntegerField: значения 0–32 767,
-    # что более чем достаточно для счётчиков правильных ответов и процентов.
     result = models.PositiveSmallIntegerField(null=True)
     foyiz = models.PositiveSmallIntegerField(null=True)
     totalQuestions = models.PositiveSmallIntegerField(null=True)
@@ -113,7 +111,10 @@ class Result(models.Model):
         null=True,
         related_name='results',
     )
-    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    # null убран (см. core/migrations/0010_result_created_not_null.py) —
+    # created теперь опорное поле сортировки Keyset Engine для tip="result",
+    # NULL там ломает составное сравнение курсора (created, id).
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, blank=True, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
 
     class Meta:
@@ -124,8 +125,10 @@ class Result(models.Model):
             # Частый паттерн запроса: результаты конкретного пользователя
             # по конкретному тесту.
             models.Index(fields=['user', 'test'], name='result_user_test_idx'),
+            # Опорный индекс Keyset Engine — составное сравнение курсора
+            # Q(created__lt=X) | Q(created=X, id__lt=Y). Обратный DESC-индекс
+            # намеренно не создан — Backward Index Scan по этому же индексу
+            # достаточен и для PostgreSQL, и для SQLite.
+            models.Index(fields=['created', 'id'], name='result_created_id_idx'),
         ]
-
-    def __str__(self):
-        return f'{self.user} | {self.result}/{self.totalQuestions} ({self.foyiz}%)'
 

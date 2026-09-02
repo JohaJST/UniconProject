@@ -76,11 +76,18 @@ def paginate_list(tip: str, request: HttpRequest) -> Optional[PageResult]:
             "(см. план: этап подключения Offset Engine к selfuser/др. спискам)."
         )
 
-    if spec.engine == "keyset":
-        raise NotImplementedError(
-            f"Keyset-движок пагинации для tip={tip!r} ещё не реализован. "
-            "Будет добавлен в core/dashboard/pagination/keyset_engine.py "
-            "(см. план: этап подключения Keyset Engine к result/question/др.)."
-        )
+        if spec.engine == "keyset":
+            from core.dashboard.pagination.keyset_engine import paginate_keyset
+    
+            page = paginate_keyset(spec.queryset_factory(), spec, request)
+            return PageResult(
+                items=page.items,
+                spec=spec,
+                pagination={
+                    "has_prev": page.has_prev,
+                    "has_next": page.has_next,
+                    "urls": page.urls,
+                },
+            )
 
     raise ValueError(f"Неизвестный движок пагинации engine={spec.engine!r} для tip={tip!r}")

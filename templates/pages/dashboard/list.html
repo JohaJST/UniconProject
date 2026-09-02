@@ -437,5 +437,59 @@
             </table>
         </div>
     </div>
+    <!-- Пагинация (Keyset Engine). Рендерится не по имени списка ("Result"),
+            а по наличию pagination-контекста из paginate_list() — сейчас это
+            единственно tip="result", но будущие списки (question/user/variant/
+            selfquestion), переключённые на keyset, подключатся сюда же без
+            повторного редактирования шаблона. -->
+    {% if pagination %}
+    <div class="flex items-center justify-end gap-1 bg-slate-800/60 border border-slate-700/50 rounded-xl p-1">
+        {% if pagination.urls.start %}
+        <a href="{{ pagination.urls.start }}"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-all"
+            title="Начало списка">
+            <i class="fa-solid fa-angles-left text-xs"></i>
+        </a>
+        {% else %}
+        <span class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 cursor-not-allowed">
+            <i class="fa-solid fa-angles-left text-xs"></i>
+        </span>
+        {% endif %}
+
+        {% if pagination.urls.prev %}
+        <a href="{{ pagination.urls.prev }}"
+            class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+            <i class="fa-solid fa-chevron-left text-xs mr-1"></i>Назад
+        </a>
+        {% else %}
+        <span class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-700 cursor-not-allowed">
+            <i class="fa-solid fa-chevron-left text-xs mr-1"></i>Назад
+        </span>
+        {% endif %}
+
+        {% if pagination.urls.next %}
+        <a href="{{ pagination.urls.next }}"
+            class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+            Вперёд<i class="fa-solid fa-chevron-right text-xs ml-1"></i>
+        </a>
+        {% else %}
+        <span class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-700 cursor-not-allowed">
+            Вперёд<i class="fa-solid fa-chevron-right text-xs ml-1"></i>
+        </span>
+        {% endif %}
+
+        {% if pagination.urls.last %}
+        <a href="{{ pagination.urls.last }}"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-all"
+            title="Конец списка">
+            <i class="fa-solid fa-angles-right text-xs"></i>
+        </a>
+        {% else %}
+        <span class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 cursor-not-allowed">
+            <i class="fa-solid fa-angles-right text-xs"></i>
+        </span>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

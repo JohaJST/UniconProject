@@ -55,11 +55,13 @@ def dlist(request, tip=None):
     if page is None:
         return render(request, 'pages/dashboard/list.html')
 
-    # Этот этап: у всех списков engine="none" — paginate_list() отдаёт
-    # весь queryset целиком через page.items, идентично прежнему
-    # поведению. page.pagination намеренно НЕ прокидывается в контекст —
-    # list.html про него не знает и ничего лишнего не отрендерит.
+    # page.pagination — пустой dict {} для engine="none" (истинностное
+    # значение — False), поэтому {% if pagination %} в list.html молчит
+    # для всех списков, кроме реально пагинированных (сейчас — только
+    # tip="result"). Явную передачу в контекст можно оставить общей для
+    # всех tip — она безвредна для тех, у кого пагинации ещё нет.
     return render(request, 'pages/dashboard/list.html', {
         "name": _DISPLAY_NAMES[tip],
         "root": page.items,
+        "pagination": page.pagination,
     })

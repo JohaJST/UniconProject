@@ -102,7 +102,10 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
     ),
     "result": ListSpec(
         queryset_factory=_QUERYSETS["result"],
-        engine="none",
+        # Первый список, реально переключённый на Keyset Engine — самый
+        # быстрорастущий лог в дашборде. Опорный индекс (created, id)
+        # добавлен в core/migrations/0010_result_created_not_null.py.
+        engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),
