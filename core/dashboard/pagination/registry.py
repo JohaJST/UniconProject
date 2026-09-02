@@ -132,7 +132,9 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
     ),
     "question": ListSpec(
         queryset_factory=_QUERYSETS["question"],
-        engine="none",
+        # Второй список, переключённый на Keyset Engine (после result).
+        # Опорный индекс (created, id) — question_created_id_idx.
+        engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),

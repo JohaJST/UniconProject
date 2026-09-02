@@ -43,22 +43,30 @@ class Test(models.Model):
 class Question(models.Model):
     text = models.TextField(default='', blank=True)
     img = models.ImageField(null=True, blank=True)
-    # Переименовано: `test` → `varianta`, чтобы отражать реальную связь
-    # (FK ведёт к TestVarianta, а не к Test).
-    # db_column='test_id' сохраняет имя столбца в БД — без потери данных.
     test = models.ForeignKey(
         Test,
         on_delete=models.CASCADE,
         related_name='questions',
         db_column='test_id',
     )
-    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    # null убран (по аналогии с Result.created, core/migrations/0010_...) —
+    # created теперь опорное поле сортировки Keyset Engine для tip="question",
+    # NULL там ломает составное сравнение курсора (created, id). Перед
+    # применением AlterField(null=False) существующие NULL нужно забэкфиллить
+    # (см. management-команду backfill_question_created).
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, blank=True, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Вопрос'
         verbose_name_plural = '6. Вопросы'
         ordering = ['id']
+        indexes = [
+            # Опорный индекс Keyset Engine — составное сравнение курсора
+            # Q(created__lt=X) | Q(created=X, id__lt=Y). Обратный DESC-индекс
+            # намеренно не создаётся (тот же паттерн, что и у Result).
+            models.Index(fields=['created', 'id'], name='question_created_id_idx'),
+        ]
 
     def __str__(self):
         return self.text or f'Вопрос #{self.pk}'
