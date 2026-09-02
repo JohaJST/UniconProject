@@ -27,6 +27,7 @@ from django.db.models import QuerySet
 
 from core.dashboard.list import _QUERYSETS
 
+from core.dashboard.selfuser_crud import _selfuser_queryset
 Engine = Literal["none", "offset", "keyset"]
 SortDirection = Literal["asc", "desc"]
 
@@ -144,6 +145,27 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
         # Сортировка напрямую по id (см. _QUERYSETS['selfquestion']).
         sort_field="id",
         sort_direction="desc",
+    ),
+    "selfuser": ListSpec(
+        queryset_factory=_selfuser_queryset,
+        engine="offset",
+        # Сортировка построена через F("last_attempt").desc(nulls_last=True)
+        # поверх annotate(Max(...)/Subquery(...)) — это НЕ физическая колонка
+        # таблицы SelfUser, индекс здесь принципиально не помогает.
+        # sort_field указан как имя аннотации ЧИСТО информационно —
+        # offset_engine.py его не читает и не использует.
+        #
+        # ВАЖНО: текущий URL-роутинг (/dashboard/list/selfresult/) вызывает
+        # list_selfuser() напрямую отдельной веткой в dlist() (см.
+        # core/dashboard/list.py) — ДО обращения к реестру, ключом "selfresult",
+        # а не "selfuser". Эта запись реестра сейчас не участвует в
+        # реальной маршрутизации, она существует для документирования
+        # архитектурного решения (offset — постоянно, не временно) и на
+        # случай, если в будущем selfuser/selfresult унифицируют с
+        # остальными списками через paginate_list().
+        sort_field="last_attempt",
+        sort_direction="desc",
+        page_size=20,
     ),
 }
 
