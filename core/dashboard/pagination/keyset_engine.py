@@ -205,11 +205,17 @@ def paginate_keyset(queryset: QuerySet, spec: ListSpec, request: HttpRequest) ->
         has_next = True
 
     else:  # direction == "last"
-        qs = queryset.order_by(*_reversed_order_fields(spec))
-        fetch = list(qs[: spec.page_size + 1])
-        has_prev = len(fetch) > spec.page_size
-        items = list(reversed(fetch[: spec.page_size]))
-        has_next = False
+        total_count = queryset.count()
+        if total_count == 0:
+            items, has_prev, has_next = [], False, False
+        else:
+            remainder = total_count % spec.page_size
+            last_page_len = remainder or spec.page_size
+            qs = queryset.order_by(*_reversed_order_fields(spec))
+            fetch = list(qs[: last_page_len + 1])
+            has_prev = len(fetch) > last_page_len
+            items = list(reversed(fetch[:last_page_len]))
+            has_next = False
 
     urls: Dict[str, Optional[str]] = {
         "start": _build_url(request, "start") if has_prev else None,
