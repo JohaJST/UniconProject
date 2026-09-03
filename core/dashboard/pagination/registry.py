@@ -128,10 +128,11 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
     ),
     "variant": ListSpec(
         queryset_factory=_QUERYSETS["variant"],
-        engine="none",
-        # Сортировка напрямую по id (см. _QUERYSETS['variant']) — id уже
-        # уникален и уже проиндексирован как PK, отдельный tie-breaker
-        # не понадобится даже при переключении на keyset.
+        # Четвёртый список, переключённый на Keyset Engine. Сортировка
+        # напрямую по id (см. _QUERYSETS['variant']) — id уже уникален и
+        # уже проиндексирован как PK (составной tie-break-индекс не нужен,
+        # миграция не требуется).
+        engine="keyset",
         sort_field="id",
         sort_direction="asc",
     ),
@@ -151,8 +152,10 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
     ),
     "selfquestion": ListSpec(
         queryset_factory=_QUERYSETS["selfquestion"],
-        engine="none",
-        # Сортировка напрямую по id (см. _QUERYSETS['selfquestion']).
+        # Пятый список, переключённый на Keyset Engine. Сортировка
+        # напрямую по id (см. _QUERYSETS['selfquestion']) — id уже уникален
+        # и уже проиндексирован как PK, миграция не требуется.
+        engine="keyset",
         sort_field="id",
         sort_direction="desc",
     ),
