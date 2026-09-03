@@ -8,9 +8,6 @@ from core.models.classrooms import Potok, Subject
 # ─────────────────────────────────────────────────────────────────────────────
 
 class Test(models.Model):
-    # name = models.CharField(max_length=200)
-    # Пустая строка вместо NULL — стандартная практика для текстовых полей Django.
-    # desc = models.TextField(default='', blank=True)
     subject = models.ForeignKey(
         Subject,
         on_delete=models.SET_NULL,
@@ -18,7 +15,7 @@ class Test(models.Model):
         blank=True,
         related_name='tests',
     )
-    
+
     potok = models.ForeignKey(
         Potok,
         on_delete=models.SET_NULL,
@@ -26,15 +23,25 @@ class Test(models.Model):
         blank=True,
         related_name='tests',
     )
-    
-    # is_start = models.BooleanField(default=False, db_index=True)
-    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+
+    # null убран (по аналогии с Result/Question/User) — created теперь
+    # опорное поле сортировки Keyset Engine для tip="quiz". Ранее решение
+    # было отложено ("engine=none, пока Test не перевалит за ~5000 строк"),
+    # но по требованию подключаем пагинацию сразу, не дожидаясь порога —
+    # индекс дешёвый, а формат курсора идентичен уже работающим спискам
+    # result/question/user, так что миграционный риск минимален.
+    # Перед AlterField(null=False) существующие NULL нужно забэкфиллить —
+    # см. management-команду backfill_test_created.
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, blank=True, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Тест'
         verbose_name_plural = '4. Тесты'
         ordering = ['-created']
+        indexes = [
+            models.Index(fields=['created', 'id'], name='test_created_id_idx'),
+        ]
 
     def __str__(self):
         return f'{self.potok} {self.subject}'

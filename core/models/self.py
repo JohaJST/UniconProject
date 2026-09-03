@@ -7,12 +7,19 @@ from django.db import models
 class SelfCtg(models.Model):
     name = models.CharField(max_length=255)
 
-    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
+    # null убран — created теперь опорное поле сортировки Keyset Engine
+    # для tip="selfctg". Перед AlterField(null=False) существующие NULL
+    # нужно забэкфиллить — см. management-команду backfill_selfctg_created.
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, blank=True, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['created', 'id'], name='selfctg_created_id_idx'),
+        ]
 
     def __str__(self):
         return self.name
-
 
 class SelfQuestion(models.Model):
     ctg = models.ForeignKey(SelfCtg, on_delete=models.SET_NULL, null=True, blank=True)

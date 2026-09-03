@@ -86,14 +86,23 @@ class ListSpec:
 # считаться по неверному полю.
 LIST_REGISTRY: Dict[str, ListSpec] = {
     "subject": ListSpec(
+        # РЕШЕНИЕ ПЕРЕСМОТРЕНО: изначально engine="none" (справочник растёт
+        # медленно, пагинация не требовалась по объёму). По явному запросу
+        # подключаем Keyset Engine сразу, не дожидаясь роста таблицы —
+        # опорный индекс (created, id) добавлен в
+        # core/migrations/00XX_subject_created_not_null.py, формат курсора
+        # идентичен уже работающим спискам result/question/user.
         queryset_factory=_QUERYSETS["subject"],
-        engine="none",
+        engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),
     "potok": ListSpec(
+        # РЕШЕНИЕ ПЕРЕСМОТРЕНО (см. subject) — Keyset Engine подключён сразу.
+        # Опорный индекс (start, id) — potok_start_id_idx, добавлен в
+        # core/migrations/00XX_potok_start_not_null.py.
         queryset_factory=_QUERYSETS["potok"],
-        engine="none",
+        engine="keyset",
         # ВАЖНО: Potok сортируется по 'start' (дата начала потока), а не
         # по 'created' — это осознанная бизнес-сортировка, сохраняем как
         # есть, а не унифицируем с остальными списками "для красоты".
@@ -102,59 +111,51 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
     ),
     "result": ListSpec(
         queryset_factory=_QUERYSETS["result"],
-        # Первый список, реально переключённый на Keyset Engine — самый
-        # быстрорастущий лог в дашборде. Опорный индекс (created, id)
-        # добавлен в core/migrations/0010_result_created_not_null.py.
         engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),
     "user": ListSpec(
         queryset_factory=_QUERYSETS["user"],
-        # Третий список, переключённый на Keyset Engine (после result,
-        # question). Опорный индекс (created, id) — user_created_id_idx.
-        # created — DateField (дневная точность): несколько User с
-        # одинаковым created — штатная ситуация, разруливается tie-break'ом
-        # по id внутри keyset_engine.py (составной Q как для datetime-полей).
         engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),
     "quiz": ListSpec(
+        # РЕШЕНИЕ ПЕРЕСМОТРЕНО: изначально было отложено ("engine=none,
+        # переоценить при ~5000 строк Test"). По явному запросу подключаем
+        # Keyset Engine сразу — опорный индекс (created, id) —
+        # test_created_id_idx, добавлен в
+        # core/migrations/00XX_test_created_not_null.py. Формат курсора
+        # идентичен уже работающим спискам result/question/user.
         queryset_factory=_QUERYSETS["quiz"],
-        engine="none",
+        engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),
     "variant": ListSpec(
         queryset_factory=_QUERYSETS["variant"],
-        # Четвёртый список, переключённый на Keyset Engine. Сортировка
-        # напрямую по id (см. _QUERYSETS['variant']) — id уже уникален и
-        # уже проиндексирован как PK (составной tie-break-индекс не нужен,
-        # миграция не требуется).
         engine="keyset",
         sort_field="id",
         sort_direction="asc",
     ),
     "question": ListSpec(
         queryset_factory=_QUERYSETS["question"],
-        # Второй список, переключённый на Keyset Engine (после result).
-        # Опорный индекс (created, id) — question_created_id_idx.
         engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),
     "selfctg": ListSpec(
+        # РЕШЕНИЕ ПЕРЕСМОТРЕНО (см. subject/potok) — Keyset Engine подключён
+        # сразу. Опорный индекс (created, id) — selfctg_created_id_idx,
+        # добавлен в core/migrations/00XX_selfctg_created_not_null.py.
         queryset_factory=_QUERYSETS["selfctg"],
-        engine="none",
+        engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),
     "selfquestion": ListSpec(
         queryset_factory=_QUERYSETS["selfquestion"],
-        # Пятый список, переключённый на Keyset Engine. Сортировка
-        # напрямую по id (см. _QUERYSETS['selfquestion']) — id уже уникален
-        # и уже проиндексирован как PK, миграция не требуется.
         engine="keyset",
         sort_field="id",
         sort_direction="desc",
@@ -162,20 +163,6 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
     "selfuser": ListSpec(
         queryset_factory=_selfuser_queryset,
         engine="offset",
-        # Сортировка построена через F("last_attempt").desc(nulls_last=True)
-        # поверх annotate(Max(...)/Subquery(...)) — это НЕ физическая колонка
-        # таблицы SelfUser, индекс здесь принципиально не помогает.
-        # sort_field указан как имя аннотации ЧИСТО информационно —
-        # offset_engine.py его не читает и не использует.
-        #
-        # ВАЖНО: текущий URL-роутинг (/dashboard/list/selfresult/) вызывает
-        # list_selfuser() напрямую отдельной веткой в dlist() (см.
-        # core/dashboard/list.py) — ДО обращения к реестру, ключом "selfresult",
-        # а не "selfuser". Эта запись реестра сейчас не участвует в
-        # реальной маршрутизации, она существует для документирования
-        # архитектурного решения (offset — постоянно, не временно) и на
-        # случай, если в будущем selfuser/selfresult унифицируют с
-        # остальными списками через paginate_list().
         sort_field="last_attempt",
         sort_direction="desc",
         page_size=20,
