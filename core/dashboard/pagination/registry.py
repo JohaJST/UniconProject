@@ -111,7 +111,12 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
     ),
     "user": ListSpec(
         queryset_factory=_QUERYSETS["user"],
-        engine="none",
+        # Третий список, переключённый на Keyset Engine (после result,
+        # question). Опорный индекс (created, id) — user_created_id_idx.
+        # created — DateField (дневная точность): несколько User с
+        # одинаковым created — штатная ситуация, разруливается tie-break'ом
+        # по id внутри keyset_engine.py (составной Q как для datetime-полей).
+        engine="keyset",
         sort_field="created",
         sort_direction="desc",
     ),

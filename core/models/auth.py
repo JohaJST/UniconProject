@@ -88,10 +88,16 @@ class User(AbstractBaseUser):
     # just = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_result = models.BooleanField(default=False)
-    
+
     # ── Временные метки ───────────────────────────────────
+    # null убран — created теперь опорное поле сортировки Keyset Engine
+    # для tip="user" (составное сравнение курсора (created, id)). Тип
+    # ОСТАЁТСЯ DateField (дневная точность) — несколько User с одинаковым
+    # created — штатная ситуация, tie-break по id полностью её покрывает.
+    # Перед AlterField(null=False) существующие NULL нужно забэкфиллить
+    # (см. management-команду backfill_user_created).
     created = models.DateField(
-        auto_now_add=True, auto_now=False, null=True, editable=False
+        auto_now_add=True, auto_now=False, editable=False
     )
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True)
 
@@ -104,7 +110,13 @@ class User(AbstractBaseUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "1. Пользователи"
-
+        indexes = [
+            # Опорный индекс Keyset Engine — составное сравнение курсора
+            # Q(created__lt=X) | Q(created=X, id__lt=Y). Обратный DESC-индекс
+            # намеренно не создаётся (тот же паттерн, что и у Result/Question).
+            models.Index(fields=['created', 'id'], name='user_created_id_idx'),
+        ]
+        
     # ── Role helpers ──────────────────────────────────────
 
     def get_role(self) -> dict:
