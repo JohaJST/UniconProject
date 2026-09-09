@@ -50,13 +50,28 @@ _DISPLAY_NAMES = {
 SEARCH_FIELDS: dict[str, list[str]] = {
     "subject":      ["name_uz", "name_ru", "name_en"],
     "potok":        [],  # нет текстовых полей, по которым имеет смысл искать
-    "result":       ["user__name", "user__last_name", "user__username", "test__subject__name"],
-    "user":         ["name", "last_name", "username", "company_name", "position"],
-    "quiz":         ["subject__name", "potok__start"],
-    "variant":      ["text_uz", "text_ru", "text_en", "question__text_uz"],
-    "question":     ["text_uz", "text_ru", "text_en", "test__subject__name"],
+    "result":       ["user__name", "user__last_name", "user__username",
+                        "test__subject__name_uz", "test__subject__name_ru", 
+                        "test__subject__name_en", "time", "foyiz", "result"
+                    ],
+    "user":         ["name", "last_name", "username", "company_name", 
+                        "position", "subject__name_uz", "subject__name_ru",
+                        "subject__name_en"
+                    ],
+    "quiz":         ["subject__name_uz", "subject__name_ru", 
+                        "subject__name_en", "potok__start", "potok__end"
+                    ],
+    "variant":      ["text_uz", "text_ru", "text_en", "question__text_uz",
+                        "question__text_ru", "question__text_en",
+                        "question__test__subject__name_uz", "question__test__subject__name_ru",
+                        "question__test__subject__name_en"
+                    ],
+    "question":     ["text_uz", "text_ru", "text_en", "test__subject__name_uz",
+                        "test__subject__name_ru", "test__subject__name_en"
+                    ],
     "selfctg":      ["name_uz", "name_ru", "name_en"],
-    "selfquestion": ["text_uz", "text_ru", "text_en", "ctg__name_uz"],
+    "selfquestion": ["text_uz", "text_ru", "text_en", "ctg__name_uz",
+                        "ctg__name_ru", "ctg__name_en"],
 }
 
 
