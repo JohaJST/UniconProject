@@ -636,12 +636,92 @@
 
 {% if search_supported %}
 <script>
+    // ═══════════════════════════════════════════════════════════
+    // Живой поиск: debounce 500мс, сброс пагинации, индикация загрузки
+    // ═══════════════════════════════════════════════════════════
+
+    const searchInput = document.getElementById('searchInput');
+    const searchForm = document.getElementById('searchForm');
+
+    let debounceTimer = null; // хендл setTimeout — сбрасывается при каждом новом вводе
+
+    /**
+     * Показывает пользователю, что данные сейчас обновляются:
+     * приглушаем таблицу (или обёртку списка) и блокируем клики по ней,
+     * пока не прилетит новая страница.
+     */
+    function showLoadingState() {
+        // querySelector('table') — самый надёжный маркер контейнера списка
+        // на этой странице; если таблицы нет (пустой список), подстрахуемся
+        // обёрткой карточки.
+        const container = document.querySelector('table') || document.querySelector('.bg-slate-800.rounded-2xl');
+        if (!container) return;
+        container.style.transition = 'opacity 0.3s';
+        container.style.opacity = '0.5';
+        container.style.pointerEvents = 'none';
+    }
+
+    /**
+     * Убирает служебные параметры пагинации из набора query-параметров —
+     * иначе поиск по ?page=3&q=xyz может открыть несуществующую страницу
+     * с результатами (Keyset: cursor/dir; Offset: page).
+     */
+    function stripPaginationParams(params) {
+        params.delete('cursor');
+        params.delete('dir');
+        params.delete('page');
+        return params;
+    }
+
+    /**
+     * Строит новый URL на основе ТЕКУЩЕГО location — сохраняет прочие
+     * параметры (задел на будущие фильтры), но сбрасывает пагинацию
+     * и проставляет свежее значение q.
+     */
+    function buildSearchUrl(query) {
+        const params = new URLSearchParams(window.location.search);
+        stripPaginationParams(params);
+
+        if (query) {
+            params.set('q', query);
+        } else {
+            params.delete('q'); // пустой запрос — не засоряем URL пустым ?q=
+        }
+
+        const queryString = params.toString();
+        return queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            // Сброс таймера при каждом новом нажатии — навигация выполнится
+            // только через 500мс после ПОСЛЕДНЕГО символа.
+            clearTimeout(debounceTimer);
+
+            const value = this.value;
+
+            debounceTimer = setTimeout(() => {
+                showLoadingState();
+                window.location.href = buildSearchUrl(value.trim());
+            }, 500);
+        });
+    }
+
+    // ── Очистка поиска: тоже обязана сбрасывать пагинацию ──────────────
     function clearSearch() {
+        clearTimeout(debounceTimer); // не даём отложенному поиску выстрелить поверх очистки
+
         const input = document.getElementById('searchInput');
         const form = document.getElementById('searchForm');
         input.value = '';
         form.classList.remove('has-value');
-        form.submit();
+
+        // Строим URL без q и без cursor/dir/page, затем переходим —
+        // submit() тут не нужен, form.action пуст, а params мы уже
+        // собрали сами (иначе form.submit() унёс бы с собой старые
+        // cursor/dir/page из скрытых полей, если бы они были).
+        showLoadingState();
+        window.location.href = buildSearchUrl('');
     }
 </script>
 {% endif %}
