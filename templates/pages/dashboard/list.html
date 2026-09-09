@@ -3,19 +3,156 @@
 {% block title %}{{ name }}{% endblock %}
 {% block page_title %}{{ name }}{% endblock %}
 
+{% block head %}
+<style>
+    :root {
+        --accent: #4e75ad;
+        --accent-light: #6b93cc;
+    }
+
+    /* ── Search bar: glassmorphism + accent glow ── */
+    .search-glass {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 260px;
+        max-width: 100%;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        transition:
+            width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            border-color 0.25s ease,
+            box-shadow 0.25s ease,
+            background 0.25s ease;
+    }
+
+    .search-glass:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .search-glass:focus-within {
+        width: 360px;
+        border-color: var(--accent-light);
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow:
+            0 0 0 3px rgba(78, 117, 173, 0.18),
+            0 8px 24px rgba(78, 117, 173, 0.15);
+    }
+
+    .search-glass__icon {
+        position: absolute;
+        left: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        pointer-events: none;
+        transition: color 0.25s ease;
+    }
+
+    .search-glass:focus-within .search-glass__icon {
+        color: var(--accent-light);
+    }
+
+    .search-glass__input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #f1f5f9;
+        font-size: 0.875rem;
+        padding: 0.65rem 2.25rem 0.65rem 2.5rem;
+    }
+
+    .search-glass__input::placeholder {
+        color: #64748b;
+    }
+
+    .search-glass__clear {
+        position: absolute;
+        right: 8px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .search-glass__clear:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        transform: translateY(-50%) scale(1.05);
+    }
+
+    .search-glass.has-value .search-glass__clear {
+        display: flex;
+    }
+
+    @media (max-width: 640px) {
+        .search-glass,
+        .search-glass:focus-within {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="space-y-6">
 
-    <!-- Page header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-white">{{ name }}</h1>
-            <a href="{% url 'dashboard' %}"
-               class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1">
-                <i class="fa-solid fa-arrow-left text-xs"></i>
-                Назад к панели
-            </a>
-        </div>
+<!-- Page header -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold text-white">{{ name }}</h1>
+        <a href="{% url 'dashboard' %}"
+           class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад к панели
+        </a>
+    </div>
+
+    <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+
+        <!-- Search bar -->
+        {% if search_supported %}
+        <form method="get" class="search-glass{% if search_query %} has-value{% endif %}" id="searchForm">
+            <span class="search-glass__icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </span>
+            <input type="text"
+                   name="q"
+                   id="searchInput"
+                   class="search-glass__input"
+                   placeholder="Поиск..."
+                   value="{{ search_query }}"
+                   autocomplete="off"
+                   oninput="document.getElementById('searchForm').classList.toggle('has-value', this.value.length > 0)">
+            <button type="button"
+                    class="search-glass__clear"
+                    title="Очистить"
+                    onclick="clearSearch()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </form>
+        {% endif %}
 
         <!-- Action button per entity type -->
         {% if name == "User" %}
@@ -61,6 +198,8 @@
             Добавить категорию
         </a>
         {% endif %}
+
+        </div>
     </div>
 
     <!-- Table card -->
@@ -494,4 +633,16 @@
     </div>
     {% endif %}
 </div>
+
+{% if search_supported %}
+<script>
+    function clearSearch() {
+        const input = document.getElementById('searchInput');
+        const form = document.getElementById('searchForm');
+        input.value = '';
+        form.classList.remove('has-value');
+        form.submit();
+    }
+</script>
+{% endif %}
 {% endblock %}
