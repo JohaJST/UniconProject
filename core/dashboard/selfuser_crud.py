@@ -73,12 +73,60 @@ def list_selfuser(request):
     Список участников Self Check с агрегированной статистикой, постранично
     через Offset Engine (см. docstring _selfuser_queryset() — почему именно
     offset, а не keyset).
+
+    Deep Search (?q=) — поиск по ФИО участника И по его попыткам SelfResult
+    (категория, id/score попытки). Реализован как TWO-STEP FILTERING, а НЕ
+    прямым apply_search() поверх _selfuser_queryset():
+
+      Шаг 1. apply_search() вызывается на "чистом" SelfUser.objects.all()
+             (без единого annotate) с полями из SEARCH_FIELDS["selfuser"],
+             включая join'ы через selfresult__... Результат — только id
+             подходящих пользователей (.values_list("id", flat=True)).
+             apply_search() сам не меняется и не знает о втором шаге.
+
+      Шаг 2. _selfuser_queryset() (тяжёлый запрос с annotate Count/Avg/Max/
+             Subquery) фильтруется по .filter(id__in=matched_ids) — БЕЗ
+             какого-либо join на selfresult в этом самом запросе. Поэтому
+             GROUP BY агрегатов остаётся ровно таким же, как без поиска:
+             Count/Avg считаются по ВСЕМ попыткам найденного пользователя,
+             а не только по тем, что совпали с поисковой строкой.
+
+    Если бы apply_search() применялся сразу к _selfuser_queryset(), JOIN по
+    selfresult__ctg__... задвоил бы строки ДО агрегации и исказил бы
+    Count/Avg/Max — считались бы только совпавшие SelfResult.
+
+    Импорт apply_search/SEARCH_FIELDS — ЛОКАЛЬНЫЙ (внутри функции): 
+    core.dashboard.list уже импортирует list_selfuser из этого модуля
+    (core.dashboard.selfuser_crud) для обработки tip == "selfresult" —
+    импорт на уровне модуля здесь замкнул бы цикл list.py -> selfuser_crud.py
+    -> list.py. Локальный импорт разрывает цикл, так как выполняется только
+    при вызове функции, когда оба модуля уже полностью загружены.
+
+    matched_ids намеренно материализуется в list() ДО применения ко второму
+    queryset — иначе Django попытался бы слить оба запроса (с их разными
+    JOIN/GROUP BY) в один SQL через подзапрос по неэквивалентным queryset,
+    что либо упадёт, либо посчитает агрегаты неверно; явный список id
+    гарантированно развязывает эти два запроса друг от друга.
     """
-    page = paginate_offset(_selfuser_queryset(), request, page_size=_SELFUSER_PAGE_SIZE)
+    from core.dashboard.list import SEARCH_FIELDS, apply_search
+
+    query = request.GET.get("q")
+    qs = _selfuser_queryset()
+
+    if query and SEARCH_FIELDS.get("selfuser"):
+        matched_ids = list(
+            apply_search(SelfUser.objects.all(), "selfuser", query)
+            .values_list("id", flat=True)
+        )
+        qs = qs.filter(id__in=matched_ids)
+
+    page = paginate_offset(qs, request, page_size=_SELFUSER_PAGE_SIZE)
 
     return render(request, "pages/dashboard/selfuser_list.html", {
         "users": page.items,
         "page": page,
+        "search_query": query or "",
+        "search_supported": bool(SEARCH_FIELDS.get("selfuser")),
     })
 
 @login_required(login_url="login")

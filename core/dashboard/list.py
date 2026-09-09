@@ -90,6 +90,13 @@ SEARCH_FIELDS: dict[str, dict[str, list[str]]] = {
             "ctg__name_uz", "ctg__name_ru", "ctg__name_en"
         ]
     },
+    "selfuser": {
+          "text": [
+              "first_name", "last_name",
+              "selfresult__ctg__name_uz", "selfresult__ctg__name_ru", "selfresult__ctg__name_en",
+          ],
+          "number": ["id", "selfresult__id", "selfresult__score"],
+    },
 }
 
 
