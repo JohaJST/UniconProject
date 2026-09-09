@@ -47,31 +47,49 @@ _DISPLAY_NAMES = {
 # Отсутствие tip в этом словаре (или пустой список) означает "поиск для
 # этого списка не поддерживается" — apply_search() в этом случае вернёт
 # queryset без изменений, а не упадёт.
-SEARCH_FIELDS: dict[str, list[str]] = {
-    "subject":      ["name_uz", "name_ru", "name_en"],
-    "potok":        [],  # нет текстовых полей, по которым имеет смысл искать
-    "result":       ["user__name", "user__last_name", "user__username",
-                        "test__subject__name_uz", "test__subject__name_ru", 
-                        "test__subject__name_en", "time", "foyiz", "result"
-                    ],
-    "user":         ["name", "last_name", "username", "company_name", 
-                        "position", "subject__name_uz", "subject__name_ru",
-                        "subject__name_en"
-                    ],
-    "quiz":         ["subject__name_uz", "subject__name_ru", 
-                        "subject__name_en", "potok__start", "potok__end"
-                    ],
-    "variant":      ["text_uz", "text_ru", "text_en", "question__text_uz",
-                        "question__text_ru", "question__text_en",
-                        "question__test__subject__name_uz", "question__test__subject__name_ru",
-                        "question__test__subject__name_en"
-                    ],
-    "question":     ["text_uz", "text_ru", "text_en", "test__subject__name_uz",
-                        "test__subject__name_ru", "test__subject__name_en"
-                    ],
-    "selfctg":      ["name_uz", "name_ru", "name_en"],
-    "selfquestion": ["text_uz", "text_ru", "text_en", "ctg__name_uz",
-                        "ctg__name_ru", "ctg__name_en"],
+SEARCH_FIELDS: dict[str, dict[str, list[str]]] = {
+    "subject": {
+        "text": ["name_uz", "name_ru", "name_en"]
+    },
+    "potok": {},  # Нет текстовых/числовых полей
+    "result": {
+        "text": [
+            "user__name", "user__last_name", "user__username",
+            "test__subject__name_uz", "test__subject__name_ru", "test__subject__name_en"
+        ],
+        "number": ["time", "foyiz", "result"]
+    },
+    "user": {
+        "text": [
+            "name", "last_name", "username", "company_name", "position",
+            "subject__name_uz", "subject__name_ru", "subject__name_en"
+        ]
+    },
+    "quiz": {
+        "text": ["subject__name_uz", "subject__name_ru", "subject__name_en"]
+    },
+    "variant": {
+        "text": [
+            "text_uz", "text_ru", "text_en", 
+            "question__text_uz", "question__text_ru", "question__text_en",
+            "question__test__subject__name_uz", "question__test__subject__name_ru", "question__test__subject__name_en"
+        ]
+    },
+    "question": {
+        "text": [
+            "text_uz", "text_ru", "text_en", 
+            "test__subject__name_uz", "test__subject__name_ru", "test__subject__name_en"
+        ]
+    },
+    "selfctg": {
+        "text": ["name_uz", "name_ru", "name_en"]
+    },
+    "selfquestion": {
+        "text": [
+            "text_uz", "text_ru", "text_en", 
+            "ctg__name_uz", "ctg__name_ru", "ctg__name_en"
+        ]
+    },
 }
 
 
@@ -95,15 +113,46 @@ def apply_search(qs: QuerySet, tip: str, query: str) -> QuerySet:
         таблиц может размножить строки).
     """
     query = (query or "").strip()
-    fields = SEARCH_FIELDS.get(tip) or []
-    if not query or not fields:
+    config = SEARCH_FIELDS.get(tip)
+    
+    if not query or not config:
         return qs
 
-    lookups = reduce(
-        operator.or_,
-        (Q(**{f"{field}__icontains": query}) for field in fields),
-    )
-    return qs.filter(lookups).distinct()
+    lookups = []
+
+    # 1. Текстовые поля (Поиск подстроки - icontains)
+    text_fields = config.get("text", [])
+    if text_fields:
+        lookups.append(reduce(
+            operator.or_,
+            (Q(**{f"{field}__icontains": query}) for field in text_fields)
+        ))
+
+    # 2. Числовые поля (Точное совпадение - exact)
+    num_fields = config.get("number", [])
+    if num_fields:
+        try:
+            # Пытаемся конвертировать запрос в число (int/float)
+            # Запятую меняем на точку на случай ввода "75,5"
+            num_val = float(query.replace(',', '.'))
+            lookups.append(reduce(
+                operator.or_,
+                (Q(**{field: num_val}) for field in num_fields)
+            ))
+        except ValueError:
+            # Запрос нельзя превратить в число (ввели текст). 
+            # Просто пропускаем поиск по числовым колонкам.
+            pass
+
+    # Если ни один фильтр не применился (например, искали текст в таблице, 
+    # где есть только числовые поля)
+    if not lookups:
+        return qs
+
+    # Объединяем текстовые и числовые Q-объекты через ИЛИ (|)
+    final_lookup = reduce(operator.or_, lookups)
+    
+    return qs.filter(final_lookup).distinct()
 
 
 @login_required(login_url="login")
