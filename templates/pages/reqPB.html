@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 {% load static %}
+{% load i18n %}
 <head>
     <meta charset="UTF-8">
-    <title>Request Position and Company</title>
+    <title>{% trans 'reqPBPageTitle' %}</title>
 </head>
 <body>
 <style>
@@ -129,21 +130,21 @@ h1 {
 <form method="post">
   {% csrf_token %}
 <div class="container">
-  <div><img style="width:80px;height:80px" src="{% static 'auth/logo.png' %}" alt="logo"></div>
-  <div class="brand-title">Required</div>
+  <div><img style="width:80px;height:80px" src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAltReq' %}"></div>
+  <div class="brand-title">{% trans 'reqPBHeading' %}</div>
   <span style="color:red">
     {% if error %}
       {{ error }}
     {% else %}
-      Напишите реальные актуальные данные. Это нужно для получение результатов теста
+      {% trans 'reqPBHintText' %}
     {% endif %}
   </span>
   <div class="inputs" style="margin-top:-5px">
-    <label>Должность</label>
-    <input name="position" type="text" placeholder="Ваша должность"/>
-    <label>Компания</label>
-    <input name="company_name" type="text" placeholder="Название компании"/>
-    <button type="submit">Go Home</button>
+    <label>{% trans 'positionLabel' %}</label>
+    <input name="position" type="text" placeholder="{% trans 'positionPlaceholder' %}"/>
+    <label>{% trans 'companyLabel' %}</label>
+    <input name="company_name" type="text" placeholder="{% trans 'companyPlaceholder' %}"/>
+    <button type="submit">{% trans 'goHomeBtn' %}</button>
   </div>
 </div>
 </form>

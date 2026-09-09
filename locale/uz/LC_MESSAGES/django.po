@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-09 21:08+0500\n"
+"POT-Creation-Date: 2026-09-09 20:42+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,207 +18,391 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: .\templates\about.html:67
+msgid "homePageTitle"
+msgstr "Bosh sahifa"
+
+msgid "heroChipOrgName"
+msgstr "\"UNICON.UZ - Fan-texnika va marketing tadqiqotlari markazi\" MChJ"
+
+msgid "heroHeadingMain"
+msgstr "Kriptologiya"
+
+msgid "heroHeadingGlow"
+msgstr "maktabi"
+
+msgid "heroDescText"
+msgstr "Kelajak kriptograflarini tayyorlovchi zamonaviy ilmiy-ta'lim markazi. Axborot xavfsizligi sohasida yangi davr boshlanmoqda."
+
+msgid "heroBtnViewCourses"
+msgstr "Kurslarni ko'rish"
+
+msgid "heroBtnMoreInfo"
+msgstr "Batafsil"
+
+msgid "heroScrollHint"
+msgstr "Pastga suring"
+
 msgid "Missiya"
-msgstr ""
+msgstr "Missiya"
 
-#: .\templates\about.html:68
 msgid "Maqsad va vazifalar"
-msgstr ""
+msgstr "Maqsad va vazifalar"
 
-#: .\templates\about.html:69
 msgid ""
 "Kriptologiya sohasida milliy xavfsizlikni ta'minlashga qaratilgan strategik "
 "yo'nalishlar"
-msgstr ""
+msgstr "Kriptologiya sohasida milliy xavfsizlikni ta'minlashga qaratilgan strategik yo'nalishlar"
 
-#: .\templates\about.html:86
+msgid "goalMainTitle"
+msgstr "Asosiy maqsad"
+
+msgid "goalMainText"
+msgstr "Axborotni kriptografik himoyalash, milliy vositalarini ishlab chiqish va ularni takomillashtirish, kriptologiya sohasida olib borilayotgan ilmiy-tadqiqot va amaliy ishlarni rivojlantirish maqsadida"
+
+msgid "goalMainHighlight"
+msgstr "yangi avlod kriptograflarini tayyorlash"
+
 msgid "Kriptografik himoya"
-msgstr ""
+msgstr "Kriptografik himoya"
 
-#: .\templates\about.html:87
 msgid "Ilmiy-tadqiqot"
-msgstr ""
+msgstr "Ilmiy-tadqiqot"
 
-#: .\templates\about.html:115
+msgid "tasksTitle"
+msgstr "Asosiy vazifalar"
+
+msgid "task1Title"
+msgstr "Ilmiy-tadqiqot ishlari"
+
+msgid "task1Text"
+msgstr "Kriptologiyaning yangi yo'nalishlarini rivojlantirish va ilmiy-tadqiqot ishlari olib borish."
+
+msgid "task2Title"
+msgstr "Ta'lim faoliyati"
+
+msgid "task2Text"
+msgstr "Kriptologiya bo'yicha o'qishlar, malaka oshirish kurslari, ilmiy seminar va treninglar."
+
+msgid "task3Title"
+msgstr "Savodxonlikni oshirish"
+
+msgid "task3Text"
+msgstr "Kriptologiya savodxonligi bo'yicha o'quv kurslarini tashkil etish."
+
 msgid "O'quv dasturlari"
-msgstr ""
+msgstr "O'quv dasturlari"
 
-#: .\templates\about.html:116
 msgid "Kurslar"
-msgstr ""
+msgstr "Kurslar"
 
-#: .\templates\about.html:117
 msgid "Zamonaviy kriptografiya va axborot xavfsizligi bo'yicha yo'nalishlar"
-msgstr ""
+msgstr "Zamonaviy kriptografiya va axborot xavfsizligi bo'yicha yo'nalishlar"
 
-#: .\templates\about.html:133
 msgid "Kurs"
-msgstr ""
+msgstr "Kurs"
 
-#: .\templates\about.html:142
 msgid "Kurslar hali qo'shilmagan"
-msgstr ""
+msgstr "Kurslar hali qo'shilmagan"
 
-#: .\templates\about.html:155
 msgid "Jamoa"
-msgstr ""
+msgstr "Jamoa"
 
-#: .\templates\about.html:156
 msgid "O'qituvchilar"
-msgstr ""
+msgstr "O'qituvchilar"
 
-#: .\templates\about.html:157
 msgid "Sohaning yetakchi mutaxassislari va tajribali pedagoglar jamoasi"
-msgstr ""
+msgstr "Sohaning yetakchi mutaxassislari va tajribali pedagoglar jamoasi"
 
-#: .\templates\about.html:160 .\templates\about.html:197
 msgid "Oldingi"
-msgstr ""
+msgstr "Oldingi"
 
-#: .\templates\about.html:177
 msgid "O'qituvchilar hali qo'shilmagan"
-msgstr ""
+msgstr "O'qituvchilar hali qo'shilmagan"
 
-#: .\templates\about.html:180 .\templates\about.html:220
 msgid "Keyingi"
-msgstr ""
+msgstr "Keyingi"
 
-#: .\templates\about.html:192
 msgid "Yangiliklar"
-msgstr ""
+msgstr "Yangiliklar"
 
-#: .\templates\about.html:193
 msgid "So'nggi yangiliklar"
-msgstr ""
+msgstr "So'nggi yangiliklar"
 
-#: .\templates\about.html:194
 msgid "Kriptologiya maktabi hayotidagi eng muhim voqealar"
-msgstr ""
+msgstr "Kriptologiya maktabi hayotidagi eng muhim voqealar"
 
-#: .\templates\about.html:217
 msgid "Yangiliklar hali qo'shilmagan"
-msgstr ""
+msgstr "Yangiliklar hali qo'shilmagan"
 
-#: .\templates\about.html:233
 msgid "Hamkorlik"
-msgstr ""
+msgstr "Hamkorlik"
 
-#: .\templates\about.html:234
 msgid "Hamkorlar"
-msgstr ""
+msgstr "Hamkorlar"
 
-#: .\templates\about.html:235
 msgid "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
-msgstr ""
+msgstr "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
 
-#: .\templates\base.html:32
-msgid "Тесты"
-msgstr "Testlar"
+msgid "footerBrandName"
+msgstr "Kriptologiya maktabi"
 
-#: .\templates\base.html:35
-msgid "Панель управления"
-msgstr "Boshqaruv paneli"
+msgid "footerBrandDesc"
+msgstr "Axborot xavfsizligi sohasida zamonaviy ta'lim markazi. Biz bilan kelajak xavfsizligini birga quramiz."
 
-#: .\templates\base.html:77 .\templates\pages\auth\login.html:117
-msgid "Войти"
-msgstr "Kirish"
+msgid "footerContactHeading"
+msgstr "Biz bilan bog'laning"
 
-#: .\templates\base.html:83
-msgid "Выйти"
-msgstr "Chiqish"
+msgid "footerAddress"
+msgstr "Toshkent sh., Amir Temur ko'chasi, 108"
 
-#: ⁨.\templates\module 3 test\test.html⁩:17
-msgid "startQuiz"
-msgstr "Testni boshlash"
+msgid "footerWorkingHours"
+msgstr "Dush-Juma: 9:00 — 18:00"
 
-#: ⁨.\templates\module 3 test\test.html⁩:21
-msgid "infoTitle"
-msgstr "Ma'lumotlaringizni kiriting"
+msgid "footerSocialHeading"
+msgstr "Ijtimoiy tarmoqlar"
 
-#: ⁨.\templates\module 3 test\test.html⁩:24
-msgid "firstName"
-msgstr "Ismingiz:"
+msgid "footerCopyrightText"
+msgstr "Barcha huquqlar himoyalangan."
 
-#: ⁨.\templates\module 3 test\test.html⁩:28
-msgid "lastName"
-msgstr "Familiyangiz:"
-
-#: ⁨.\templates\module 3 test\test.html⁩:33
-#: ⁨.\templates\module 3 test\test.html⁩:66
-msgid "quit"
-msgstr "Chiqish"
-
-#: ⁨.\templates\module 3 test\test.html⁩:34
-#: ⁨.\templates\module 3 test\test.html⁩:49
-msgid "next"
-msgstr "Keyingisi"
-
-#: ⁨.\templates\module 3 test\test.html⁩:59
-msgid "completeText"
-msgstr "Test tugadi"
-
-#: ⁨.\templates\module 3 test\test.html⁩:65
-msgid "retake"
-msgstr "Qayta boshlash"
-
-#: ⁨.\templates\module 3 test\test.html⁩:78
-msgid "fioReq"
-msgstr "Iltimos, ismingiz va familiyangizni kiriting, testni boshlash uchun."
-
-#: ⁨.\templates\module 3 test\test.html⁩:79
-msgid "statusNice"
-msgstr "Barakalla!"
-
-#: ⁨.\templates\module 3 test\test.html⁩:80
-msgid "statusBad"
-msgstr "Yana ko'proq shug'ulanish kerak"
-
-#: ⁨.\templates\module 3 test\test.html⁩:82
-msgid "statusNorm"
-msgstr "Yaxshi"
-
-#: .\templates\pages\auth\login.html:17
-msgid "Выберите ученика"
-msgstr "O'quvchini tanlang"
-
-#: .\templates\pages\auth\login.html:29
-msgid "Войдите в свою учётную запись"
-msgstr "Hisobingizga kiring"
-
-#: .\templates\pages\auth\login.html:55
-msgid "Класс"
-msgstr "Sinf"
-
-#: .\templates\pages\auth\login.html:65
-msgid "Выберите класс"
-msgstr "Sinfni tanlang"
-
-#: .\templates\pages\auth\login.html:88
-msgid "Ученик"
-msgstr "O'quvchi"
-
-#: .\templates\pages\auth\login.html:97
-msgid "Сначала выберите класс"
-msgstr "Sinfni tanlang"
-
-#~ msgid "Профиль"
-#~ msgstr "Profil"
-
-msgid "firstNameInput"
-msgstr "Ismingizni kiriting"
-
-msgid "lastNameInput"
-msgstr "Familiyangizni kiriting"
-
-msgid "quesOf"
-msgstr "ta savoldan"
-
-msgid "SelfStudy"
-msgstr "O'rganib va bilimni tekshirish"
+msgid "footerDesignedByText"
+msgstr "Designed by"
 
 msgid "about"
 msgstr "Kriptologiya maktabi"
 
+msgid "Тесты"
+msgstr "Testlar"
+
+msgid "SelfStudy"
+msgstr "O'rganib va bilimni tekshirish"
+
+msgid "Панель управления"
+msgstr "Boshqaruv paneli"
+
+msgid "Войти"
+msgstr "Kirish"
+
+msgid "Выйти"
+msgstr "Chiqish"
+
+msgid "testsPageTitle"
+msgstr "Testlar"
+
+msgid "availableTestsHeading"
+msgstr "Mavjud testlar"
+
+msgid "chooseTestPrompt"
+msgstr ", o'tish uchun testni tanlang"
+
+msgid "completedBadge"
+msgstr "✓ O'tilgan"
+
+msgid "newBadge"
+msgstr "Yangi"
+
+msgid "questionsAbbrev"
+msgstr "savol"
+
+msgid "viewResultsBtn"
+msgstr "Natijalarni ko'rish"
+
+msgid "startTestBtn"
+msgstr "Testni boshlash →"
+
+msgid "noTestsAvailable"
+msgstr "Mavjud testlar yo'q"
+
+msgid "contactTeacherPrompt"
+msgstr "O'qituvchingizga murojaat qiling"
+
+msgid "inProgressBadge"
+msgstr "↻ Jarayonda"
+
+msgid "continueTestBtn"
+msgstr "Davom ettirish →"
+
+msgid "startQuiz"
+msgstr "Testni boshlash"
+
+msgid "infoTitle"
+msgstr "Ma'lumotlaringizni kiriting"
+
+msgid "firstName"
+msgstr "Ismingiz:"
+
+msgid "firstNameInput"
+msgstr "Ismingizni kiriting"
+
+msgid "lastName"
+msgstr "Familiyangiz:"
+
+msgid "lastNameInput"
+msgstr "Familiyangizni kiriting"
+
+msgid "quit"
+msgstr "Chiqish"
+
+msgid "next"
+msgstr "Keyingisi"
+
+msgid "ctgSelectTitle"
+msgstr "Kategoriyani tanlang"
+
+msgid "questionsCountSuffix"
+msgstr "savol"
+
+msgid "noCategoriesYet"
+msgstr "Kategoriyalar hali qo'shilmagan"
+
+msgid "ctgBack"
+msgstr "Orqaga"
+
+msgid "completeText"
+msgstr "Test tugadi"
+
+msgid "retake"
+msgstr "Qayta boshlash"
+
+msgid "fioReq"
+msgstr "Iltimos, ismingiz va familiyangizni kiriting, testni boshlash uchun."
+
+msgid "statusNice"
+msgstr "Barakalla!"
+
+msgid "statusBad"
+msgstr "Yana ko'proq shug'ulanish kerak"
+
+msgid "statusNorm"
+msgstr "Yaxshi"
+
+msgid "quesOf"
+msgstr "ta savoldan"
+
 msgid "resultText"
-msgstr "Hurmatli, <b>{last_name} {first_name}</b>, siz <p>{total}</p> ta savoldan <p>{score}</p> ta to'g'ri javob berdingiz"
+msgstr "Hurmatli <b>{last_name} {first_name}</b>, siz <b>{total}</b> savoldan <b>{score}</b> tasiga to'g'ri javob berdingiz"
+"Hurmatli, <b>{last_name} {first_name}</b>, siz <p>{total}</p> ta savoldan "
+"<p>{score}</p> ta to'g'ri javob berdingiz"
+
+msgid "exitConfirmMessage"
+msgstr "Chiqasizmi? Jarayon yo'qoladi."
+
+msgid "confirmSubmitAnswers"
+msgstr "Javoblar yuborilsinmi?"
+
+msgid "submitErrorFallback"
+msgstr "Yuborishda xatolik"
+
+msgid "connectionErrorPrefix"
+msgstr "Ulanish xatosi: "
+
+msgid "questionImageAlt"
+msgstr "Savol rasmi"
+
+msgid "noQuestionsInTest"
+msgstr "Bu testda hozircha savollar yo'q."
+
+msgid "finishTestBtn"
+msgstr "TESTNI YAKUNLASH"
+
+msgid "submittingResultsText"
+msgstr "Natijalar yuborilmoqda..."
+
+msgid "loginPageTitle"
+msgstr "Check Your Brain — Kirish"
+
+msgid "Выберите ученика"
+msgstr "O'quvchini tanlang"
+
+msgid "logoAlt"
+msgstr "Logotip"
+
+msgid "Войдите в свою учётную запись"
+msgstr "Hisobingizga kiring"
+
+msgid "Поток"
+msgstr "Oqim"
+
+msgid "Выберите поток"
+msgstr "Oqimni tanlang"
+
+msgid "Ученик"
+msgstr "O'quvchi"
+
+msgid "Сначала выберите поток"
+msgstr "Avval oqimni tanlang"
+
+msgid "reqPBPageTitle"
+msgstr "Lavozim va kompaniyani kiriting"
+
+msgid "logoAltReq"
+msgstr "Logotip"
+
+msgid "reqPBHeading"
+msgstr "Majburiy"
+
+msgid "reqPBHintText"
+msgstr "Haqiqiy va dolzarb ma'lumotlarni kiriting. Bu test natijalarini olish uchun zarur"
+
+
+msgid "positionLabel"
+msgstr "Lavozim"
+
+msgid "positionPlaceholder"
+msgstr "Sizning lavozimingiz"
+
+msgid "companyLabel"
+msgstr "Kompaniya"
+
+msgid "companyPlaceholder"
+msgstr "Kompaniya nomi"
+
+msgid "goHomeBtn"
+msgstr "Bosh sahifaga"
+
+msgid "profilePageTitle"
+msgstr "Profil"
+
+msgid "potokLabel"
+msgstr "Oqim: "
+
+msgid "positionLabelColon"
+msgstr "Lavozim: "
+
+msgid "companyLabelColon"
+msgstr "Kompaniya: "
+
+msgid "langLabel"
+msgstr "Til: "
+
+msgid "testsCompletedLabel"
+msgstr "O'tilgan testlar"
+
+msgid "avgPercentLabel"
+msgstr "O'rtacha foiz"
+
+msgid "testHistoryHeading"
+msgstr "Testlar tarixi"
+
+msgid "noTestsCompletedYet"
+msgstr "Siz hali birorta ham test o'tmagansiz"
+
+msgid "resultsPageTitleSuffix"
+msgstr "— Natijalar"
+
+msgid "resultHeadingPrefix"
+msgstr "Kriptologiya maktabining"
+
+msgid "resultHeadingSuffix"
+msgstr "kursi"
+
+msgid "percentLabel"
+msgstr "Foiz"
+
+msgid "correctLabel"
+msgstr "To'g'ri"
+
+msgid "totalLabel"
+msgstr "Jami"
+
+msgid "backToHomeBtn"
+msgstr "Bosh sahifaga"

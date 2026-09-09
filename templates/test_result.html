@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{ result.test }} — Результаты{% endblock %}
+{% load i18n %}
+{% block title %}{{ result.test }} {% trans 'resultsPageTitleSuffix' %}{% endblock %}
 {% block header %}
 <style>
     .result-page {
@@ -72,22 +73,22 @@
 
     <div class="result-header">
         <div class="trophy">🏆</div>
-        <h1>Kriptologiya maktabining {{ result.test.subject.name }} kursi</h1>
+        <h1>{% trans 'resultHeadingPrefix' %} {{ result.test.subject.name }} {% trans 'resultHeadingSuffix' %}</h1>
         <div style="font-size: 25px;" class="subject">{{ result.user.username }}
             <!--&nbsp;·&nbsp; -->
             {# result.created|date:"d.m.Y" #}</div>
         <div class="stats"> 
             <div class="stat-box">
                 <div class="val">{{ result.foyiz }}%</div>
-                <div class="lbl">Процент</div>
+                <div class="lbl">{% trans 'percentLabel' %}</div>
             </div>
             <div class="stat-box">
                 <div class="val">{{ result.result }}</div>
-                <div class="lbl">Верных</div>
+                <div class="lbl">{% trans 'correctLabel' %}</div>
             </div>
             <div class="stat-box">
                 <div class="val">{{ result.totalQuestions }}</div>
-                <div class="lbl">Всего</div>
+                <div class="lbl">{% trans 'totalLabel' %}</div>
             </div>
         </div>
     </div>
@@ -108,7 +109,7 @@
     </div>-->
 
     <div class="back-row">
-        <a href="{% url 'logout' %}" class="btn-back" style="text-decoration: none;">На главную</a>
+        <a href="{% url 'logout' %}" class="btn-back" style="text-decoration: none;">{% trans 'backToHomeBtn' %}</a>
     </div>
 
 </div>

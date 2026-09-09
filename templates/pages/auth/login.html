@@ -5,7 +5,7 @@
         {% load i18n %}
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Check Your Brain — Вход</title>
+        <title>{% trans 'loginPageTitle' %}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
@@ -22,7 +22,7 @@
                 <header class="auth-header">
                     <img
                         src="{% static 'auth/logo.png' %}"
-                        alt="Логотип"
+                        alt="{% trans 'logoAlt' %}"
                         class="auth-logo"
                     />
                     <h1 class="auth-title">{{ APP_NAME }}</h1>

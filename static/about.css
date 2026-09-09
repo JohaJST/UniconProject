@@ -229,7 +229,7 @@ html { scroll-behavior: smooth; }
 /* ============================================================
    COURSES — 3D + z-index fix, без overflow:hidden на гриде
    ============================================================ */
-.courses { padding: 6rem 0; background: var(--white); position: relative; z-index: 1; }
+.courses { padding: 6rem 0; background: var(--white); position: relative; z-index: 10; }
 .courses-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
 
 .c-card {
@@ -266,13 +266,21 @@ html { scroll-behavior: smooth; }
     opacity: 0; visibility: hidden; transform: translateY(10px);
     transition: opacity .3s var(--ease), visibility .3s var(--ease), transform .3s var(--ease);
     pointer-events: none;
+    max-height: 320px; 
+    overflow-y: auto;
 }
 .c-card__extra { left: calc(100% + 16px); }
 .c-card:nth-child(3n) .c-card__extra { left: auto; right: calc(100% + 16px); }
 .c-card:hover .c-card__extra { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
 .c-card__extra h4 { font-size: .85rem; font-weight: 700; color: var(--navy); margin-bottom: .55rem; padding-bottom: .4rem; border-bottom: 1px solid rgba(239,68,68,.15); }
 .c-card__extra p { font-size: .78rem; color: var(--slate); line-height: 1.65; }
-
+.c-card__extra::-webkit-scrollbar { 
+    width: 5px; 
+}
+.c-card__extra::-webkit-scrollbar-thumb { 
+    background: rgba(59,130,246,.3); 
+    border-radius: 10px; 
+}
 
 /* ============================================================
    TEACHERS + NEWS CAROUSEL

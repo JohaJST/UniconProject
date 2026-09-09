@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block title %}Профиль{% endblock %} {% block header%} {% load static %}
+{% extends 'base.html' %} {% load i18n %} {% block title %}{% trans 'profilePageTitle' %}{% endblock %} {% block header%} {% load static %}
 <link rel="stylesheet" href="{% static 'profile.css' %}" />
 {% endblock %} {% block body %}
 <div class="profile-page">
@@ -10,25 +10,25 @@
             <div style="space-y-1">
                 {% if user.potok %}
                     <p class="profile-meta">
-                        Поток: {{ user.potok.date_range }}
+                        {% trans 'potokLabel' %} {{ user.potok.date_range }}
                     </p>
                 {% endif %}
                 
                 {% if user.position %}
                     <p class="profile-meta">
-                        Должность: {{ user.position }}
+                        {% trans 'positionLabelColon' %} {{ user.position }}
                     </p>
                 {%endif %}
 
                 {% if user.company_name %}
                     <p class="profile-meta">
-                        Компания: {{ user.company_name }}
+                        {% trans 'companyLabelColon' %} {{ user.company_name }}
                     </p>
                 {% endif %}
                 
                 {% if user.lang %}
                     <p class="profile-meta">
-                        Язык: {{ user.lang }}
+                        {% trans 'langLabel' %} {{ user.lang }}
                     </p>
                 {%endif %}
             </div>
@@ -39,17 +39,17 @@
     <div class="profile-stats">
         <div class="stat-card">
             <span class="stat-value">{{ results|length }}</span>
-            <span class="stat-label">Тестов пройдено</span>
+            <span class="stat-label">{% trans 'testsCompletedLabel' %}</span>
         </div>
         <div class="stat-card accent">
             <span class="stat-value">{{ average }} %</span>
-            <span class="stat-label">Средний процент</span>
+            <span class="stat-label">{% trans 'avgPercentLabel' %}</span>
         </div>
     </div>
 
     <!-- ── Results list ── -->
     <div class="results-section">
-        <h2 class="section-title">История тестов</h2>
+        <h2 class="section-title">{% trans 'testHistoryHeading' %}</h2>
 
         {% if results %}
         <div class="results-list">
@@ -93,7 +93,7 @@
                  zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"
                 />
             </svg>
-            <p>Вы ещё не прошли ни одного теста</p>
+            <p>{% trans 'noTestsCompletedYet' %}</p>
         </div>
         {% endif %}
     </div>

@@ -24,6 +24,18 @@ let lastName = "";
 const fNameInput = document.getElementById("first_name");
 const lNameInput = document.getElementById("last_name");
 
+/* ── XSS-защита: имя/фамилия вставляются в innerHTML (subtitleTemplate).
+   Пользовательский ввод обязан экранироваться ДО вставки в разметку,
+   иначе введённый <img onerror=...> выполнится в браузере. ── */
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 let que_count = 0;
 let que_numb = 1;
 let userScore = 0;
@@ -220,8 +232,8 @@ function showResult() {
     }
 
     let finalSubtitle = subtitleTemplate
-        .replace('{last_name}', lastName)
-        .replace('{first_name}', firstName)
+        .replace('{last_name}', escapeHtml(lastName))
+        .replace('{first_name}', escapeHtml(firstName))
         .replace('{score}', userScore)
         .replace('{total}', questions.length);
 

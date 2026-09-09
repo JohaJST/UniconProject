@@ -40,19 +40,19 @@
          счётчики), а сами вопросы подгружаются AJAX-ом только для
          ВЫБРАННОЙ категории (см. loadCategoryQuestions в script.js). -->
     <div class="info_box ctg_box" id="ctg_box">
-        <div class="info-title"><span>Выберите категорию</span></div>
+        <div class="info-title"><span>{% trans 'ctgSelectTitle' %}</span></div>
         <div class="ctg-list" id="ctg_list">
             {% for c in ctgs %}
             <div class="ctg-item" data-ctg-id="{{ c.id }}">
                 <span class="ctg-name">{{ c.name }}</span>
-                <span class="ctg-count">{{ c.question_count }} вопросов</span>
+                <span class="ctg-count">{{ c.question_count }} {% trans 'questionsCountSuffix' %}</span>
             </div>
             {% empty %}
-            <div class="ctg-empty">Категории пока не добавлены</div>
+            <div class="ctg-empty">{% trans 'noCategoriesYet' %}</div>
             {% endfor %}
         </div>
         <div class="buttons">
-            <button class="quit" id="ctg_back_btn">Назад</button>
+            <button class="quit" id="ctg_back_btn">{% trans 'ctgBack' %}</button>
         </div>
     </div>
     

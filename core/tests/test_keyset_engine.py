@@ -101,13 +101,15 @@ class StartNextPrevLastTests(KeysetEngineTestCase):
     def test_last_page(self):
         request = self._get(dir="last")
         page = paginate_keyset(Question.objects.all(), self.spec, request)
-    
-        self.assertEqual(
-            [q.id for q in page.items],
-            [self.questions[1].id, self.questions[0].id],  # tail block: q1, q0
-        )
+
+        # Раскладка страниц ВЫРАВНЕНА ПО НАЧАЛУ (прямой обход: [q4,q3],
+        # [q2,q1], [q0]), поэтому "last" — ровно хвост прямого обхода ([q0]),
+        # а не "полный блок с конца" ([q1,q0]): иначе прямой и обратный
+        # обходы разошлись бы и страницы начали перекрываться (полная
+        # проверка консистентности — в test_pagination_full.py).
+        self.assertEqual([q.id for q in page.items], [self.questions[0].id])
         self.assertFalse(page.has_next)
-        self.assertTrue(page.has_prev)  # q2, q3, q4 still exist before this block
+        self.assertTrue(page.has_prev)  # q1..q4 остаются до этой страницы
 
     def test_prev_reconstructs_previous_page(self):
         start_page = paginate_keyset(Question.objects.all(), self.spec, self._get())

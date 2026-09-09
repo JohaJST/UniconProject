@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-09 21:08+0500\n"
+"POT-Creation-Date: 2026-09-09 20:42+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,207 +20,392 @@ msgstr ""
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
 "(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: .\templates\about.html:67
+msgid "homePageTitle"
+msgstr "Главная страница"
+
+msgid "heroChipOrgName"
+msgstr "«UNICON.UZ — Центр научно-технических и маркетинговых исследований» ООО"
+
+msgid "heroHeadingMain"
+msgstr "Криптология"
+
+msgid "heroHeadingGlow"
+msgstr "школа"
+
+msgid "heroDescText"
+msgstr "Современный научно-образовательный центр, готовящий криптографов будущего. В сфере информационной безопасности начинается новая эра."
+
+
+msgid "heroBtnViewCourses"
+msgstr "Смотреть курсы"
+
+msgid "heroBtnMoreInfo"
+msgstr "Подробнее"
+
+msgid "heroScrollHint"
+msgstr "Листайте вниз"
+
 msgid "Missiya"
-msgstr ""
+msgstr "Миссия"
 
-#: .\templates\about.html:68
 msgid "Maqsad va vazifalar"
-msgstr ""
+msgstr "Цели и задачи"
 
-#: .\templates\about.html:69
 msgid ""
 "Kriptologiya sohasida milliy xavfsizlikni ta'minlashga qaratilgan strategik "
 "yo'nalishlar"
-msgstr ""
+msgstr "Стратегические направления обеспечения национальной безопасности в сфере криптологии"
 
-#: .\templates\about.html:86
+msgid "goalMainTitle"
+msgstr "Основная цель"
+
+msgid "goalMainText"
+msgstr "Разработка и совершенствование национальных средств криптографической защиты информации, развитие научно-исследовательских и практических работ в области криптологии с целью"
+
+msgid "goalMainHighlight"
+msgstr "подготовки криптографов нового поколения"
+
 msgid "Kriptografik himoya"
-msgstr ""
+msgstr "Криптографическая защита"
 
-#: .\templates\about.html:87
 msgid "Ilmiy-tadqiqot"
-msgstr ""
+msgstr "Научные исследования"
 
-#: .\templates\about.html:115
+msgid "tasksTitle"
+msgstr "Основные задачи"
+
+msgid "task1Title"
+msgstr "Научно-исследовательская работа"
+
+msgid "task1Text"
+msgstr "Развитие новых направлений криптологии и проведение научно-исследовательских работ."
+
+msgid "task2Title"
+msgstr "Образовательная деятельность"
+
+msgid "task2Text"
+msgstr "Лекции по криптологии, курсы повышения квалификации, научные семинары и тренинги."
+
+msgid "task3Title"
+msgstr "Повышение грамотности"
+
+msgid "task3Text"
+msgstr "Организация учебных курсов по криптологической грамотности."
+
 msgid "O'quv dasturlari"
-msgstr ""
+msgstr "Учебные программы"
 
-#: .\templates\about.html:116
 msgid "Kurslar"
-msgstr ""
+msgstr "Курсы"
 
-#: .\templates\about.html:117
 msgid "Zamonaviy kriptografiya va axborot xavfsizligi bo'yicha yo'nalishlar"
-msgstr ""
+msgstr "Направления современной криптографии и информационной безопасности"
 
-#: .\templates\about.html:133
 msgid "Kurs"
-msgstr ""
+msgstr "Курс"
 
-#: .\templates\about.html:142
 msgid "Kurslar hali qo'shilmagan"
-msgstr ""
+msgstr "Курсы пока не добавлены"
 
-#: .\templates\about.html:155
 msgid "Jamoa"
-msgstr ""
+msgstr "Команда"
 
-#: .\templates\about.html:156
 msgid "O'qituvchilar"
-msgstr ""
+msgstr "Преподаватели"
 
-#: .\templates\about.html:157
 msgid "Sohaning yetakchi mutaxassislari va tajribali pedagoglar jamoasi"
-msgstr ""
+msgstr "Команда ведущих специалистов отрасли и опытных педагогов"
 
-#: .\templates\about.html:160 .\templates\about.html:197
 msgid "Oldingi"
-msgstr ""
+msgstr "Назад"
 
-#: .\templates\about.html:177
 msgid "O'qituvchilar hali qo'shilmagan"
-msgstr ""
+msgstr "Преподаватели пока не добавлены"
 
-#: .\templates\about.html:180 .\templates\about.html:220
 msgid "Keyingi"
-msgstr ""
-
-#: .\templates\about.html:192
-msgid "Yangiliklar"
-msgstr ""
-
-#: .\templates\about.html:193
-msgid "So'nggi yangiliklar"
-msgstr ""
-
-#: .\templates\about.html:194
-msgid "Kriptologiya maktabi hayotidagi eng muhim voqealar"
-msgstr ""
-
-#: .\templates\about.html:217
-msgid "Yangiliklar hali qo'shilmagan"
-msgstr ""
-
-#: .\templates\about.html:233
-msgid "Hamkorlik"
-msgstr ""
-
-#: .\templates\about.html:234
-msgid "Hamkorlar"
-msgstr ""
-
-#: .\templates\about.html:235
-msgid "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
-msgstr ""
-
-#: .\templates\base.html:32
-msgid "Тесты"
-msgstr "Тесты"
-
-#: .\templates\base.html:35
-msgid "Панель управления"
-msgstr "Панель управления"
-
-#: .\templates\base.html:77 .\templates\pages\auth\login.html:117
-msgid "Войти"
-msgstr "Войти"
-
-#: .\templates\base.html:83
-msgid "Выйти"
-msgstr "Выйти"
-
-#: ⁨.\templates\module 3 test\test.html⁩:17
-msgid "startQuiz"
-msgstr "Начать Тест"
-
-#: ⁨.\templates\module 3 test\test.html⁩:21
-msgid "infoTitle"
-msgstr "Введите ваши данные"
-
-#: ⁨.\templates\module 3 test\test.html⁩:24
-msgid "firstName"
-msgstr "Имя:"
-
-#: ⁨.\templates\module 3 test\test.html⁩:28
-msgid "lastName"
-msgstr "Фамилия:"
-
-#: ⁨.\templates\module 3 test\test.html⁩:33
-#: ⁨.\templates\module 3 test\test.html⁩:66
-msgid "quit"
-msgstr "Выйти"
-
-#: ⁨.\templates\module 3 test\test.html⁩:34
-#: ⁨.\templates\module 3 test\test.html⁩:49
-msgid "next"
 msgstr "Далее"
 
-#: ⁨.\templates\module 3 test\test.html⁩:59
-msgid "completeText"
-msgstr "Тест закончен"
+msgid "Yangiliklar"
+msgstr "Новости"
 
-#: ⁨.\templates\module 3 test\test.html⁩:65
-msgid "retake"
-msgstr "Пройти заново"
+msgid "So'nggi yangiliklar"
+msgstr "Последние новости"
 
-#: ⁨.\templates\module 3 test\test.html⁩:78
-msgid "fioReq"
-msgstr "Пожалуйста, введите ваше имя и фамилию для начала теста."
+msgid "Kriptologiya maktabi hayotidagi eng muhim voqealar"
+msgstr "Важнейшие события из жизни Школы криптологии"
 
-#: ⁨.\templates\module 3 test\test.html⁩:79
-msgid "statusNice"
-msgstr "Молодец!"
+msgid "Yangiliklar hali qo'shilmagan"
+msgstr "Новости пока не добавлены"
 
-#: ⁨.\templates\module 3 test\test.html⁩:80
-msgid "statusBad"
-msgstr "Нужно потренироваться"
+msgid "Hamkorlik"
+msgstr "Сотрудничество"
 
-#: ⁨.\templates\module 3 test\test.html⁩:82
-msgid "statusNorm"
-msgstr "Нормально"
+msgid "Hamkorlar"
+msgstr "Партнёры"
 
-#: .\templates\pages\auth\login.html:17
-msgid "Выберите ученика"
-msgstr "Выберите ученика"
+msgid "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
+msgstr "Ведущие организации и компании, сотрудничающие с нами"
 
-#: .\templates\pages\auth\login.html:29
-msgid "Войдите в свою учётную запись"
-msgstr "Войдите в свою учётную запись"
+msgid "footerBrandName"
+msgstr "Школа криптологии"
 
-#: .\templates\pages\auth\login.html:55
-msgid "Класс"
-msgstr "Класс"
+msgid "footerBrandDesc"
+msgstr "Современный образовательный центр в сфере информационной безопасности. Вместе мы построим безопасное будущее."
 
-#: .\templates\pages\auth\login.html:65
-msgid "Выберите класс"
-msgstr "Выберите класс"
+msgid "footerContactHeading"
+msgstr "Свяжитесь с нами"
 
-#: .\templates\pages\auth\login.html:88
-msgid "Ученик"
-msgstr "Ученик"
+msgid "footerAddress"
+msgstr "г. Ташкент, ул. Амира Темура, 108"
 
-#: .\templates\pages\auth\login.html:97
-msgid "Сначала выберите класс"
-msgstr "Сначала выберите класс"
+msgid "footerWorkingHours"
+msgstr "Пн-Пт: 9:00 — 18:00"
 
-#~ msgid "Профиль"
-#~ msgstr "Профиль"
+msgid "footerSocialHeading"
+msgstr "Социальные сети"
 
-msgid "firstNameInput"
-msgstr "Введите ваше имя"
+msgid "footerCopyrightText"
+msgstr "Все права защищены."
 
-msgid "lastNameInput"
-msgstr "Введите вашу фамилию"
-
-msgid "quesOf"
-msgstr "вопрос(а) из"
-
-msgid "SelfStudy"
-msgstr "Учиться и проверить себя"
+msgid "footerDesignedByText"
+msgstr "Разработано"
 
 msgid "about"
 msgstr "Школа криптологии"
 
+msgid "Тесты"
+msgstr "Тесты"
+
+msgid "SelfStudy"
+msgstr "Учиться и проверить себя"
+
+msgid "Панель управления"
+msgstr "Панель управления"
+
+msgid "Войти"
+msgstr "Войти"
+
+msgid "Выйти"
+msgstr "Выйти"
+
+msgid "testsPageTitle"
+msgstr "Тесты"
+
+msgid "availableTestsHeading"
+msgstr "Доступные тесты"
+
+msgid "chooseTestPrompt"
+msgstr ", выберите тест для прохождения"
+
+msgid "completedBadge"
+msgstr "✓ Пройден"
+
+msgid "newBadge"
+msgstr "Новый"
+
+msgid "questionsAbbrev"
+msgstr "вопр."
+
+msgid "viewResultsBtn"
+msgstr "Посмотреть результаты"
+
+msgid "startTestBtn"
+msgstr "Начать тест →"
+
+msgid "noTestsAvailable"
+msgstr "Нет доступных тестов"
+
+msgid "contactTeacherPrompt"
+msgstr "Обратитесь к преподавателю"
+
+msgid "inProgressBadge"
+msgstr "↻ В процессе"
+
+msgid "continueTestBtn"
+msgstr "Продолжить →"
+
+msgid "startQuiz"
+msgstr "Начать Тест"
+
+msgid "infoTitle"
+msgstr "Введите ваши данные"
+
+msgid "firstName"
+msgstr "Имя:"
+
+msgid "firstNameInput"
+msgstr "Введите ваше имя"
+
+msgid "lastName"
+msgstr "Фамилия:"
+
+msgid "lastNameInput"
+msgstr "Введите вашу фамилию"
+
+msgid "quit"
+msgstr "Выйти"
+
+msgid "next"
+msgstr "Далее"
+
+msgid "ctgSelectTitle"
+msgstr "Выберите категорию"
+
+msgid "questionsCountSuffix"
+msgstr "вопросов"
+
+msgid "noCategoriesYet"
+msgstr "Категории пока не добавлены"
+
+msgid "ctgBack"
+msgstr "Назад"
+
+msgid "completeText"
+msgstr "Тест закончен"
+
+msgid "retake"
+msgstr "Пройти заново"
+
+msgid "fioReq"
+msgstr "Пожалуйста, введите ваше имя и фамилию для начала теста."
+
+msgid "statusNice"
+msgstr "Молодец!"
+
+msgid "statusBad"
+msgstr "Нужно потренироваться"
+
+msgid "statusNorm"
+msgstr "Нормально"
+
+msgid "quesOf"
+msgstr "вопрос(а) из"
+
 msgid "resultText"
-msgstr "Уважаемый(ая) <b>{last_name} {first_name}</b>, вы набрали <p>{score}</p> из <p>{total}</p>"
+msgstr "Уважаемый(ая) <b>{last_name} {first_name}</b>, вы набрали <b>{score}</b> из <b>{total}</b>"
+"Уважаемый(ая) <b>{last_name} {first_name}</b>, вы набрали <p>{score}</p> из "
+"<p>{total}</p>"
+
+msgid "exitConfirmMessage"
+msgstr "Выйти? Прогресс будет потерян."
+
+msgid "confirmSubmitAnswers"
+msgstr "Отправить ответы?"
+
+msgid "submitErrorFallback"
+msgstr "Ошибка отправки"
+
+msgid "connectionErrorPrefix"
+msgstr "Ошибка соединения: "
+
+msgid "questionImageAlt"
+msgstr "Изображение вопроса"
+
+msgid "noQuestionsInTest"
+msgstr "В этом тесте пока нет вопросов."
+
+msgid "finishTestBtn"
+msgstr "ЗАВЕРШИТЬ ТЕСТ"
+
+msgid "submittingResultsText"
+msgstr "Отправка результатов..."
+
+msgid "loginPageTitle"
+msgstr "Check Your Brain — Вход"
+
+msgid "Выберите ученика"
+msgstr "Выберите ученика"
+
+msgid "logoAlt"
+msgstr "Логотип"
+
+msgid "Войдите в свою учётную запись"
+msgstr "Войдите в свою учётную запись"
+
+msgid "Поток"
+msgstr "Поток"
+
+msgid "Выберите поток"
+msgstr "Выберите поток"
+
+msgid "Ученик"
+msgstr "Ученик"
+
+msgid "Сначала выберите поток"
+msgstr "Сначала выберите поток"
+
+msgid "reqPBPageTitle"
+msgstr "Укажите должность и компанию"
+
+msgid "logoAltReq"
+msgstr "Логотип"
+
+msgid "reqPBHeading"
+msgstr "Обязательно"
+
+msgid "reqPBHintText"
+msgstr "Укажите реальные актуальные данные. Это необходимо для получения результатов теста"
+
+
+msgid "positionLabel"
+msgstr "Должность"
+
+msgid "positionPlaceholder"
+msgstr "Ваша должность"
+
+msgid "companyLabel"
+msgstr "Компания"
+
+msgid "companyPlaceholder"
+msgstr "Название компании"
+
+msgid "goHomeBtn"
+msgstr "На главную"
+
+msgid "profilePageTitle"
+msgstr "Профиль"
+
+msgid "potokLabel"
+msgstr "Поток: "
+
+msgid "positionLabelColon"
+msgstr "Должность: "
+
+msgid "companyLabelColon"
+msgstr "Компания: "
+
+msgid "langLabel"
+msgstr "Язык: "
+
+msgid "testsCompletedLabel"
+msgstr "Тестов пройдено"
+
+msgid "avgPercentLabel"
+msgstr "Средний процент"
+
+msgid "testHistoryHeading"
+msgstr "История тестов"
+
+msgid "noTestsCompletedYet"
+msgstr "Вы ещё не прошли ни одного теста"
+
+msgid "resultsPageTitleSuffix"
+msgstr "— Результаты"
+
+msgid "resultHeadingPrefix"
+msgstr "Курс «"
+
+msgid "resultHeadingSuffix"
+msgstr "» школы криптологии"
+
+msgid "percentLabel"
+msgstr "Процент"
+
+msgid "correctLabel"
+msgstr "Верных"
+
+msgid "totalLabel"
+msgstr "Всего"
+
+msgid "backToHomeBtn"
+msgstr "На главную"

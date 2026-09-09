@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-09 21:08+0500\n"
+"POT-Creation-Date: 2026-09-09 20:42+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,207 +18,392 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: .\templates\about.html:67
+msgid "homePageTitle"
+msgstr "Home page"
+
+msgid "heroChipOrgName"
+msgstr "\"UNICON.UZ - Science, Technology and Marketing Research Center\" LLC"
+
+msgid "heroHeadingMain"
+msgstr "Cryptology"
+
+msgid "heroHeadingGlow"
+msgstr "School"
+
+msgid "heroDescText"
+msgstr "A modern scientific and educational center training the cryptographers of the future. A new era begins in the field of information security."
+
+
+msgid "heroBtnViewCourses"
+msgstr "View courses"
+
+msgid "heroBtnMoreInfo"
+msgstr "Details"
+
+msgid "heroScrollHint"
+msgstr "Scroll down"
+
 msgid "Missiya"
-msgstr ""
+msgstr "Mission"
 
-#: .\templates\about.html:68
 msgid "Maqsad va vazifalar"
-msgstr ""
+msgstr "Goals and objectives"
 
-#: .\templates\about.html:69
 msgid ""
 "Kriptologiya sohasida milliy xavfsizlikni ta'minlashga qaratilgan strategik "
 "yo'nalishlar"
-msgstr ""
+msgstr "Strategic directions for ensuring national security in the field of cryptology"
 
-#: .\templates\about.html:86
+msgid "goalMainTitle"
+msgstr "Main goal"
+
+msgid "goalMainText"
+msgstr "To develop and improve national cryptographic information protection tools and to advance research and practical work in the field of cryptology in order to"
+
+msgid "goalMainHighlight"
+msgstr "train a new generation of cryptographers"
+
 msgid "Kriptografik himoya"
-msgstr ""
+msgstr "Cryptographic protection"
 
-#: .\templates\about.html:87
 msgid "Ilmiy-tadqiqot"
-msgstr ""
+msgstr "Research"
 
-#: .\templates\about.html:115
+msgid "tasksTitle"
+msgstr "Main tasks"
+
+msgid "task1Title"
+msgstr "Research work"
+
+msgid "task1Text"
+msgstr "Developing new areas of cryptology and conducting research."
+
+msgid "task2Title"
+msgstr "Educational activities"
+
+msgid "task2Text"
+msgstr "Cryptology lectures, professional development courses, scientific seminars and trainings."
+
+msgid "task3Title"
+msgstr "Improving literacy"
+
+msgid "task3Text"
+msgstr "Organizing training courses on cryptology literacy."
+
 msgid "O'quv dasturlari"
-msgstr ""
+msgstr "Study programs"
 
-#: .\templates\about.html:116
 msgid "Kurslar"
-msgstr ""
+msgstr "Courses"
 
-#: .\templates\about.html:117
 msgid "Zamonaviy kriptografiya va axborot xavfsizligi bo'yicha yo'nalishlar"
-msgstr ""
+msgstr "Areas of modern cryptography and information security"
 
-#: .\templates\about.html:133
 msgid "Kurs"
-msgstr ""
+msgstr "Course"
 
-#: .\templates\about.html:142
 msgid "Kurslar hali qo'shilmagan"
-msgstr ""
+msgstr "No courses added yet"
 
-#: .\templates\about.html:155
 msgid "Jamoa"
-msgstr ""
+msgstr "Team"
 
-#: .\templates\about.html:156
 msgid "O'qituvchilar"
-msgstr ""
+msgstr "Teachers"
 
-#: .\templates\about.html:157
 msgid "Sohaning yetakchi mutaxassislari va tajribali pedagoglar jamoasi"
-msgstr ""
+msgstr "A team of leading industry experts and experienced educators"
 
-#: .\templates\about.html:160 .\templates\about.html:197
 msgid "Oldingi"
-msgstr ""
+msgstr "Previous"
 
-#: .\templates\about.html:177
 msgid "O'qituvchilar hali qo'shilmagan"
-msgstr ""
+msgstr "No teachers added yet"
 
-#: .\templates\about.html:180 .\templates\about.html:220
 msgid "Keyingi"
-msgstr ""
-
-#: .\templates\about.html:192
-msgid "Yangiliklar"
-msgstr ""
-
-#: .\templates\about.html:193
-msgid "So'nggi yangiliklar"
-msgstr ""
-
-#: .\templates\about.html:194
-msgid "Kriptologiya maktabi hayotidagi eng muhim voqealar"
-msgstr ""
-
-#: .\templates\about.html:217
-msgid "Yangiliklar hali qo'shilmagan"
-msgstr ""
-
-#: .\templates\about.html:233
-msgid "Hamkorlik"
-msgstr ""
-
-#: .\templates\about.html:234
-msgid "Hamkorlar"
-msgstr ""
-
-#: .\templates\about.html:235
-msgid "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
-msgstr ""
-
-#: .\templates\base.html:32
-msgid "Тесты"
-msgstr "Tests"
-
-#: .\templates\base.html:35
-msgid "Панель управления"
-msgstr "The Control panel"
-
-#: .\templates\base.html:77 .\templates\pages\auth\login.html:117
-msgid "Войти"
-msgstr "Login"
-
-#: .\templates\base.html:83
-msgid "Выйти"
-msgstr "Logout"
-
-#: ⁨.\templates\module 3 test\test.html⁩:17
-msgid "startQuiz"
-msgstr "Start Quiz"
-
-#: ⁨.\templates\module 3 test\test.html⁩:21
-msgid "infoTitle"
-msgstr "Input your first and last name"
-
-#: ⁨.\templates\module 3 test\test.html⁩:24
-msgid "firstName"
-msgstr "First Name"
-
-#: ⁨.\templates\module 3 test\test.html⁩:28
-msgid "lastName"
-msgstr "Last Name"
-
-#: ⁨.\templates\module 3 test\test.html⁩:33
-#: ⁨.\templates\module 3 test\test.html⁩:66
-msgid "quit"
-msgstr "Quit"
-
-#: ⁨.\templates\module 3 test\test.html⁩:34
-#: ⁨.\templates\module 3 test\test.html⁩:49
-msgid "next"
 msgstr "Next"
 
-#: ⁨.\templates\module 3 test\test.html⁩:59
-msgid "completeText"
-msgstr "Test completed"
+msgid "Yangiliklar"
+msgstr "News"
 
-#: ⁨.\templates\module 3 test\test.html⁩:65
-msgid "retake"
-msgstr "Retake"
+msgid "So'nggi yangiliklar"
+msgstr "Latest news"
 
-#: ⁨.\templates\module 3 test\test.html⁩:78
-msgid "fioReq"
-msgstr "Please enter your first and last name to start the test."
+msgid "Kriptologiya maktabi hayotidagi eng muhim voqealar"
+msgstr "The most important events in the life of the School of Cryptology"
 
-#: ⁨.\templates\module 3 test\test.html⁩:79
-msgid "statusNice"
-msgstr "Well done!"
+msgid "Yangiliklar hali qo'shilmagan"
+msgstr "No news added yet"
 
-#: ⁨.\templates\module 3 test\test.html⁩:80
-msgid "statusBad"
-msgstr "You need to improve yourself"
+msgid "Hamkorlik"
+msgstr "Partnership"
 
-#: ⁨.\templates\module 3 test\test.html⁩:82
-msgid "statusNorm"
-msgstr "Normal"
+msgid "Hamkorlar"
+msgstr "Partners"
 
-#: .\templates\pages\auth\login.html:17
-msgid "Выберите ученика"
-msgstr "Select Student"
+msgid "Biz bilan hamkorlik qilayotgan yetakchi tashkilot va kompaniyalar"
+msgstr "Leading organizations and companies partnering with us"
 
-#: .\templates\pages\auth\login.html:29
-msgid "Войдите в свою учётную запись"
-msgstr "Log in to your account"
+msgid "footerBrandName"
+msgstr "School of Cryptology"
 
-#: .\templates\pages\auth\login.html:55
-msgid "Класс"
-msgstr "Class"
+msgid "footerBrandDesc"
+msgstr "A modern educational center in information security. Together we will build a secure future."
 
-#: .\templates\pages\auth\login.html:65
-msgid "Выберите класс"
-msgstr "Select Class"
+msgid "footerContactHeading"
+msgstr "Contact us"
 
-#: .\templates\pages\auth\login.html:88
-msgid "Ученик"
-msgstr "Student"
+msgid "footerAddress"
+msgstr "Tashkent, Amir Temur Street, 108"
 
-#: .\templates\pages\auth\login.html:97
-msgid "Сначала выберите класс"
-msgstr "Select Class first"
+msgid "footerWorkingHours"
+msgstr "Mon-Fri: 9:00 — 18:00"
 
-#~ msgid "Профиль"
-#~ msgstr "Profile"
+msgid "footerSocialHeading"
+msgstr "Social media"
 
-msgid "firstNameInput"
-msgstr "Enter your first name"
+msgid "footerCopyrightText"
+msgstr "All rights reserved."
 
-msgid "lastNameInput"
-msgstr "Enter your last name"
-
-msgid "quesOf"
-msgstr "question(s) out of"
-
-msgid "SelfStudy"
-msgstr "Study and check your knowledge"
+msgid "footerDesignedByText"
+msgstr "Designed by"
 
 msgid "about"
 msgstr "Criptology school"
 
+msgid "Тесты"
+msgstr "Tests"
+
+msgid "SelfStudy"
+msgstr "Study and check your knowledge"
+
+msgid "Панель управления"
+msgstr "The Control panel"
+
+msgid "Войти"
+msgstr "Login"
+
+msgid "Выйти"
+msgstr "Logout"
+
+msgid "testsPageTitle"
+msgstr "Tests"
+
+msgid "availableTestsHeading"
+msgstr "Available tests"
+
+msgid "chooseTestPrompt"
+msgstr ", choose a test to take"
+
+msgid "completedBadge"
+msgstr "✓ Completed"
+
+msgid "newBadge"
+msgstr "New"
+
+msgid "questionsAbbrev"
+msgstr "q."
+
+msgid "viewResultsBtn"
+msgstr "View results"
+
+msgid "startTestBtn"
+msgstr "Start test →"
+
+msgid "noTestsAvailable"
+msgstr "No available tests"
+
+msgid "contactTeacherPrompt"
+msgstr "Contact your teacher"
+
+msgid "inProgressBadge"
+msgstr "↻ In progress"
+
+msgid "continueTestBtn"
+msgstr "Continue →"
+
+msgid "startQuiz"
+msgstr "Start Quiz"
+
+msgid "infoTitle"
+msgstr "Input your first and last name"
+
+msgid "firstName"
+msgstr "First Name"
+
+msgid "firstNameInput"
+msgstr "Enter your first name"
+
+msgid "lastName"
+msgstr "Last Name"
+
+msgid "lastNameInput"
+msgstr "Enter your last name"
+
+msgid "quit"
+msgstr "Quit"
+
+msgid "next"
+msgstr "Next"
+
+msgid "ctgSelectTitle"
+msgstr "Select a category"
+
+msgid "questionsCountSuffix"
+msgstr "questions"
+
+msgid "noCategoriesYet"
+msgstr "No categories added yet"
+
+msgid "ctgBack"
+msgstr "Back"
+
+msgid "completeText"
+msgstr "Test completed"
+
+msgid "retake"
+msgstr "Retake"
+
+msgid "fioReq"
+msgstr "Please enter your first and last name to start the test."
+
+msgid "statusNice"
+msgstr "Well done!"
+
+msgid "statusBad"
+msgstr "You need to improve yourself"
+
+msgid "statusNorm"
+msgstr "Normal"
+
+msgid "quesOf"
+msgstr "question(s) out of"
+
 msgid "resultText"
-msgstr "Dear, <b>{last_name} {first_name}</b>, you scored <p>{score}</p> out of <p>{total}</p>"
+msgstr "Dear <b>{last_name} {first_name}</b>, you scored <b>{score}</b> out of <b>{total}</b>"
+"Dear, <b>{last_name} {first_name}</b>, you scored <p>{score}</p> out of "
+"<p>{total}</p>"
+
+msgid "exitConfirmMessage"
+msgstr "Exit? Your progress will be lost."
+
+msgid "confirmSubmitAnswers"
+msgstr "Submit answers?"
+
+msgid "submitErrorFallback"
+msgstr "Submission error"
+
+msgid "connectionErrorPrefix"
+msgstr "Connection error: "
+
+msgid "questionImageAlt"
+msgstr "Question image"
+
+msgid "noQuestionsInTest"
+msgstr "This test has no questions yet."
+
+msgid "finishTestBtn"
+msgstr "FINISH TEST"
+
+msgid "submittingResultsText"
+msgstr "Submitting results..."
+
+msgid "loginPageTitle"
+msgstr "Check Your Brain — Sign in"
+
+msgid "Выберите ученика"
+msgstr "Select Student"
+
+msgid "logoAlt"
+msgstr "Logo"
+
+msgid "Войдите в свою учётную запись"
+msgstr "Log in to your account"
+
+msgid "Поток"
+msgstr "Group"
+
+msgid "Выберите поток"
+msgstr "Select a group"
+
+msgid "Ученик"
+msgstr "Student"
+
+msgid "Сначала выберите поток"
+msgstr "First select a group"
+
+msgid "reqPBPageTitle"
+msgstr "Request Position and Company"
+
+msgid "logoAltReq"
+msgstr "Logo"
+
+msgid "reqPBHeading"
+msgstr "Required"
+
+msgid "reqPBHintText"
+msgstr "Enter your actual details. This is required to receive your test results"
+
+
+msgid "positionLabel"
+msgstr "Position"
+
+msgid "positionPlaceholder"
+msgstr "Your position"
+
+msgid "companyLabel"
+msgstr "Company"
+
+msgid "companyPlaceholder"
+msgstr "Company name"
+
+msgid "goHomeBtn"
+msgstr "Go Home"
+
+msgid "profilePageTitle"
+msgstr "Profile"
+
+msgid "potokLabel"
+msgstr "Group: "
+
+msgid "positionLabelColon"
+msgstr "Position: "
+
+msgid "companyLabelColon"
+msgstr "Company: "
+
+msgid "langLabel"
+msgstr "Language: "
+
+msgid "testsCompletedLabel"
+msgstr "Tests completed"
+
+msgid "avgPercentLabel"
+msgstr "Average percentage"
+
+msgid "testHistoryHeading"
+msgstr "Test history"
+
+msgid "noTestsCompletedYet"
+msgstr "You haven't taken any tests yet"
+
+msgid "resultsPageTitleSuffix"
+msgstr "— Results"
+
+msgid "resultHeadingPrefix"
+msgstr "The Cryptology School "
+
+msgid "resultHeadingSuffix"
+msgstr " course"
+
+msgid "percentLabel"
+msgstr "Percentage"
+
+msgid "correctLabel"
+msgstr "Correct"
+
+msgid "totalLabel"
+msgstr "Total"
+
+msgid "backToHomeBtn"
+msgstr "Home"

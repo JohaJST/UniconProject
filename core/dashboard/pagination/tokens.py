@@ -14,14 +14,21 @@ core/dashboard/pagination/tokens.py
 теоретически: signing.dumps() с разным salt даёт разные подписи для
 одного и того же SECRET_KEY.
 
-ХОТФИКС: django.core.signing.dumps() по умолчанию сериализует через
+ХОТФИКС №1: django.core.signing.dumps() по умолчанию сериализует через
 signing.JSONSerializer, который использует ГОЛЫЙ json.dumps() без Django-
 энкодера — datetime/date/Decimal/UUID он НЕ умеет и роняет TypeError
 ("Object of type datetime is not JSON serializable"). sort_value для
 списков с sort_field="created" (result, question, user) — это как раз
-datetime. Поэтому здесь явно передаётся собственный сериализатор на базе
-DjangoJSONEncoder (используется и в dumps, и в loads — иначе тело токена
-не распарсится обратно).
+datetime. Поэтому здесь явно передаётся собственный сериализатор.
+
+ХОТФИКС №2 (КРИТИЧЕСКИЙ, баг перекрытия страниц): НЕЛЬЗЯ использовать
+DjangoJSONEncoder — он обрезает ISO-строку datetime до МИЛЛИСЕКУНД
+(r[:23] + r[26:] внутри его default()). Для keyset-пагинации это ломает
+строгую границу: курсор "...09.001" при реальном значении строки
+"...09.001628" делает фильтр created__gt ВКЛЮЧАЮЩИМ строку-курсор (её
+значение больше усечённого) — соседние prev/next-страницы начинают
+перекрываться (дубли строк между страницами). Поэтому используется
+собственный _PreciseJSONEncoder, сохраняющий полную точность isoformat().
 
 signing.dumps() всегда встраивает временную метку (через TimestampSigner
 внутри) — срок годности НЕ фиксируется при кодировании, а проверяется
@@ -33,28 +40,50 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date, datetime, time
+from decimal import Decimal
 from typing import Any, Dict, Optional
+from uuid import UUID
 
 from django.core import signing
-from django.core.serializers.json import DjangoJSONEncoder
 
 _SALT = "dashboard-pagination-v1"
 
 _DEFAULT_MAX_AGE = 3600  # 1 час — согласовано с TTL курсора Keyset Engine
 
 
-class _DjangoJSONSerializer:
+class _PreciseJSONEncoder(json.JSONEncoder):
+    """
+    JSON-энкодер для курсоров пагинации: поддерживает datetime/date/time/
+    Decimal/UUID и — в отличие от DjangoJSONEncoder — НЕ теряет микросекунды
+    у datetime (см. ХОТФИКС №2 в docstring модуля).
+    """
+
+    def default(self, o: Any) -> Any:
+        # ВАЖНО: datetime проверяется ДО date — datetime является
+        # подклассом date, порядок isinstance имеет значение.
+        if isinstance(o, datetime):
+            return o.isoformat()  # полная точность, включая микросекунды
+        if isinstance(o, (date, time)):
+            return o.isoformat()
+        if isinstance(o, (Decimal, UUID)):
+            return str(o)
+        return super().default(o)
+
+
+class _PreciseJSONSerializer:
     """
     Сериализатор для django.core.signing, умеющий datetime/date/Decimal/UUID
-    (в отличие от дефолтного signing.JSONSerializer, который зовёт голый
-    json.dumps() без кастомного encoder'а).
+    с полной точностью (в отличие от дефолтного signing.JSONSerializer,
+    который зовёт голый json.dumps() без кастомного encoder'а, и в отличие
+    от DjangoJSONEncoder, который обрезает datetime до миллисекунд).
 
     Интерфейс совпадает с ожидаемым signing.dumps()/signing.loads():
     dumps(obj) -> bytes, loads(data: bytes) -> obj.
     """
 
     def dumps(self, obj: Any) -> bytes:
-        return json.dumps(obj, separators=(",", ":"), cls=DjangoJSONEncoder).encode("latin-1")
+        return json.dumps(obj, separators=(",", ":"), cls=_PreciseJSONEncoder).encode("latin-1")
 
     def loads(self, data: bytes) -> Any:
         return json.loads(data.decode("latin-1"))
@@ -66,14 +95,17 @@ def encode_cursor(sort_value: Any, id_value: int, direction: str, filters_finger
 
     :param sort_value: значение поля сортировки последней/первой строки
         текущей страницы (например, datetime для created, либо int для id
-        у списков с sort_field="id"). Сериализуется через _DjangoJSONSerializer
-        (DjangoJSONEncoder) — datetime/date/Decimal/UUID поддерживаются;
-        при decode_cursor() значение вернётся уже как JSON-примитив
-        (например, ISO-строка для datetime) — разбор обратно в нужный
-        Python-тип на совести вызывающего кода (keyset_engine.py), который
-        точно знает тип sort_field конкретного списка. На практике ORM-
-        фильтры Django (__lt/__gt по DateTimeField) сами умеют принимать
-        ISO-строку напрямую, поэтому обратный парсинг в datetime не требуется.
+        у списков с sort_field="id"). Сериализуется через
+        _PreciseJSONSerializer (полная точность isoformat, включая
+        микросекунды — DjangoJSONEncoder здесь НЕ подходит, он обрезает
+        datetime до миллисекунд и ломает строгую границу фильтра, см.
+        ХОТФИКС №2 в docstring модуля); при decode_cursor() значение
+        вернётся уже как JSON-примитив (например, ISO-строка для datetime) —
+        разбор обратно в нужный Python-тип на совести вызывающего кода
+        (keyset_engine.py), который точно знает тип sort_field конкретного
+        списка. На практике ORM-фильтры Django (__lt/__gt по DateTimeField)
+        сами умеют принимать ISO-строку напрямую, поэтому обратный парсинг
+        в datetime не требуется.
     :param id_value: id строки-границы страницы (тай-брейкер).
     :param direction: направление навигации, например "next"/"prev".
     :param filters_fingerprint: хэш применённых на момент выдачи курсора
@@ -88,7 +120,7 @@ def encode_cursor(sort_value: Any, id_value: int, direction: str, filters_finger
         "dir": direction,
         "fp": filters_fingerprint,
     }
-    return signing.dumps(payload, salt=_SALT, serializer=_DjangoJSONSerializer)
+    return signing.dumps(payload, salt=_SALT, serializer=_PreciseJSONSerializer)
 
 
 def decode_cursor(token: Optional[str], max_age: int = _DEFAULT_MAX_AGE) -> Optional[Dict[str, Any]]:
@@ -111,7 +143,7 @@ def decode_cursor(token: Optional[str], max_age: int = _DEFAULT_MAX_AGE) -> Opti
         return None
 
     try:
-        return signing.loads(token, salt=_SALT, max_age=max_age, serializer=_DjangoJSONSerializer)
+        return signing.loads(token, salt=_SALT, max_age=max_age, serializer=_PreciseJSONSerializer)
     except signing.SignatureExpired:
         return None
     except signing.BadSignature:
