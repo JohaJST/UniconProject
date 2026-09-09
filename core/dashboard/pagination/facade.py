@@ -119,7 +119,7 @@ def paginate_list(tip: str, request: HttpRequest) -> Optional[PageResult]:
         from core.dashboard.pagination.keyset_engine import paginate_keyset
 
         page = paginate_keyset(_get_searched_queryset(tip, spec, request), spec, request)
-       return PageResult(
+        return PageResult(
             items=page.items,
             spec=spec,
             pagination={
