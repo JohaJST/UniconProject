@@ -27,6 +27,7 @@ from django.http import HttpRequest
 from core.dashboard.pagination.registry import ListSpec, get_list_spec
 
 
+
 @dataclass
 class PageResult:
     """
@@ -45,6 +46,35 @@ class PageResult:
     items: Union[QuerySet, list]
     spec: ListSpec
     pagination: Dict[str, Any] = field(default_factory=dict)
+
+
+def _get_searched_queryset(tip: str, spec: ListSpec, request: HttpRequest) -> QuerySet:
+    """
+    Строит базовый queryset через spec.queryset_factory() и, если в запросе
+    передан ?q=, сужает его через apply_search() из core.dashboard.list.
+
+    ВАЖНО: вызывается ОДИН РАЗ на каждую точку входа в paginate_list()
+    (для each ветки engine — свой отдельный вызов spec.queryset_factory(),
+    как и раньше), но фильтрация по q применяется единообразно во всех
+    трёх ветках — до того, как queryset попадёт в PageResult.items (engine
+    "none") или будет передан в keyset_engine/offset_engine.
+
+    Импорт apply_search — локальный (внутри функции), а не на уровне
+    модуля: core.dashboard.list уже импортируется из registry.py
+    (для _QUERYSETS), а registry.py, в свою очередь, импортируется этим
+    же facade.py — локальный импорт исключает даже теоретический риск
+    цикла при изменении порядка импортов в будущем.
+    
+    Поиск: если запрос содержит ?q=<текст>, queryset сужается через
+        core.dashboard.list.apply_search() ПОСЛЕ вызова queryset_factory(),
+        но ДО того, как он попадёт в PageResult.items (engine="none") или
+        будет передан в keyset_engine/offset_engine — так пагинация всегда
+        считается по уже отфильтрованным данным, а не по полному списку.
+    """
+    from core.dashboard.list import apply_search
+
+    qs = spec.queryset_factory()
+    return apply_search(qs, tip, request.GET.get("q"))
 
 
 def paginate_list(tip: str, request: HttpRequest) -> Optional[PageResult]:
@@ -67,20 +97,29 @@ def paginate_list(tip: str, request: HttpRequest) -> Optional[PageResult]:
         return None
 
     if spec.engine == "none":
-        return PageResult(items=spec.queryset_factory(), spec=spec, pagination={})
+        return PageResult(items=_get_searched_queryset(tip, spec, request), spec=spec, pagination={})
 
     if spec.engine == "offset":
-        raise NotImplementedError(
-            f"Offset-движок пагинации для tip={tip!r} ещё не реализован. "
-            "Будет добавлен в core/dashboard/pagination/offset_engine.py "
-            "(см. план: этап подключения Offset Engine к selfuser/др. спискам)."
+        from core.dashboard.pagination.offset_engine import paginate_offset
+
+        page = paginate_offset(_get_searched_queryset(tip, spec, request), request, page_size=spec.page_size)
+        return PageResult(
+            items=page.items,
+            spec=spec,
+            pagination={
+                "current_page": page.current_page,
+                "total_pages": page.total_pages,
+                "has_prev": page.has_prev,
+                "has_next": page.has_next,
+                "urls": page.urls,
+            },
         )
 
     if spec.engine == "keyset":
         from core.dashboard.pagination.keyset_engine import paginate_keyset
 
-        page = paginate_keyset(spec.queryset_factory(), spec, request)
-        return PageResult(
+        page = paginate_keyset(_get_searched_queryset(tip, spec, request), spec, request)
+       return PageResult(
             items=page.items,
             spec=spec,
             pagination={
