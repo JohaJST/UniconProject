@@ -80,8 +80,8 @@ class SelfResult(models.Model):
 
 class SelfStudy(models.Model):
     html_text = models.TextField(null=True, blank=True)
-    style_text = models.TextField(null=True, blank=True)
-    js_text = models.TextField(null=True, blank=True)
+    # style_text = models.TextField(null=True, blank=True)
+    # js_text = models.TextField(null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True, auto_now=False, blank=True, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, blank=True)

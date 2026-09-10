@@ -36,7 +36,7 @@ class VariantTranslationOptions(TranslationOptions):
 @register(About)
 class AboutTranslationOptions(TranslationOptions):
     fields = (
-        'info', 'title', 'desc', 'goals_info',
+        'info', 'title', 'desc', 'goals_info', 'location',
         'news_info', 'teachers_info', 'courses_info',
         'partners_info', 'working_hours', 'footer_info',
     )
