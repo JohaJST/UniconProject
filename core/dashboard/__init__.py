@@ -9,6 +9,12 @@ from .user_crud import view_user, edit_user
 from .quiz_crud import view_quiz, edit_quiz
 from .selfctg_crud import view_selfctg, edit_selfctg
 from .selfuser_crud import list_selfuser, view_selfuser
+from .courses_crud import view_courses, edit_courses
+from .teachers_crud import view_teachers, edit_teachers
+from .news_crud import view_news, edit_news
+from .partners_crud import view_partners, edit_partners
+from .about_crud import edit_about
+from .selfstudy_crud import edit_selfstudy
 from .export import (
     export_hub,
     export_result_excel,
