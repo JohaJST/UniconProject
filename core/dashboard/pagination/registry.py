@@ -167,6 +167,36 @@ LIST_REGISTRY: Dict[str, ListSpec] = {
         sort_direction="desc",
         page_size=20,
     ),
+    # Courses/Teachers/News/Partners — новые списочные модели дашборда
+    # (по образцу subject/potok/quiz): Keyset Engine подключается сразу,
+    # без промежуточного engine="none" — тот же паттерн, что и у остальных
+    # справочников. Опорный индекс (created, id) для каждой модели заводится
+    # отдельной data/schema-миграцией на шаге, где эти модели получают
+    # необходимые для сортировки поля/индексы.
+    "courses": ListSpec(
+        queryset_factory=_QUERYSETS["courses"],
+        engine="keyset",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "teachers": ListSpec(
+        queryset_factory=_QUERYSETS["teachers"],
+        engine="keyset",
+        sort_field="created",
+        sort_direction="desc",
+    ),
+    "news": ListSpec(
+        queryset_factory=_QUERYSETS["news"],
+        engine="keyset",
+        sort_field="date",
+        sort_direction="desc",
+    ),
+    "partners": ListSpec(
+        queryset_factory=_QUERYSETS["partners"],
+        engine="keyset",
+        sort_field="created",
+        sort_direction="desc",
+    ),
 }
 
 

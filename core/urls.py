@@ -17,6 +17,7 @@ from .dashboard import (
     action, dlist, form, home, lock, ai_translate,
     export_hub, export_result_excel, export_result_word,
     export_selfresult_excel, export_selfresult_word,
+    edit_about, edit_selfstudy,
 )
 from .dashboard.self_check import create_or_edit_self_question
 
@@ -50,6 +51,11 @@ urlpatterns = [
     path("dashboard/export/result/word/", export_result_word, name="export_result_word"),
     path("dashboard/export/selfresult/excel/", export_selfresult_excel, name="export_selfresult_excel"),
     path("dashboard/export/selfresult/word/", export_selfresult_word, name="export_selfresult_word"),
+    # Синглтоны (About, SelfStudy) — без pk, вне i18n_patterns, как и остальные
+    # dashboard-пути. Сами edit_about/edit_selfstudy появятся на шаге 5 —
+    # path/импорт заводим уже сейчас.
+    path("dashboard/about/", edit_about, name="dashboard_about"),
+    path("dashboard/selfstudy/", edit_selfstudy, name="dashboard_selfstudy"),
     path("dashboard/<str:status>/", home, name="dashboard_status"),
     path("dashboard/<str:status>/<int:subject_id>/", home, name="dashboard_subject"),
     path("dashboard/<str:status>/<int:subject_id>/<int:potok_id>/", home, name="dashboard_potok"),

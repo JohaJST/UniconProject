@@ -5,7 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import render
 
-from core.models import Potok, Question, Result, Subject, Test, User, Variant
+from core.models import (
+    Courses, News, Partners, Potok, Question, Result, Subject, Teachers,
+    Test, User, Variant,
+)
 from core.models.self import SelfCtg, SelfQuestion
 
 from .selfuser_crud import list_selfuser
@@ -20,6 +23,10 @@ _QUERYSETS = {
     "question":     lambda: Question.objects.select_related('test__subject').all().order_by('-created'),
     "selfctg":      lambda: SelfCtg.objects.annotate(question_count=Count('selfquestion')).order_by('-created'),
     "selfquestion": lambda: SelfQuestion.objects.prefetch_related('selfanswer_set').select_related('ctg').order_by('-id'),
+    "courses":      lambda: Courses.objects.all().order_by('-created'),
+    "teachers":     lambda: Teachers.objects.all().order_by('-created'),
+    "news":         lambda: News.objects.all().order_by('-date'),
+    "partners":     lambda: Partners.objects.all().order_by('-created'),
 }
 
 _DISPLAY_NAMES = {
@@ -32,6 +39,10 @@ _DISPLAY_NAMES = {
     "question":     "Question",
     "selfctg":      "SelfCtg",
     "selfquestion": "Self Question",
+    "courses":      "Courses",
+    "teachers":     "Teachers",
+    "news":         "News",
+    "partners":     "Partners",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -97,6 +108,29 @@ SEARCH_FIELDS: dict[str, dict[str, list[str]]] = {
           ],
           "number": ["id", "selfresult__id", "selfresult__score"],
     },
+    "courses": {
+            "text": [
+                "title_uz", "title_ru", "title_en",
+                "name_uz", "name_ru", "name_en",
+                "desc_uz", "desc_ru", "desc_en",
+            ],
+            "number": []
+        },
+        "teachers": {
+            "text": ["fio", "position_uz", "position_ru", "position_en", "phone"],
+            "number": []
+        },
+        "news": {
+            "text": [
+                "title_uz", "title_ru", "title_en",
+                "desc_uz", "desc_ru", "desc_en",
+            ],
+            "number": []
+        },
+        "partners": {
+            "text": ["name", "link"],
+            "number": []
+        },
 }
 
 

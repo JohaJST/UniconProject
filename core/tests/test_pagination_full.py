@@ -59,7 +59,10 @@ from core.dashboard.pagination.offset_engine import paginate_offset
 from core.dashboard.pagination.registry import LIST_REGISTRY, get_list_spec
 from core.dashboard.pagination.tokens import encode_cursor
 from core.dashboard.selfuser_crud import _selfuser_queryset
-from core.models import Potok, Question, Result, Subject, Test, User, Variant
+from core.models import (
+    Courses, News, Partners, Potok, Question, Result, Subject, Teachers,
+    Test, User, Variant,
+)
 from core.models.auth import Role
 from core.models.self import SelfCtg, SelfQuestion, SelfResult, SelfUser
 
@@ -283,6 +286,45 @@ def _seed_result(n):
         r = Result.objects.create(user=author, test=t, result=i, foyiz=i, totalQuestions=10)
         Result.objects.filter(pk=r.pk).update(created=base - timedelta(seconds=i))
 
+
+def _seed_courses(n):
+    Courses.objects.bulk_create(
+        [Courses(title=f"KSTEST_course_{i}", name=f"KSTEST_course_{i}", desc="d") for i in range(n)]
+    )
+    ids = list(Courses.objects.filter(title__startswith="KSTEST_course_").values_list("id", flat=True))
+    base = timezone.now()
+    for offset, pk in enumerate(ids):
+        Courses.objects.filter(pk=pk).update(created=base - timedelta(seconds=offset))
+
+
+def _seed_teachers(n):
+    Teachers.objects.bulk_create(
+        [Teachers(fio=f"KSTEST_teacher_{i}", position="p", phone="123") for i in range(n)]
+    )
+    ids = list(Teachers.objects.filter(fio__startswith="KSTEST_teacher_").values_list("id", flat=True))
+    base = timezone.now()
+    for offset, pk in enumerate(ids):
+        Teachers.objects.filter(pk=pk).update(created=base - timedelta(seconds=offset))
+
+
+def _seed_news(n):
+    from datetime import date, timedelta
+    base_date = date.today()
+    News.objects.bulk_create(
+        [News(title=f"KSTEST_news_{i}", desc="d", date=base_date - timedelta(days=i)) for i in range(n)]
+    )
+
+
+def _seed_partners(n):
+    Partners.objects.bulk_create(
+        [Partners(name=f"KSTEST_partner_{i}", link="http://x") for i in range(n)]
+    )
+    ids = list(Partners.objects.filter(name__startswith="KSTEST_partner_").values_list("id", flat=True))
+    base = timezone.now()
+    for offset, pk in enumerate(ids):
+        Partners.objects.filter(pk=pk).update(created=base - timedelta(seconds=offset))
+
+
 _SEEDERS = {
     "subject": _seed_subject,
     "potok": _seed_potok,
@@ -293,6 +335,10 @@ _SEEDERS = {
     "selfquestion": _seed_selfquestion,
     "user": _seed_user,
     "result": _seed_result,
+    "courses": _seed_courses,
+    "teachers": _seed_teachers,
+    "news": _seed_news,
+    "partners": _seed_partners,
 }
 
 
@@ -428,6 +474,18 @@ class KeysetEngineAllListsTests(TestCase):
 
     def test_result(self):
         self._run_full_check("result")
+
+    def test_courses(self):
+        self._run_full_check("courses")
+
+    def test_teachers(self):
+        self._run_full_check("teachers")
+
+    def test_news(self):
+        self._run_full_check("news")
+
+    def test_partners(self):
+        self._run_full_check("partners")
 
     def test_all_registered_keyset_tips_are_covered_by_this_suite(self):
         """
