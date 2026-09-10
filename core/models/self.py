@@ -52,7 +52,7 @@ class SelfUser(models.Model):
     first_name = models.CharField(max_length=255, default="No First Name")
     last_name = models.CharField(max_length=255, default="No Last Name")
     
-    created = models.DateField(auto_now_add=True, auto_now=False, null=True, editable=False)
+    created = models.DateField(auto_now_add=True, auto_now=False, editable=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True)
 
     def __str__(self):
@@ -63,7 +63,7 @@ class SelfResult(models.Model):
     user = models.ForeignKey(SelfUser, on_delete=models.SET_NULL, null=True, blank=True)
     score = models.SmallIntegerField(default=0)
     created = models.DateField(
-        auto_now_add=True, auto_now=False, null=True, editable=False
+        auto_now_add=True, auto_now=False, editable=False
     )
     updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True)
     foiz = models.FloatField(default=0.0)
@@ -83,8 +83,8 @@ class SelfStudy(models.Model):
     style_text = models.TextField(null=True, blank=True)
     js_text = models.TextField(null=True, blank=True)
 
-    created = models.DateTimeField(auto_now_add=True, auto_now=False, null=True, blank=True, editable=False)
-    updated = models.DateTimeField(auto_now_add=False, auto_now=True, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, auto_now=False, blank=True, editable=False)
+    updated = models.DateTimeField(auto_now_add=False, auto_now=True, blank=True)
 
 
     def __str__(self):
