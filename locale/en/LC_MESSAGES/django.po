@@ -281,8 +281,7 @@ msgstr "question(s) out of"
 
 msgid "resultText"
 msgstr "Dear <b>{last_name} {first_name}</b>, you scored <b>{score}</b> out of <b>{total}</b>"
-"Dear, <b>{last_name} {first_name}</b>, you scored <p>{score}</p> out of "
-"<p>{total}</p>"
+
 
 msgid "exitConfirmMessage"
 msgstr "Exit? Your progress will be lost."

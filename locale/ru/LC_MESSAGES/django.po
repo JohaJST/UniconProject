@@ -283,8 +283,7 @@ msgstr "вопрос(а) из"
 
 msgid "resultText"
 msgstr "Уважаемый(ая) <b>{last_name} {first_name}</b>, вы набрали <b>{score}</b> из <b>{total}</b>"
-"Уважаемый(ая) <b>{last_name} {first_name}</b>, вы набрали <p>{score}</p> из "
-"<p>{total}</p>"
+
 
 msgid "exitConfirmMessage"
 msgstr "Выйти? Прогресс будет потерян."

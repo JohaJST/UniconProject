@@ -280,8 +280,7 @@ msgstr "ta savoldan"
 
 msgid "resultText"
 msgstr "Hurmatli <b>{last_name} {first_name}</b>, siz <b>{total}</b> savoldan <b>{score}</b> tasiga to'g'ri javob berdingiz"
-"Hurmatli, <b>{last_name} {first_name}</b>, siz <p>{total}</p> ta savoldan "
-"<p>{score}</p> ta to'g'ri javob berdingiz"
+
 
 msgid "exitConfirmMessage"
 msgstr "Chiqasizmi? Jarayon yo'qoladi."
