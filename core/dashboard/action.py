@@ -494,6 +494,7 @@ def form(req):
                 password=data.get("password") or "1234",
                 name=data["first_name"],
                 last_name=data["last_name"],
+                second_name=data["second_name"],
                 potok_id=int(data["potok"]) if data.get("potok") else None,
                 position=data.get("position"),
                 company_name=data.get("company_name"),

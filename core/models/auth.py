@@ -62,6 +62,7 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=256, unique=True, null=True, blank=True)
     name = models.CharField(max_length=256, default=" ", null=True)
     last_name = models.CharField(max_length=256, null=True)
+    second_name = models.CharField(max_length=256, null=True)
     potok = models.ForeignKey(Potok, on_delete=models.SET_NULL, null=True)
     position = models.CharField(max_length=256, null=True, blank=True)
     company_name = models.CharField(max_length=256, null=True, blank=True)
@@ -182,7 +183,7 @@ class User(AbstractBaseUser):
     # ── Строковые методы ─────────────────────────────────
 
     def full_name(self) -> str:
-        return f"{self.last_name} {self.name}"
+        return f"{self.last_name} {self.name} {self.second_name}"
 
     def personal(self) -> dict:
         return {

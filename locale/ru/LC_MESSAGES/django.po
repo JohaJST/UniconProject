@@ -27,10 +27,10 @@ msgid "heroChipOrgName"
 msgstr "«UNICON.UZ — Центр научно-технических и маркетинговых исследований» ООО"
 
 msgid "heroHeadingMain"
-msgstr "Криптология"
+msgstr "Школа"
 
 msgid "heroHeadingGlow"
-msgstr "школа"
+msgstr "криптология"
 
 msgid "heroDescText"
 msgstr "Современный научно-образовательный центр, готовящий криптографов будущего. В сфере информационной безопасности начинается новая эра."

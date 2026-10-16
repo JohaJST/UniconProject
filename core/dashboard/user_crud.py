@@ -60,6 +60,7 @@ def edit_user(request, pk):
         try:
             target_user.name = data["first_name"]
             target_user.last_name = data["last_name"]
+            target_user.second_name = data["second_name"]
 
             target_user.position = data.get("position") or None
             target_user.company_name = data.get("company_name") or None
