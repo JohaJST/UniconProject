@@ -1,0 +1,93 @@
+{% extends 'pages/dashboard/base.html' %}
+
+{% block title %}Редактировать партнёра{% endblock %}
+{% block page_title %}Редактировать партнёра{% endblock %}
+
+{% block head %}
+<style>
+    .translation-tabs {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 280ms ease-out, opacity 280ms ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Редактировать партнёра</h1>
+        <a href="{% url 'action' status='view' path='partners' pk=partner.id %}"
+           class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="mb-4 bg-rose-500/10 border border-rose-500/40 text-rose-300 text-sm rounded-xl px-4 py-3">
+        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>{{ error }}
+    </div>
+    {% endif %}
+
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8">
+        <form id="partnerEditForm" method="post" enctype="multipart/form-data"
+              action="{% url 'action' status='edit' path='partners' pk=partner.id %}">
+            {% csrf_token %}
+
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="partners_name">
+                    Название <span class="text-rose-400">*</span>
+                </label>
+                <input id="partners_name" type="text" name="partners_name" required 
+                       value="{{ post_data.partners_name|default:partner.name }}"
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+            </div>
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="partners_link">
+                    Ссылка <span class="text-rose-400">*</span>
+                </label>
+                <input id="partners_link" type="url" name="partners_link" required 
+                       value="{{ post_data.partners_link|default:partner.link }}"
+                       class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+            </div>
+            <div class="mb-5">
+                <label class="text-sm font-medium text-slate-300 mb-1.5 block">Фото</label>
+
+                {% if partner.photo %}
+                <div class="flex items-center gap-3 mb-3 bg-slate-900/60 border border-slate-700 rounded-xl p-3">
+                    <img src="{{ partner.photo.url }}" alt="Текущее фото"
+                         class="w-20 h-20 object-cover rounded-lg border border-slate-700 shrink-0">
+                    <p class="text-xs text-slate-400">Текущее фото. Выберите файл ниже, чтобы заменить его.</p>
+                </div>
+                {% endif %}
+
+                <input type="file" name="partners_photo" accept="image/*"
+                       class="w-full text-xs text-slate-400 bg-slate-800 border border-slate-600
+                              rounded-xl px-3 py-2
+                              file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0
+                              file:bg-indigo-600 file:text-white file:text-xs file:font-medium
+                              file:cursor-pointer cursor-pointer">
+            </div>
+
+            <div class="border-t border-slate-700 my-6"></div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                               font-medium transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Сохранить
+                </button>
+                <a href="{% url 'action' status='view' path='partners' pk=partner.id %}"
+                   class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                          transition-colors text-sm">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

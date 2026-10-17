@@ -1,0 +1,55 @@
+{% extends 'pages/dashboard/base.html' %}
+
+{% block title %}Новость: {{ news.title_uz|default:news.title }}{% endblock %}
+{% block page_title %}Детали: Новость{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/50 shadow-sm p-6 lg:p-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+            <div class="min-w-0">
+                <a href="{% url 'dlist' tip='news' %}"
+                   class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-2">
+                    <i class="fa-solid fa-arrow-left text-xs"></i> Назад к списку
+                </a>
+                <h1 class="text-2xl font-bold text-white break-words">
+                    <i class="fa-solid fa-newspaper text-indigo-400 mr-2"></i>{{ news.title_uz|default:news.title }}
+                </h1>
+            </div>
+            <a href="{% url 'action' status='edit' path='news' pk=news.id %}"
+               class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors inline-flex items-center gap-2 shrink-0">
+                <i class="fa-solid fa-pen"></i> Редактировать
+            </a>
+        </div>
+
+        {% if news.photo %}
+        <img src="{{ news.photo.url }}" alt="Фото новости"
+             class="max-w-xs w-full rounded-xl border border-slate-700 mb-6">
+        {% endif %}
+
+        <div class="grid grid-cols-1 gap-4">
+                <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3">
+                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Дата</p>
+                    <p class="text-sm text-slate-200 font-medium break-words">{{ news.date|date:"d.m.Y"|default:"—" }}</p>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3">
+                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Заголовок</p>
+                    <div class="space-y-1.5 text-sm text-slate-200 break-words">
+                    <p><span class="font-bold text-slate-300 text-[10px] uppercase bg-slate-700 px-2 py-0.5 rounded-full mr-1">UZ</span> {{ news.title_uz|default:"—" }}</p>
+                    <p><span class="font-bold text-slate-300 text-[10px] uppercase bg-slate-700 px-2 py-0.5 rounded-full mr-1">RU</span> {{ news.title_ru|default:"—" }}</p>
+                    <p><span class="font-bold text-slate-300 text-[10px] uppercase bg-slate-700 px-2 py-0.5 rounded-full mr-1">EN</span> {{ news.title_en|default:"—" }}</p>
+                    </div>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3">
+                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Описание</p>
+                    <div class="space-y-1.5 text-sm text-slate-200 break-words">
+                    <p><span class="font-bold text-slate-300 text-[10px] uppercase bg-slate-700 px-2 py-0.5 rounded-full mr-1">UZ</span> {{ news.desc_uz|default:"—" }}</p>
+                    <p><span class="font-bold text-slate-300 text-[10px] uppercase bg-slate-700 px-2 py-0.5 rounded-full mr-1">RU</span> {{ news.desc_ru|default:"—" }}</p>
+                    <p><span class="font-bold text-slate-300 text-[10px] uppercase bg-slate-700 px-2 py-0.5 rounded-full mr-1">EN</span> {{ news.desc_en|default:"—" }}</p>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
