@@ -62,13 +62,16 @@ def _safe_avg(values):
 # RESULT — сбор данных
 # ═══════════════════════════════════════════════════════════════════════════
 
+# Формат файлов повторяет шаблоны exel_test_natija.xlsx / word_natija_forma.docx.
 RESULT_HEADERS = [
-    "ID", "Фамилия", "Имя", "Username", "Поток", "Должность", "Компания",
-    "Предмет", "Тест", "Верных", "Всего вопросов", "Процент, %",
-    "Время прохождения", "Дата прохождения",
+    "F.I.O (pasport bo'yicha to'liq yozilishi kerak):",
+    "Korxona nomi to'liq yozilishi shart:",
+    "Lavozim:",
+    "Pasport seriyasi va raqami:",
+    "JSHSHIR:",
+    "Telefon raqami:",
+    "Ball",
 ]
-
-STUDENT_SUMMARY_HEADERS = ["Ученик", "Поток", "Попыток", "Средний %", "Лучший %"]
 
 
 def _result_queryset(request):
@@ -85,42 +88,24 @@ def _result_queryset(request):
 
 def _result_row(r: Result) -> list:
     user = r.user
-    test = r.test
+    if not user:
+        return ["", "", "", "", "", "", r.result if r.result is not None else ""]
+
+    fio = " ".join(p.strip() for p in (user.last_name, user.name, user.second_name) if p and p.strip())
+    # JSHSHIR в шаблоне хранится числом; при нецифровом значении оставляем текст.
+    pinfl = user.pinfl or ""
+    if pinfl.isdigit():
+        pinfl = int(pinfl)
     return [
-        r.id,
-        user.last_name if user else "— (удалён)",
-        user.name if user else "—",
-        user.username if user else "—",
-        user.potok.date_range if (user and user.potok) else "—",
-        user.position if (user and user.position) else "—",
-        user.company_name if (user and user.company_name) else "—",
-        test.subject.name if (test and test.subject) else "—",
-        str(test) if test else "— (удалён)",
-        r.result if r.result is not None else "—",
-        r.totalQuestions if r.totalQuestions is not None else "—",
-        r.foyiz if r.foyiz is not None else "—",
-        _fmt_seconds(r.time),
-        r.created.strftime("%d.%m.%Y %H:%M") if r.created else "—",
+        fio,
+        user.company_name or "",
+        user.position or "",
+        user.passport or "",
+        pinfl,
+        user.phone or "",
+        # "Ball" = число верных ответов. Для процента замените на r.foyiz.
+        r.result if r.result is not None else "",
     ]
-
-
-def _result_student_summary(results) -> list:
-    groups = defaultdict(list)
-    for r in results:
-        if r.user:
-            key = (
-                f"{r.user.last_name} {r.user.name}",
-                r.user.potok.date_range if r.user.potok else "—",
-            )
-        else:
-            key = ("Пользователь удалён", "—")
-        groups[key].append(r.foyiz or 0)
-
-    rows = []
-    for (name, potok), scores in groups.items():
-        rows.append([name, potok, len(scores), _safe_avg(scores), max(scores)])
-    rows.sort(key=lambda row: row[3], reverse=True)
-    return rows
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -359,6 +344,36 @@ def _build_docx_report(title, headers, rows, summary_lines, summary_title, summa
 
     return doc
 
+def _build_natija_docx(headers, rows):
+    """Word-таблица по шаблону word_natija_forma.docx: A4 альбомная, Table Grid, Times New Roman 12."""
+    from docx import Document
+    from docx.shared import Pt, Cm
+    from docx.enum.section import WD_ORIENT
+
+    doc = Document()
+    section = doc.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    section.page_width, section.page_height = Cm(29.7), Cm(21.0)
+    section.left_margin = section.right_margin = Cm(2)
+    section.top_margin = section.bottom_margin = Cm(2)
+
+    def put(cell, text):
+        cell.text = ""
+        run = cell.paragraphs[0].add_run("" if text is None else str(text))
+        run.font.name = "Times New Roman"
+        run.font.size = Pt(12)
+
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = "Table Grid"
+    for i, h in enumerate(headers):
+        put(table.rows[0].cells[i], h)
+    _repeat_header_row(table.rows[0])
+
+    for row_data in rows:
+        cells = table.add_row().cells
+        for i, value in enumerate(row_data):
+            put(cells[i], value)
+    return doc
 
 def _docx_response(doc, filename: str) -> HttpResponse:
     buf = io.BytesIO()
@@ -383,24 +398,34 @@ def export_result_excel(request):
     results = list(_result_queryset(request))
     rows = [_result_row(r) for r in results]
 
-    total = len(results)
-    scores = [r.foyiz for r in results if r.foyiz is not None]
-    summary = [
-        ("Всего попыток:", total),
-        ("Средний процент:", f"{_safe_avg(scores)}%"),
-        ("Отлично (≥75%):", sum(1 for s in scores if s >= 75)),
-        ("Слабо (<50%):", sum(1 for s in scores if s < 50)),
-    ]
+    from openpyxl.styles import Alignment, Font
+
+    font = Font(name="Arial", size=10)
+    left = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "Результаты тестов"
-    _write_excel_sheet(ws, RESULT_HEADERS, rows, "Отчёт по результатам тестов", summary)
+    ws.title = "Form responses 1"  # имя листа как в шаблоне
+    ws.append(RESULT_HEADERS)
+    def _safe(v):
+        # Строки, начинающиеся с = + - @, Excel трактует как формулы.
+        if isinstance(v, str) and v[:1] in ("=", "+", "-", "@"):
+            return "'" + v
+        return v
 
-    ws2 = wb.create_sheet("Сводка по ученикам")
-    _write_excel_sheet(ws2, STUDENT_SUMMARY_HEADERS, _result_student_summary(results), "Сводка по ученикам")
+    for row in rows:
+        ws.append([_safe(v) for v in row])
 
-    return _xlsx_response(wb, f"results_{_file_stamp()}.xlsx")
+    for line in ws.iter_rows():
+        for cell in line:
+            cell.font = font
+            cell.alignment = left
+
+    for letter, width in zip("ABCDEFG", (44.7, 37.4, 28, 25, 18.9, 20, 12)):
+        ws.column_dimensions[letter].width = width
+    ws.freeze_panes = "A2"
+
+    return _xlsx_response(wb, f"natija_{_file_stamp()}.xlsx")
 
 
 @login_required(login_url="login")
@@ -408,24 +433,8 @@ def export_result_word(request):
     results = list(_result_queryset(request))
     rows = [_result_row(r) for r in results]
 
-    total = len(results)
-    scores = [r.foyiz for r in results if r.foyiz is not None]
-    summary = [
-        ("Всего попыток:", total),
-        ("Средний процент:", f"{_safe_avg(scores)}%"),
-        ("Отлично (≥75%):", sum(1 for s in scores if s >= 75)),
-    ]
-
-    doc = _build_docx_report(
-        title="Отчёт по результатам тестов",
-        headers=RESULT_HEADERS,
-        rows=rows,
-        summary_lines=summary,
-        summary_title="Сводка по ученикам",
-        summary_headers=STUDENT_SUMMARY_HEADERS,
-        summary_rows=_result_student_summary(results),
-    )
-    return _docx_response(doc, f"results_{_file_stamp()}.docx")
+    doc = _build_natija_docx(RESULT_HEADERS, rows)
+    return _docx_response(doc, f"natija_{_file_stamp()}.docx")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -492,3 +501,4 @@ def export_hub(request):
         "potoks": Potok.objects.all().order_by('-start'),
         "ctgs": SelfCtg.objects.all().order_by('name_uz'),
     })
+

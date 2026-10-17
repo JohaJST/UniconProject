@@ -66,6 +66,10 @@ class User(AbstractBaseUser):
     potok = models.ForeignKey(Potok, on_delete=models.SET_NULL, null=True)
     position = models.CharField(max_length=256, null=True, blank=True)
     company_name = models.CharField(max_length=256, null=True, blank=True)
+    # Данные для экспорта результатов (формат "natija"): паспорт, ПИНФЛ, телефон.
+    passport = models.CharField(max_length=32, null=True, blank=True)
+    pinfl = models.CharField(max_length=14, null=True, blank=True)
+    phone = models.CharField(max_length=32, null=True, blank=True)
     subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True)
     # ── Настройки ─────────────────────────────────────────
     # log = models.JSONField(default=dict, null=True, blank=True)
