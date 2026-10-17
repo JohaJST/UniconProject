@@ -165,6 +165,39 @@
                                group-hover:text-indigo-400 transition-colors shrink-0"></i>
                     <span>Категории Self Check</span>
                 </a>
+
+                <a href="{% url 'dlist' tip='courses' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-graduation-cap w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Курсы</span>
+                </a>
+
+                <a href="{% url 'dlist' tip='teachers' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-chalkboard-user w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Преподаватели</span>
+                </a>
+
+                <a href="{% url 'dlist' tip='news' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-newspaper w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Новости</span>
+                </a>
+
+                <a href="{% url 'dlist' tip='partners' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-handshake w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Партнёры</span>
+                </a>
+
                 
                 <a href="{% url 'export_hub' %}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
@@ -219,12 +252,62 @@
                     <span>Добавить категорию</span>
                 </a>
 
+                <a href="{% url 'action_no_pk' status='create' path='courses' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Добавить курс</span>
+                </a>
+
+                <a href="{% url 'action_no_pk' status='create' path='teachers' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Добавить преподавателя</span>
+                </a>
+
+                <a href="{% url 'action_no_pk' status='create' path='news' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Добавить новость</span>
+                </a>
+
+                <a href="{% url 'action_no_pk' status='create' path='partners' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-plus w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Добавить партнёра</span>
+                </a>
+
                 <a href="{% url 'self_check_create' %}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                           text-indigo-300 hover:text-indigo-200 hover:bg-indigo-600/20 transition-all group">
                     <i class="fa-solid fa-circle-plus w-4 text-center text-indigo-400
                                group-hover:text-indigo-300 transition-colors shrink-0"></i>
                     <span>Создать вопрос Self Check</span>
+                </a>
+
+                <div class="my-2 border-t border-slate-800/80"></div>
+
+                <a href="{% url 'dashboard_about' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-circle-info w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>О нас</span>
+                </a>
+
+                <a href="{% url 'dashboard_selfstudy' %}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                          text-slate-300 hover:text-white hover:bg-slate-800 transition-all group">
+                    <i class="fa-solid fa-book-open-reader w-4 text-center text-slate-400
+                               group-hover:text-indigo-400 transition-colors shrink-0"></i>
+                    <span>Самообучение</span>
                 </a>
 
             </nav>

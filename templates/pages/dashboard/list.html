@@ -197,6 +197,34 @@
             <i class="fa-solid fa-plus"></i>
             Добавить категорию
         </a>
+        {% elif name == "Courses" %}
+        <a href="{% url 'action_no_pk' status='create' path='courses' %}"
+           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white
+                  px-4 py-2.5 rounded-xl font-medium transition-colors text-sm shrink-0">
+            <i class="fa-solid fa-plus"></i>
+            Добавить курс
+        </a>
+        {% elif name == "Teachers" %}
+        <a href="{% url 'action_no_pk' status='create' path='teachers' %}"
+           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white
+                  px-4 py-2.5 rounded-xl font-medium transition-colors text-sm shrink-0">
+            <i class="fa-solid fa-plus"></i>
+            Добавить преподавателя
+        </a>
+        {% elif name == "News" %}
+        <a href="{% url 'action_no_pk' status='create' path='news' %}"
+           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white
+                  px-4 py-2.5 rounded-xl font-medium transition-colors text-sm shrink-0">
+            <i class="fa-solid fa-plus"></i>
+            Добавить новость
+        </a>
+        {% elif name == "Partners" %}
+        <a href="{% url 'action_no_pk' status='create' path='partners' %}"
+           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white
+                  px-4 py-2.5 rounded-xl font-medium transition-colors text-sm shrink-0">
+            <i class="fa-solid fa-plus"></i>
+            Добавить партнёра
+        </a>
         {% endif %}
 
         </div>
@@ -265,6 +293,27 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Название</th>
                             <th class="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Вопросов</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
+                        {% elif name == "Courses" %}
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Фото</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Заголовок</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Название</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
+                        {% elif name == "Teachers" %}
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Фото</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ФИО</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Должность</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Телефон</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
+                        {% elif name == "News" %}
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Фото</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Заголовок</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Дата</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
+                        {% elif name == "Partners" %}
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Фото</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Название</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ссылка</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Действие</th>
                         {% endif %}
                     </tr>
@@ -557,6 +606,114 @@
                                     <i class="fa-solid fa-pen text-xs"></i>
                                 </a>
                                 <a href="{% url 'action' status='delete' path='selfctg' pk=i.id %}"
+                                   class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
+                                          rounded-lg transition-colors inline-flex" title="Удалить">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% elif name == "Courses" %}
+                        <tr class="hover:bg-slate-750 transition-colors">
+                            <td class="px-4 py-3">
+                                {% if i.photo %}<img src="{{ i.photo.url }}" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-700">
+                                {% else %}<span class="text-slate-600">—</span>{% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-white font-medium">{{ i.title_uz|default:i.title }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ i.name_uz|default:i.name }}</td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="{% url 'action' status='view' path='courses' pk=i.id %}"
+                                   class="px-3 py-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
+                                          rounded-lg transition-colors inline-flex" title="Посмотреть">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='edit' path='courses' pk=i.id %}"
+                                   class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
+                                          rounded-lg transition-colors inline-flex" title="Редактировать">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='delete' path='courses' pk=i.id %}"
+                                   class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
+                                          rounded-lg transition-colors inline-flex" title="Удалить">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% elif name == "Teachers" %}
+                        <tr class="hover:bg-slate-750 transition-colors">
+                            <td class="px-4 py-3">
+                                {% if i.photo %}<img src="{{ i.photo.url }}" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-700">
+                                {% else %}<span class="text-slate-600">—</span>{% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-white font-medium">{{ i.fio }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ i.position_uz|default:i.position }}</td>
+                            <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.phone }}</td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="{% url 'action' status='view' path='teachers' pk=i.id %}"
+                                   class="px-3 py-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
+                                          rounded-lg transition-colors inline-flex" title="Посмотреть">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='edit' path='teachers' pk=i.id %}"
+                                   class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
+                                          rounded-lg transition-colors inline-flex" title="Редактировать">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='delete' path='teachers' pk=i.id %}"
+                                   class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
+                                          rounded-lg transition-colors inline-flex" title="Удалить">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% elif name == "News" %}
+                        <tr class="hover:bg-slate-750 transition-colors">
+                            <td class="px-4 py-3">
+                                {% if i.photo %}<img src="{{ i.photo.url }}" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-700">
+                                {% else %}<span class="text-slate-600">—</span>{% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-white font-medium">{{ i.title_uz|default:i.title }}</td>
+                            <td class="px-4 py-3 text-slate-400">{{ i.date|date:"d.m.Y" }}</td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="{% url 'action' status='view' path='news' pk=i.id %}"
+                                   class="px-3 py-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
+                                          rounded-lg transition-colors inline-flex" title="Посмотреть">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='edit' path='news' pk=i.id %}"
+                                   class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
+                                          rounded-lg transition-colors inline-flex" title="Редактировать">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='delete' path='news' pk=i.id %}"
+                                   class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
+                                          rounded-lg transition-colors inline-flex" title="Удалить">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% elif name == "Partners" %}
+                        <tr class="hover:bg-slate-750 transition-colors">
+                            <td class="px-4 py-3">
+                                {% if i.photo %}<img src="{{ i.photo.url }}" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-700">
+                                {% else %}<span class="text-slate-600">—</span>{% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-white font-medium">{{ i.name }}</td>
+                            <td class="px-4 py-3 text-slate-400 text-xs"><a href="{{ i.link }}" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300">{{ i.link }}</a></td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="{% url 'action' status='view' path='partners' pk=i.id %}"
+                                   class="px-3 py-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
+                                          rounded-lg transition-colors inline-flex" title="Посмотреть">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='edit' path='partners' pk=i.id %}"
+                                   class="px-3 py-1.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10
+                                          rounded-lg transition-colors inline-flex" title="Редактировать">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </a>
+                                <a href="{% url 'action' status='delete' path='partners' pk=i.id %}"
                                    class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
                                           rounded-lg transition-colors inline-flex" title="Удалить">
                                     <i class="fa-solid fa-trash text-xs"></i>
