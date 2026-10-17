@@ -196,6 +196,37 @@
     ═══════════════════════════════════════════════════════════ */
     let selfctgTranslateInFlight = false;
 
+    /* ── Зеркалирование основного поля в UZ ──
+       lastMain[mainId] — последнее значение основного поля, пока скрытый UZ ему равен.
+       null — UZ правили вручную, зеркалирование выключено. */
+    const lastMain = {};
+    const norm = s => (s || '').replace(/\r\n/g, '\n');
+
+    function initMirror(mainId, hidId, tabId) {
+        const main = document.getElementById(mainId);
+        const hidUz = document.getElementById(hidId);
+        const tabUz = document.getElementById(tabId);
+        if (!main || !hidUz || !tabUz) return;
+
+        lastMain[mainId] = norm(main.value);
+
+        main.addEventListener('input', () => {
+            if (lastMain[mainId] === null) return;
+            if (norm(hidUz.value) === lastMain[mainId]) {
+                hidUz.value = main.value;
+                tabUz.value = main.value;
+            }
+            lastMain[mainId] = norm(main.value);
+        });
+
+        tabUz.addEventListener('input', () => { lastMain[mainId] = null; });
+    }
+
+    // После успешного AI-перевода зеркало включается всегда: точка отсчёта — новый uz
+    function rearmMirror(mainId, uz) { lastMain[mainId] = norm(uz); }
+
+    initMirror('selfctg-name', 'selfctg-name-uz', 'selfctg-tab-uz');
+
     function revealSelfctgTranslationTabs(isMissing) {
         const block = document.getElementById('selfctgTranslationTabs');
         if (!block) return;
@@ -288,6 +319,7 @@
             document.getElementById('selfctg-tab-ru').value = ru;
             document.getElementById('selfctg-tab-en').value = en;
 
+            rearmMirror('selfctg-name', uz);
             revealSelfctgTranslationTabs(missingSet.has('selfctg_name'));
             showToast('Перевод готов', 'success');
             resetBtn();

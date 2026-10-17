@@ -153,6 +153,37 @@
     const LANGS = ['uz', 'ru', 'en'];
     let inFlight = false;
 
+    /* ── Зеркалирование основного поля в UZ ──
+       lastMain[mainId] — последнее значение основного поля, пока скрытый UZ ему равен.
+       null — UZ правили вручную, зеркалирование выключено. */
+    const lastMain = {};
+    const norm = s => (s || '').replace(/\r\n/g, '\n');
+
+    function initMirror(mainId, hidId, tabId) {
+        const main = document.getElementById(mainId);
+        const hidUz = document.getElementById(hidId);
+        const tabUz = document.getElementById(tabId);
+        if (!main || !hidUz || !tabUz) return;
+
+        lastMain[mainId] = norm(main.value);
+
+        main.addEventListener('input', () => {
+            if (lastMain[mainId] === null) return;
+            if (norm(hidUz.value) === lastMain[mainId]) {
+                hidUz.value = main.value;
+                tabUz.value = main.value;
+            }
+            lastMain[mainId] = norm(main.value);
+        });
+
+        tabUz.addEventListener('input', () => { lastMain[mainId] = null; });
+    }
+
+    // После успешного AI-перевода зеркало включается всегда: точка отсчёта — новый uz
+    function rearmMirror(mainId, uz) { lastMain[mainId] = norm(uz); }
+
+    FIELD_IDS.forEach(id => initMirror(id, id + '-uz', id + '-tab-uz'));
+
     function getCookie(name) {
         const m = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith(name + '='));
         return m ? decodeURIComponent(m.substring(name.length + 1)) : null;
@@ -217,6 +248,7 @@
                     document.getElementById(t.id + '-' + l).value = t[l] || '';
                     document.getElementById(t.id + '-tab-' + l).value = t[l] || '';
                 });
+                rearmMirror(t.id, t.uz || '');
                 markMissing(t.id, missing.has(t.id));
             });
             showToast('Перевод готов', 'success');

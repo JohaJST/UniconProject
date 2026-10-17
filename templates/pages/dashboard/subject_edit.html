@@ -227,11 +227,36 @@
         }
     }
 
-    document.getElementById('subject-name').addEventListener('input', function () {
-        // Ручное изменение видимого поля больше не гарантирует, что скрытые
-        // переводы актуальны — но, в отличие от create, здесь есть исходные
-        // значения из БД, поэтому не сбрасываем их молча.
-    });
+    /* ── Зеркалирование основного поля в UZ ──
+       lastMain[mainId] — последнее значение основного поля, пока скрытый UZ ему равен.
+       null — UZ правили вручную, зеркалирование выключено. */
+    const lastMain = {};
+    const norm = s => (s || '').replace(/\r\n/g, '\n');
+
+    function initMirror(mainId, hidId, tabId) {
+        const main = document.getElementById(mainId);
+        const hidUz = document.getElementById(hidId);
+        const tabUz = document.getElementById(tabId);
+        if (!main || !hidUz || !tabUz) return;
+
+        lastMain[mainId] = norm(main.value);
+
+        main.addEventListener('input', () => {
+            if (lastMain[mainId] === null) return;
+            if (norm(hidUz.value) === lastMain[mainId]) {
+                hidUz.value = main.value;
+                tabUz.value = main.value;
+            }
+            lastMain[mainId] = norm(main.value);
+        });
+
+        tabUz.addEventListener('input', () => { lastMain[mainId] = null; });
+    }
+
+    // После успешного AI-перевода зеркало включается всегда: точка отсчёта — новый uz
+    function rearmMirror(mainId, uz) { lastMain[mainId] = norm(uz); }
+
+    initMirror('subject-name', 'subject-name-uz', 'subject-tab-uz');
 
     async function translateSubjectName() {
         if (subjectTranslateInFlight) return;
@@ -305,6 +330,7 @@
             document.getElementById('subject-tab-ru').value = ru;
             document.getElementById('subject-tab-en').value = en;
 
+            rearmMirror('subject-name', uz);
             revealSubjectTranslationTabs(missingSet.has('subject_name'));
             showToast('Перевод готов', 'success');
             resetBtn();
