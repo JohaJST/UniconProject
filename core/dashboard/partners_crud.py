@@ -90,12 +90,12 @@ def edit_partners(request, pk):
     errors = []
     if not raw_name:
         errors.append("Название обязательно")
-        if not raw_link:
-            errors.append("Ссылка обязательна")
-        elif not is_safe_http_url(raw_link):
-            errors.append(_LINK_ERROR)
-    
-        if errors:
+    if not raw_link:
+        errors.append("Ссылка обязательна")
+    elif not is_safe_http_url(raw_link):
+        errors.append(_LINK_ERROR)
+
+    if errors:
         return render(request, "pages/dashboard/partners_edit.html", {
             "partner": partner,
             "error": "; ".join(errors),

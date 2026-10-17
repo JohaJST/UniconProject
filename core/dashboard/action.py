@@ -352,12 +352,12 @@ def action(request, status, path, pk=None):
                 errors = []
                 if not raw_name:
                     errors.append("Название обязательно")
-                    if not raw_link:
-                        errors.append("Ссылка обязательна")
-                    elif not is_safe_http_url(raw_link):
-                        errors.append(_LINK_ERROR)
-    
-                    photo_file, photo_error = _require_photo(files, "partners_photo")
+                if not raw_link:
+                    errors.append("Ссылка обязательна")
+                elif not is_safe_http_url(raw_link):
+                    errors.append(_LINK_ERROR)
+
+                photo_file, photo_error = _require_photo(files, "partners_photo")
                 if photo_error:
                     errors.append(photo_error)
 
