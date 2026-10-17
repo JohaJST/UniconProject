@@ -21,7 +21,7 @@ from django.views.decorators.http import require_POST
 # logger = logging.getLogger(__name__)
 
 _THROTTLE_TIMEOUT = 5   # секунд между запросами одного пользователя
-_AI_TIMEOUT = 25        # секунд на сам HTTP-запрос к AI-провайдеру
+_AI_TIMEOUT = 120        # секунд на сам HTTP-запрос к AI-провайдеру
 
 # Снимает один ведущий ```/```json и один завершающий ``` (без re.MULTILINE).
 _FENCE_RE = re.compile(r"^```(?:json)?\n?|\n?```$")

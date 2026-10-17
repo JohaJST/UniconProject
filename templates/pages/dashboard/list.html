@@ -419,38 +419,6 @@
                                 </a>
                             </td>
                         </tr>
-                        <script>
-                        function formatSeconds(totalSeconds) {
-                            // Вычисляем часы, минуты и оставшиеся секунды
-                            const hours = Math.floor(totalSeconds / 3600);
-                            const minutes = Math.floor((totalSeconds % 3600) / 60);
-                            const seconds = Math.floor(totalSeconds % 60);
-                            
-                            // Форматируем секунды с ведущим нулем (например, "05")
-                            const formattedSeconds = seconds.toString().padStart(2, '0');
-                        
-                            if (hours > 0) {
-                                // Если есть часы, добавляем ведущий ноль и к минутам (например, "1:05:30")
-                                const formattedMinutes = minutes.toString().padStart(2, '0');
-                                return `${hours}:${formattedMinutes}:${formattedSeconds}`;
-                            } else {
-                                // Если часов нет, минуты отображаются без лишних нулей в начале (например, "5:30")
-                                return `${minutes}:${formattedSeconds}`;
-                            }
-                        }
-                        
-                        document.addEventListener("DOMContentLoaded", function() {
-                            const timeElements = document.querySelectorAll('.time-display');
-                        
-                            timeElements.forEach(el => {
-                                const seconds = parseInt(el.getAttribute('data-seconds'), 10);
-                                
-                                if (!isNaN(seconds)) {
-                                    el.textContent = formatSeconds(seconds);
-                                }
-                            });
-                        });
-                        </script>
                         {% elif name == "Quiz" %}
                         <tr class="hover:bg-slate-750 transition-colors">
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ i.id }}</td>
@@ -880,6 +848,51 @@
         showLoadingState();
         window.location.href = buildSearchUrl('');
     }
-</script>
-{% endif %}
-{% endblock %}
+    </script>
+    {% endif %}
+    
+    {% if name == "Result" %}
+    <script>
+    (function () {
+        'use strict';
+    
+        function formatSeconds(totalSeconds) {
+            // Вычисляем часы, минуты и оставшиеся секунды
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+    
+            // Форматируем секунды с ведущим нулем (например, "05")
+            const formattedSeconds = seconds.toString().padStart(2, '0');
+    
+            if (hours > 0) {
+                // Если есть часы, добавляем ведущий ноль и к минутам (например, "1:05:30")
+                const formattedMinutes = minutes.toString().padStart(2, '0');
+                return `${hours}:${formattedMinutes}:${formattedSeconds}`;
+            } else {
+                // Если часов нет, минуты отображаются без лишних нулей в начале (например, "5:30")
+                return `${minutes}:${formattedSeconds}`;
+            }
+        }
+    
+        function renderTimes() {
+            const timeElements = document.querySelectorAll('.time-display');
+            if (!timeElements.length) return;
+    
+            timeElements.forEach(el => {
+                const seconds = parseInt(el.getAttribute('data-seconds'), 10);
+                if (!isNaN(seconds)) {
+                    el.textContent = formatSeconds(seconds);
+                }
+            });
+        }
+    
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderTimes);
+        } else {
+            renderTimes();
+        }
+    })();
+    </script>
+    {% endif %}
+    {% endblock %}
