@@ -1,0 +1,404 @@
+{% extends 'pages/dashboard/base.html' %}
+
+{% block title %}О нас{% endblock %}
+{% block page_title %}О нас{% endblock %}
+
+{% block head %}
+<style>
+    .translation-tabs {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 280ms ease-out, opacity 280ms ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+    <!-- Page heading -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Страница «О нас»</h1>
+        <a href="{% url 'dashboard' %}"
+           class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад к панели
+        </a>
+    </div>
+
+    <form id="aboutForm" method="post" action="{% url 'dashboard_about' %}">
+        {% csrf_token %}
+
+        <!-- ══════════════════════════════════════════════
+             Служебные (нетранслируемые) поля
+        ══════════════════════════════════════════════════ -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-5">
+                <i class="fa-solid fa-address-book text-indigo-400 mr-1.5"></i>
+                Контакты и соцсети
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                <div>
+                    <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="about_tg">Telegram</label>
+                    <input id="about_tg" type="text" name="about_tg" maxlength="255"
+                           value="{{ about.tg|default_if_none:'' }}" placeholder="https://t.me/..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="about_insta">Instagram</label>
+                    <input id="about_insta" type="text" name="about_insta" maxlength="255"
+                           value="{{ about.insta|default_if_none:'' }}" placeholder="https://instagram.com/..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="about_fb">Facebook</label>
+                    <input id="about_fb" type="text" name="about_fb" maxlength="255"
+                           value="{{ about.fb|default_if_none:'' }}" placeholder="https://facebook.com/..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="about_phone">Телефон</label>
+                    <input id="about_phone" type="text" name="about_phone" maxlength="255"
+                           value="{{ about.phone|default_if_none:'' }}" placeholder="+998..."
+                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="about_email">E-mail</label>
+                    <input id="about_email" type="text" name="about_email" maxlength="255"
+                           value="{{ about.email|default_if_none:'' }}" placeholder="info@example.uz"
+                           class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <label class="inline-flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" name="about_partners" value="1"
+                       {% if about.partners %}checked{% endif %}
+                       class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-500
+                              focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer">
+                <span class="text-sm text-slate-300">Показывать блок «Партнёры» на странице «О нас»</span>
+            </label>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             Переводимые поля (строятся JS из ABOUT_DATA)
+        ══════════════════════════════════════════════════ -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-8 mb-6">
+            <div class="flex items-center justify-between gap-3 mb-2">
+                <h2 class="text-lg font-semibold text-white">
+                    <i class="fa-solid fa-language text-indigo-400 mr-1.5"></i>
+                    Тексты страницы
+                </h2>
+                <button type="button" id="aiBtn" onclick="translateAll()"
+                        class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500
+                               text-white px-3 py-1.5 rounded-xl text-xs font-medium
+                               transition-colors shrink-0">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                    <span>Перевести всё через AI</span>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-6">
+                Верхнее поле — исходный текст (по умолчанию UZ). «Перевести всё» берёт исходный текст
+                каждого поля и перезаписывает UZ/RU/EN одним запросом.
+            </p>
+
+            <div id="translatableFields"></div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                           font-medium transition-colors inline-flex items-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i>
+                Сохранить
+            </button>
+            <a href="{% url 'dashboard' %}"
+               class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                      transition-colors text-sm">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const AI_URL = "{% url 'ai_translate' %}";
+    const LANGS = ['uz', 'ru', 'en'];
+
+    /* Текущие значения из БД. escapejs — безопасно для любых кавычек/переносов.
+       Значения в DOM попадают только через .value (не через innerHTML). */
+    const ABOUT_DATA = {
+        info:          { uz: "{{ about.info_uz|default_if_none:''|escapejs }}",          ru: "{{ about.info_ru|default_if_none:''|escapejs }}",          en: "{{ about.info_en|default_if_none:''|escapejs }}" },
+        title:         { uz: "{{ about.title_uz|default_if_none:''|escapejs }}",         ru: "{{ about.title_ru|default_if_none:''|escapejs }}",         en: "{{ about.title_en|default_if_none:''|escapejs }}" },
+        desc:          { uz: "{{ about.desc_uz|default_if_none:''|escapejs }}",          ru: "{{ about.desc_ru|default_if_none:''|escapejs }}",          en: "{{ about.desc_en|default_if_none:''|escapejs }}" },
+        goals_info:    { uz: "{{ about.goals_info_uz|default_if_none:''|escapejs }}",    ru: "{{ about.goals_info_ru|default_if_none:''|escapejs }}",    en: "{{ about.goals_info_en|default_if_none:''|escapejs }}" },
+        courses_info:  { uz: "{{ about.courses_info_uz|default_if_none:''|escapejs }}",  ru: "{{ about.courses_info_ru|default_if_none:''|escapejs }}",  en: "{{ about.courses_info_en|default_if_none:''|escapejs }}" },
+        teachers_info: { uz: "{{ about.teachers_info_uz|default_if_none:''|escapejs }}", ru: "{{ about.teachers_info_ru|default_if_none:''|escapejs }}", en: "{{ about.teachers_info_en|default_if_none:''|escapejs }}" },
+        news_info:     { uz: "{{ about.news_info_uz|default_if_none:''|escapejs }}",     ru: "{{ about.news_info_ru|default_if_none:''|escapejs }}",     en: "{{ about.news_info_en|default_if_none:''|escapejs }}" },
+        partners_info: { uz: "{{ about.partners_info_uz|default_if_none:''|escapejs }}", ru: "{{ about.partners_info_ru|default_if_none:''|escapejs }}", en: "{{ about.partners_info_en|default_if_none:''|escapejs }}" },
+        working_hours: { uz: "{{ about.working_hours_uz|default_if_none:''|escapejs }}", ru: "{{ about.working_hours_ru|default_if_none:''|escapejs }}", en: "{{ about.working_hours_en|default_if_none:''|escapejs }}" },
+        footer_info:   { uz: "{{ about.footer_info_uz|default_if_none:''|escapejs }}",   ru: "{{ about.footer_info_ru|default_if_none:''|escapejs }}",   en: "{{ about.footer_info_en|default_if_none:''|escapejs }}" },
+        location:      { uz: "{{ about.location_uz|default_if_none:''|escapejs }}",      ru: "{{ about.location_ru|default_if_none:''|escapejs }}",      en: "{{ about.location_en|default_if_none:''|escapejs }}" }
+    };
+
+    /* ai:true — входит в батч-запрос "Перевести всё". ml — textarea вместо input.
+       location в модели тоже переводимое (about_crud._TRANSLATABLE_FIELDS), но в батч
+       не входит: адрес переводится вручную. Но блок для него нужен, иначе при
+       сохранении ru/en адреса затрутся пустыми значениями. */
+    const FIELDS = [
+        { id: 'info',          label: 'Краткая информация',     ml: false, ai: true },
+        { id: 'title',         label: 'Заголовок',              ml: false, ai: true },
+        { id: 'desc',          label: 'Описание',               ml: true,  ai: true },
+        { id: 'goals_info',    label: 'Цели и задачи',          ml: true,  ai: true },
+        { id: 'courses_info',  label: 'Блок «Курсы»',           ml: true,  ai: true },
+        { id: 'teachers_info', label: 'Блок «Преподаватели»',   ml: true,  ai: true },
+        { id: 'news_info',     label: 'Блок «Новости»',         ml: true,  ai: true },
+        { id: 'partners_info', label: 'Блок «Партнёры»',        ml: true,  ai: true },
+        { id: 'working_hours', label: 'Часы работы',            ml: false, ai: true },
+        { id: 'footer_info',   label: 'Текст в футере',         ml: false, ai: true },
+        { id: 'location',      label: 'Адрес',                  ml: false, ai: false }
+    ];
+
+    const MAIN_CLS = 'w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors';
+    const TAB_CLS  = 'w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors';
+
+    /* ─── CSRF-хелпер ─── */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    /* ─── Toasts ─── */
+    function getToastContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    function showToast(message, type = 'error') {
+        const container = getToastContainer();
+        const toast = document.createElement('div');
+        const colors = type === 'success'
+            ? 'bg-emerald-600 border-emerald-500'
+            : 'bg-rose-600 border-rose-500';
+        toast.className = `${colors} text-white text-sm font-medium px-4 py-3 rounded-xl
+                            shadow-xl border max-w-xs
+                            translate-x-4 opacity-0 transition-all duration-300 ease-out`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-4', 'opacity-0');
+            });
+        });
+
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-4');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Построение UI полей (разметка статична, значения — через .value)
+    ═══════════════════════════════════════════════════════════ */
+    function buildField(f) {
+        const key = `about_${f.id}`;
+        const data = ABOUT_DATA[f.id] || { uz: '', ru: '', en: '' };
+
+        const wrap = document.createElement('div');
+        wrap.className = 'mb-6 pb-6 border-b border-slate-700/60 last:border-b-0 last:pb-0 last:mb-0';
+
+        const mainHtml = f.ml
+            ? `<textarea id="${key}" name="${key}" rows="4" class="${MAIN_CLS} resize-none"></textarea>`
+            : `<input id="${key}" type="text" name="${key}" maxlength="255" class="${MAIN_CLS}">`;
+
+        const tabsHtml = LANGS.map(l => {
+            const field = f.ml
+                ? `<textarea id="${key}-tab-${l}" rows="3" class="${TAB_CLS} resize-none"></textarea>`
+                : `<input id="${key}-tab-${l}" type="text" maxlength="255" class="${TAB_CLS}">`;
+            return `<div>
+                        <span class="inline-block text-[10px] font-bold text-slate-300 bg-slate-700 px-2 py-0.5 rounded-full mb-1">${l.toUpperCase()}</span>
+                        ${field}
+                    </div>`;
+        }).join('');
+
+        wrap.innerHTML = `
+            <label class="text-sm font-medium text-slate-300 mb-1.5 flex items-center gap-2" for="${key}">
+                ${f.label}
+                ${f.ai ? '' : '<span class="text-[10px] font-semibold text-slate-400 bg-slate-700 px-2 py-0.5 rounded-full">без AI</span>'}
+            </label>
+            ${mainHtml}
+
+            <input type="hidden" name="${key}_uz" id="${key}-uz">
+            <input type="hidden" name="${key}_ru" id="${key}-ru">
+            <input type="hidden" name="${key}_en" id="${key}-en">
+
+            <div id="${key}-tabs"
+                 class="translation-tabs border border-slate-700 rounded-xl p-3 mt-3 bg-slate-800/50"
+                 style="max-height:900px;opacity:1;">
+                <div id="${key}-note" class="hidden text-xs text-amber-400 mb-2 items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    AI не смог перевести — впишите вручную
+                </div>
+                <div class="space-y-2">${tabsHtml}</div>
+            </div>
+        `;
+
+        document.getElementById('translatableFields').appendChild(wrap);
+
+        // Значения — только через .value (никакого innerHTML с данными из БД).
+        const main = document.getElementById(key);
+        main.value = data.uz || '';
+        LANGS.forEach(l => {
+            document.getElementById(`${key}-${l}`).value = data[l] || '';
+            const tab = document.getElementById(`${key}-tab-${l}`);
+            tab.value = data[l] || '';
+            tab.addEventListener('input', () => {
+                document.getElementById(`${key}-${l}`).value = tab.value;
+                // Ручная правка UZ-вкладки — теперь UZ уже не "зеркало" основного поля.
+                if (l === 'uz') lastMain[f.id] = null;
+            });
+        });
+
+        // Пока UZ совпадает с основным полем — правки основного поля зеркалятся
+        // в UZ (иначе view возьмёт старый скрытый uz, и правка потеряется).
+        lastMain[f.id] = main.value;
+        main.addEventListener('input', () => {
+            const hidUz = document.getElementById(`${key}-uz`);
+            if (lastMain[f.id] !== null && hidUz.value === lastMain[f.id]) {
+                hidUz.value = main.value;
+                document.getElementById(`${key}-tab-uz`).value = main.value;
+            }
+            lastMain[f.id] = main.value;
+        });
+    }
+
+    const lastMain = {};
+    FIELDS.forEach(buildField);
+
+    /* ═══════════════════════════════════════════════════════════
+       Применение AI-перевода
+    ═══════════════════════════════════════════════════════════ */
+    function markMissing(key, isMissing) {
+        const block = document.getElementById(`${key}-tabs`);
+        const note = document.getElementById(`${key}-note`);
+        if (!block) return;
+        block.classList.toggle('border-amber-500', isMissing);
+        block.classList.toggle('border-slate-700', !isMissing);
+        if (note) {
+            note.classList.toggle('hidden', !isMissing);
+            note.classList.toggle('flex', isMissing);
+        }
+    }
+
+    function applyTranslation(id, uz, ru, en, isMissing) {
+        // id приходит как "about_<field>" — ровно как мы его отправили.
+        const vals = { uz: uz || '', ru: ru || '', en: en || '' };
+        if (!document.getElementById(`${id}-uz`)) return;
+        LANGS.forEach(l => {
+            document.getElementById(`${id}-${l}`).value = vals[l];
+            document.getElementById(`${id}-tab-${l}`).value = vals[l];
+        });
+        // После AI UZ снова считается "зеркалом" основного поля.
+        const fieldId = id.replace(/^about_/, '');
+        const main = document.getElementById(id);
+        if (main && main.value === vals.uz) lastMain[fieldId] = main.value;
+        markMissing(id, isMissing);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       ОДИН батч-запрос на все поля с ai:true
+    ═══════════════════════════════════════════════════════════ */
+    let translateInFlight = false;
+
+    async function translateAll() {
+        if (translateInFlight) return;
+        const btn = document.getElementById('aiBtn');
+
+        const items = [];
+        FIELDS.filter(f => f.ai).forEach(f => {
+            const el = document.getElementById(`about_${f.id}`);
+            const text = el ? el.value.trim() : '';
+            if (text) items.push({ id: `about_${f.id}`, text });
+        });
+
+        if (items.length === 0) {
+            showToast('Сначала заполните хотя бы одно поле', 'error');
+            return;
+        }
+
+        translateInFlight = true;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+        btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <span>Перевод...</span>`;
+
+        const resetBtn = () => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            btn.innerHTML = originalHtml;
+            translateInFlight = false;
+        };
+
+        try {
+            const res = await fetch(AI_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ items })
+            });
+
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                showToast('Сессия обновилась, перезагрузите страницу и повторите', 'error');
+                resetBtn();
+                return;
+            }
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                let msg = 'Не удалось перевести, впишите вручную';
+                if (res.status === 429) msg = 'Подождите немного';
+                else if (res.status === 502) msg = 'AI сервис временно недоступен';
+                showToast(msg, 'error');
+                resetBtn();
+                return;
+            }
+
+            const missingSet = new Set(data.missing || []);
+            (data.translations || []).forEach(t => {
+                applyTranslation(t.id, t.uz, t.ru, t.en, missingSet.has(t.id));
+            });
+
+            showToast(missingSet.size ? 'Перевод готов, но часть полей — впишите вручную' : 'Перевод готов', 'success');
+            resetBtn();
+
+        } catch (e) {
+            showToast(e instanceof TypeError ? 'Проблема соединения, попробуйте ещё раз' : 'Не удалось перевести, впишите вручную', 'error');
+            resetBtn();
+        }
+    }
+</script>
+{% endblock %}

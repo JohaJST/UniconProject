@@ -1,0 +1,473 @@
+{% extends 'pages/dashboard/base.html' %}
+
+{% block title %}Самообучение{% endblock %}
+{% block page_title %}Самообучение{% endblock %}
+
+{% block head %}
+<style>
+    /* ═══════════════════════════════════════════════════════════════════
+       Overlay-редактор: прозрачная <textarea> поверх <pre><code>.
+
+       КРИТИЧНО: textarea, pre и code обязаны иметь ИДЕНТИЧНЫЕ
+       font-family/font-size/line-height/letter-spacing/tab-size,
+       padding, border, white-space: pre-wrap и word-wrap: break-word.
+       Любое расхождение даёт "съезд" подсветки на 1-2px.
+
+       Дополнительно, по той же причине:
+         - overflow-y: scroll на ОБОИХ слоях — иначе у textarea появляется
+           полоса прокрутки, у pre нет, ширина текста различается и переносы
+           строк расходятся;
+         - в подсветке НЕЛЬЗЯ менять font-weight/font-style у span'ов —
+           только color (иначе меняется ширина глифов).
+       ═══════════════════════════════════════════════════════════════════ */
+    .ed-wrap {
+        position: relative;
+        height: 440px;
+        background: #0b1220;
+        border: 1px solid #475569;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    .ed-wrap:focus-within {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 1px #6366f1;
+    }
+
+    .ed-wrap .ed-pre,
+    .ed-wrap .ed-code,
+    .ed-wrap .ed-ta {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        font-size: 13px;
+        font-weight: 400;
+        font-style: normal;
+        line-height: 20px;
+        letter-spacing: 0;
+        tab-size: 4;
+        -moz-tab-size: 4;
+        font-variant-ligatures: none;
+        text-transform: none;
+        text-indent: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: normal;
+        text-align: left;
+        box-sizing: border-box;
+        margin: 0;
+    }
+
+    /* Слои pre и textarea: одинаковые padding/border/размеры/скролл */
+    .ed-wrap .ed-pre,
+    .ed-wrap .ed-ta {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: 12px 14px;
+        border: 1px solid transparent;
+        overflow-y: scroll;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #334155 transparent;
+    }
+    .ed-wrap .ed-pre::-webkit-scrollbar,
+    .ed-wrap .ed-ta::-webkit-scrollbar { width: 8px; height: 8px; }
+    .ed-wrap .ed-pre::-webkit-scrollbar-thumb,
+    .ed-wrap .ed-ta::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    .ed-wrap .ed-pre::-webkit-scrollbar-track,
+    .ed-wrap .ed-ta::-webkit-scrollbar-track { background: transparent; }
+
+    /* code внутри pre: padding/border на pre, поэтому здесь нули */
+    .ed-wrap .ed-code {
+        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #e2e8f0;
+    }
+
+    .ed-wrap .ed-pre {
+        background: transparent;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .ed-wrap .ed-ta {
+        z-index: 2;
+        background: transparent;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+        caret-color: #f1f5f9;
+        resize: none;
+        outline: none;
+    }
+    .ed-wrap .ed-ta::selection {
+        background: rgba(99, 102, 241, 0.4);
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Подсветка — ТОЛЬКО цвет */
+    .ed-code .tk-br  { color: #64748b; }
+    .ed-code .tk-tag { color: #f472b6; }
+    .ed-code .tk-attr{ color: #fbbf24; }
+    .ed-code .tk-str { color: #86efac; }
+    .ed-code .tk-cm  { color: #475569; }
+
+    .ed-status { min-height: 1.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+
+    <!-- Page heading -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Страница самообучения</h1>
+        <a href="{% url 'dashboard' %}"
+           class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mt-1">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            Назад к панели
+        </a>
+    </div>
+
+    <form id="selfstudyForm" method="post" action="{% url 'dashboard_selfstudy' %}">
+        {% csrf_token %}
+
+        <div class="bg-slate-800 rounded-2xl border border-slate-700/50 p-6 lg:p-8 mb-6">
+
+            <!-- Tabs -->
+            <div class="flex items-center gap-1 bg-slate-900/60 border border-slate-700/50 rounded-xl p-1 mb-6 w-max">
+                <button type="button" data-tab="uz"
+                        class="tab-btn px-5 py-1.5 rounded-lg text-sm font-semibold transition-all inline-flex items-center gap-2">
+                    UZ <span class="tab-dot hidden w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                </button>
+                <button type="button" data-tab="ru"
+                        class="tab-btn px-5 py-1.5 rounded-lg text-sm font-semibold transition-all inline-flex items-center gap-2">
+                    RU <span class="tab-dot hidden w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                </button>
+                <button type="button" data-tab="en"
+                        class="tab-btn px-5 py-1.5 rounded-lg text-sm font-semibold transition-all inline-flex items-center gap-2">
+                    EN <span class="tab-dot hidden w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                </button>
+            </div>
+
+            <!-- ═════════ UZ ═════════ -->
+            <div class="tab-panel" data-panel="uz" data-editor>
+                <div class="ed-wrap">
+                    <pre class="ed-pre" aria-hidden="true"><code class="ed-code"></code></pre>
+<textarea class="ed-ta" name="selfstudy_html_uz" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="soft">
+{{ selfstudy.html_text_uz|default_if_none:"" }}</textarea>
+                </div>
+                <div class="ed-status text-xs mt-2"></div>
+                <div class="mt-3 flex items-center gap-3">
+                    <button type="button" class="preview-btn inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-eye text-xs"></i> Предпросмотр
+                    </button>
+                    <span class="text-xs text-slate-500">Tab вставляет 4 пробела</span>
+                </div>
+                <iframe class="preview-frame hidden w-full h-[420px] mt-4 rounded-xl border border-slate-600 bg-white"
+                        sandbox="allow-scripts" title="Предпросмотр UZ"></iframe>
+            </div>
+
+            <!-- ═════════ RU ═════════ -->
+            <div class="tab-panel hidden" data-panel="ru" data-editor>
+                <div class="ed-wrap">
+                    <pre class="ed-pre" aria-hidden="true"><code class="ed-code"></code></pre>
+<textarea class="ed-ta" name="selfstudy_html_ru" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="soft">
+{{ selfstudy.html_text_ru|default_if_none:"" }}</textarea>
+                </div>
+                <div class="ed-status text-xs mt-2"></div>
+                <div class="mt-3 flex items-center gap-3">
+                    <button type="button" class="preview-btn inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-eye text-xs"></i> Предпросмотр
+                    </button>
+                    <span class="text-xs text-slate-500">Tab вставляет 4 пробела</span>
+                </div>
+                <iframe class="preview-frame hidden w-full h-[420px] mt-4 rounded-xl border border-slate-600 bg-white"
+                        sandbox="allow-scripts" title="Предпросмотр RU"></iframe>
+            </div>
+
+            <!-- ═════════ EN ═════════ -->
+            <div class="tab-panel hidden" data-panel="en" data-editor>
+                <div class="ed-wrap">
+                    <pre class="ed-pre" aria-hidden="true"><code class="ed-code"></code></pre>
+<textarea class="ed-ta" name="selfstudy_html_en" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="soft">
+{{ selfstudy.html_text_en|default_if_none:"" }}</textarea>
+                </div>
+                <div class="ed-status text-xs mt-2"></div>
+                <div class="mt-3 flex items-center gap-3">
+                    <button type="button" class="preview-btn inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-eye text-xs"></i> Предпросмотр
+                    </button>
+                    <span class="text-xs text-slate-500">Tab вставляет 4 пробела</span>
+                </div>
+                <iframe class="preview-frame hidden w-full h-[420px] mt-4 rounded-xl border border-slate-600 bg-white"
+                        sandbox="allow-scripts" title="Предпросмотр EN"></iframe>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl
+                           font-medium transition-colors inline-flex items-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i>
+                Сохранить
+            </button>
+            <a href="{% url 'dashboard' %}"
+               class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl
+                      transition-colors text-sm">
+                Отмена
+            </a>
+            <span class="text-xs text-slate-500">Предупреждения валидатора не блокируют сохранение.</span>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ═══════════════════════════════════════════════════════════
+       Подсветка (regex). Сначала экранируем &, <, > — затем
+       разбираем уже экранированный текст (&lt; &gt;).
+       Только color, без bold/italic (см. комментарий в CSS).
+    ═══════════════════════════════════════════════════════════ */
+    const TAG_RE = /(&lt;!--[\s\S]*?--&gt;)|(&lt;\/?)([A-Za-z][\w:-]*)((?:[^&]|&(?!gt;))*?)(\/?)(&gt;)/g;
+    const ATTR_RE = /("[^"]*"|'[^']*')|([\w:@.-]+)(?=\s*=)/g;
+
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlight(src) {
+        return escapeHtml(src).replace(TAG_RE, function (m, comment, open, name, attrs, slash, close) {
+            if (comment) return '<span class="tk-cm">' + comment + '</span>';
+            const attrsHl = attrs.replace(ATTR_RE, function (mm, str, aname) {
+                return str
+                    ? '<span class="tk-str">' + str + '</span>'
+                    : '<span class="tk-attr">' + aname + '</span>';
+            });
+            return '<span class="tk-br">' + open + '</span>'
+                 + '<span class="tk-tag">' + name + '</span>'
+                 + attrsHl
+                 + '<span class="tk-br">' + slash + close + '</span>';
+        });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Валидатор: стек тегов + баланс кавычек внутри тегов.
+       Ничего не блокирует — только сообщает.
+    ═══════════════════════════════════════════════════════════ */
+    const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+    const OPTIONAL_CLOSE = new Set(['p', 'li', 'dt', 'dd', 'tr', 'td', 'th', 'thead', 'tbody', 'tfoot', 'option']);
+    const RAW_TEXT = new Set(['script', 'style', 'textarea', 'title']);
+
+    function validate(src) {
+        const errs = [];
+        const stack = [];
+        const n = src.length;
+        const nameRe = /<(\/?)([A-Za-z][\w:-]*)/y;
+        const lineOf = (pos) => src.slice(0, pos).split('\n').length;
+        let i = 0;
+
+        while (i < n) {
+            const lt = src.indexOf('<', i);
+            if (lt === -1) break;
+
+            if (src.startsWith('<!--', lt)) {
+                const e = src.indexOf('-->', lt + 4);
+                if (e === -1) { errs.push('Строка ' + lineOf(lt) + ': незакрытый комментарий <!--'); break; }
+                i = e + 3; continue;
+            }
+            if (src.startsWith('<!', lt) || src.startsWith('<?', lt)) {
+                const e = src.indexOf('>', lt);
+                if (e === -1) { errs.push('Строка ' + lineOf(lt) + ': не закрыта декларация <!…'); break; }
+                i = e + 1; continue;
+            }
+
+            nameRe.lastIndex = lt;
+            const m = nameRe.exec(src);
+            if (!m) { i = lt + 1; continue; }
+
+            const isClose = m[1] === '/';
+            const name = m[2].toLowerCase();
+
+            // Поиск конца тега с учётом кавычек
+            let j = lt + m[0].length;
+            let q = null;
+            for (; j < n; j++) {
+                const c = src[j];
+                if (q) { if (c === q) q = null; }
+                else if (c === '"' || c === "'") q = c;
+                else if (c === '>') break;
+            }
+            if (j >= n) {
+                errs.push('Строка ' + lineOf(lt) + (q
+                    ? ': незакрытая кавычка (' + q + ') в теге <' + name + '>'
+                    : ': тег <' + name + '> не закрыт символом >'));
+                break;
+            }
+            const selfClosing = src[j - 1] === '/';
+            i = j + 1;
+
+            if (isClose) {
+                if (!stack.length) {
+                    errs.push('Строка ' + lineOf(lt) + ': лишний закрывающий </' + name + '>');
+                    continue;
+                }
+                if (stack[stack.length - 1].name === name) { stack.pop(); continue; }
+                let idx = -1;
+                for (let k = stack.length - 1; k >= 0; k--) { if (stack[k].name === name) { idx = k; break; } }
+                if (idx === -1) {
+                    errs.push('Строка ' + lineOf(lt) + ': лишний закрывающий </' + name + '>');
+                    continue;
+                }
+                for (let k = stack.length - 1; k > idx; k--) {
+                    if (!OPTIONAL_CLOSE.has(stack[k].name)) {
+                        errs.push('Строка ' + lineOf(stack[k].pos) + ': тег <' + stack[k].name + '> не закрыт');
+                    }
+                }
+                stack.length = idx;
+                continue;
+            }
+
+            if (VOID.has(name) || selfClosing) continue;
+            stack.push({ name: name, pos: lt });
+
+            if (RAW_TEXT.has(name)) {
+                const lower = src.toLowerCase();
+                const end = lower.indexOf('</' + name, i);
+                if (end === -1) {
+                    errs.push('Строка ' + lineOf(lt) + ': тег <' + name + '> не закрыт');
+                    stack.pop();
+                    break;
+                }
+                i = end; // сам закрывающий тег обработается на следующей итерации
+            }
+        }
+
+        for (let k = 0; k < stack.length; k++) {
+            if (!OPTIONAL_CLOSE.has(stack[k].name)) {
+                errs.push('Строка ' + lineOf(stack[k].pos) + ': тег <' + stack[k].name + '> не закрыт');
+            }
+        }
+        return errs;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Инициализация одного редактора
+    ═══════════════════════════════════════════════════════════ */
+    function initEditor(panel) {
+        const ta = panel.querySelector('.ed-ta');
+        const pre = panel.querySelector('.ed-pre');
+        const code = panel.querySelector('.ed-code');
+        const status = panel.querySelector('.ed-status');
+        const previewBtn = panel.querySelector('.preview-btn');
+        const frame = panel.querySelector('.preview-frame');
+        const lang = panel.getAttribute('data-panel');
+        const dot = document.querySelector('.tab-btn[data-tab="' + lang + '"] .tab-dot');
+
+        // Жёсткая синхронизация И scrollTop, И scrollLeft
+        function syncScroll() {
+            pre.scrollTop = ta.scrollTop;
+            pre.scrollLeft = ta.scrollLeft;
+        }
+
+        function render() {
+            let html = highlight(ta.value);
+            // Последняя пустая строка в pre без символа не рендерится — иначе
+            // высота слоёв расходится и скролл "плывёт" в самом низу.
+            if (ta.value.endsWith('\n')) html += ' ';
+            code.innerHTML = html;
+            syncScroll();
+        }
+
+        let vTimer = null;
+        function runValidation() {
+            const errs = validate(ta.value);
+            if (!ta.value.trim()) {
+                status.textContent = '';
+                status.className = 'ed-status text-xs mt-2';
+                if (dot) dot.classList.add('hidden');
+                return;
+            }
+            if (errs.length === 0) {
+                status.textContent = '✓ Баланс тегов и кавычек в порядке';
+                status.className = 'ed-status text-xs mt-2 text-emerald-400';
+                if (dot) dot.classList.add('hidden');
+            } else {
+                const shown = errs.slice(0, 5).join('\n');
+                const more = errs.length > 5 ? '\n…и ещё ' + (errs.length - 5) : '';
+                status.textContent = shown + more;
+                status.className = 'ed-status text-xs mt-2 text-rose-400 whitespace-pre-line';
+                if (dot) dot.classList.remove('hidden');
+            }
+        }
+
+        ta.addEventListener('input', function () {
+            render();
+            clearTimeout(vTimer);
+            vTimer = setTimeout(runValidation, 200);
+        });
+        ta.addEventListener('scroll', syncScroll, { passive: true });
+
+        // Tab -> 4 пробела в позицию курсора (Shift+Tab не трогаем — выход фокуса с клавиатуры)
+        ta.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                const start = ta.selectionStart;
+                const end = ta.selectionEnd;
+                ta.setRangeText('    ', start, end, 'end');
+                ta.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+
+        // Предпросмотр: sandbox="allow-scripts" БЕЗ allow-same-origin (требование безопасности).
+        // srcdoc задаём через свойство — экранирование кавычек не нужно.
+        previewBtn.addEventListener('click', function () {
+            const raw = ta.value;
+            const hasHtmlTag = /<html[\s>]/i.test(raw);
+            frame.srcdoc = hasHtmlTag
+                ? raw
+                : '<!doctype html><html><head><meta charset="utf-8"></head><body>' + raw + '</body></html>';
+            frame.classList.remove('hidden');
+        });
+
+        window.addEventListener('resize', syncScroll);
+
+        // Для переключения вкладок
+        panel._refresh = function () { render(); };
+
+        render();
+        runValidation();
+    }
+
+    document.querySelectorAll('[data-editor]').forEach(initEditor);
+
+    /* ═══════════════════════════════════════════════════════════
+       Вкладки
+    ═══════════════════════════════════════════════════════════ */
+    const ACTIVE = ['bg-indigo-600', 'text-white', 'shadow'];
+    const IDLE = ['text-slate-400', 'hover:text-white', 'hover:bg-slate-700'];
+
+    function showTab(lang) {
+        document.querySelectorAll('.tab-btn').forEach(function (btn) {
+            const on = btn.getAttribute('data-tab') === lang;
+            ACTIVE.forEach(function (c) { btn.classList.toggle(c, on); });
+            IDLE.forEach(function (c) { btn.classList.toggle(c, !on); });
+        });
+        document.querySelectorAll('.tab-panel').forEach(function (p) {
+            const on = p.getAttribute('data-panel') === lang;
+            p.classList.toggle('hidden', !on);
+            if (on && p._refresh) p._refresh(); // у скрытой панели scrollHeight был 0
+        });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { showTab(btn.getAttribute('data-tab')); });
+    });
+    showTab('uz');
+})();
+</script>
+{% endblock %}
