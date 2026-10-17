@@ -88,7 +88,7 @@ class SelfStudy(models.Model):
 
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 # class SelfImg(models.Model):
 #     img = models.ImageField(upload_to='self_imgs/')

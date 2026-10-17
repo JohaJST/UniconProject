@@ -24,6 +24,8 @@ process_uploaded_image() вызывается ДО transaction.atomic(), а ст
 """
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.db import transaction
@@ -31,6 +33,22 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from core.media_utils import InvalidImageError, process_uploaded_image
 from core.models import Partners
+
+
+_LINK_ERROR = "Ссылка должна начинаться с http:// или https:// и содержать адрес сайта"
+
+
+def is_safe_http_url(value: str) -> bool:
+    """
+    True только для абсолютных http/https-ссылок с непустым хостом.
+    type="url" в браузере пропускает javascript:/data: — значение
+    рендерится в <a href>, поэтому проверка обязана быть серверной.
+    """
+    try:
+        parsed = urlparse((value or "").strip())
+        return parsed.scheme in ("http", "https") and bool(parsed.netloc) and bool(parsed.hostname)
+    except ValueError:
+        return False
 
 
 @login_required(login_url="login")
@@ -72,10 +90,12 @@ def edit_partners(request, pk):
     errors = []
     if not raw_name:
         errors.append("Название обязательно")
-    if not raw_link:
-        errors.append("Ссылка обязательна")
-
-    if errors:
+        if not raw_link:
+            errors.append("Ссылка обязательна")
+        elif not is_safe_http_url(raw_link):
+            errors.append(_LINK_ERROR)
+    
+        if errors:
         return render(request, "pages/dashboard/partners_edit.html", {
             "partner": partner,
             "error": "; ".join(errors),

@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models.fields import DateField
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from core.dashboard.subject_crud import view_subject, edit_subject
 from core.dashboard.potok_crud import view_potok, edit_potok
@@ -16,7 +16,9 @@ from core.dashboard.selfctg_crud import view_selfctg, edit_selfctg
 from core.dashboard.courses_crud import view_courses, edit_courses
 from core.dashboard.teachers_crud import view_teachers, edit_teachers
 from core.dashboard.news_crud import view_news, edit_news
-from core.dashboard.partners_crud import view_partners, edit_partners
+from core.dashboard.partners_crud import (
+    view_partners, edit_partners, is_safe_http_url, _LINK_ERROR,
+)
 
 from core.media_utils import InvalidImageError, process_uploaded_image
 from core.models import (
@@ -350,10 +352,12 @@ def action(request, status, path, pk=None):
                 errors = []
                 if not raw_name:
                     errors.append("Название обязательно")
-                if not raw_link:
-                    errors.append("Ссылка обязательна")
-
-                photo_file, photo_error = _require_photo(files, "partners_photo")
+                    if not raw_link:
+                        errors.append("Ссылка обязательна")
+                    elif not is_safe_http_url(raw_link):
+                        errors.append(_LINK_ERROR)
+    
+                    photo_file, photo_error = _require_photo(files, "partners_photo")
                 if photo_error:
                     errors.append(photo_error)
 
@@ -458,28 +462,28 @@ def action(request, status, path, pk=None):
                     target.delete()
                     return redirect("dlist", tip="selfresult")
         elif path == "courses":
-            obj = Courses.objects.get(id=pk)
+            obj = get_object_or_404(Courses, id=pk)
             photo_name = obj.photo.name if obj.photo else None
             obj.delete()
             if photo_name:
                 default_storage.delete(photo_name)
             return redirect("dlist", tip=path)
         elif path == "teachers":
-            obj = Teachers.objects.get(id=pk)
+            obj = get_object_or_404(Teachers, id=pk)
             photo_name = obj.photo.name if obj.photo else None
             obj.delete()
             if photo_name:
                 default_storage.delete(photo_name)
             return redirect("dlist", tip=path)
         elif path == "news":
-            obj = News.objects.get(id=pk)
+            obj = get_object_or_404(News, id=pk)
             photo_name = obj.photo.name if obj.photo else None
             obj.delete()
             if photo_name:
                 default_storage.delete(photo_name)
             return redirect("dlist", tip=path)
         elif path == "partners":
-            obj = Partners.objects.get(id=pk)
+            obj = get_object_or_404(Partners, id=pk)
             photo_name = obj.photo.name if obj.photo else None
             obj.delete()
             if photo_name:
