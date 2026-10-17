@@ -142,8 +142,17 @@ def edit_news(request, pk):
     except Exception:
         # Транзакция откатилась — но уже записанный на диск новый файл
         # сам по себе не исчезает, подчищаем вручную.
-        if new_photo_file:
-            default_storage.delete(new_photo_file.name)
+        stored_name = new_image_name
+        if (
+            stored_name is None
+            and new_photo_file
+            and news.photo
+            and getattr(news.photo, "_committed", False)
+            and news.photo.name != old_photo_name
+        ):
+            stored_name = news.photo.name
+        if stored_name:
+            default_storage.delete(stored_name)
 
         return render(request, "pages/dashboard/news_edit.html", {
             "news": news,

@@ -120,8 +120,17 @@ def edit_teachers(request, pk):
             if new_photo_file:
                 new_image_name = teacher.photo.name
     except Exception:
-        if new_photo_file:
-            default_storage.delete(new_photo_file.name)
+        stored_name = new_image_name
+        if (
+            stored_name is None
+            and new_photo_file
+            and teacher.photo
+            and getattr(teacher.photo, "_committed", False)
+            and teacher.photo.name != old_photo_name
+        ):
+            stored_name = teacher.photo.name
+        if stored_name:
+            default_storage.delete(stored_name)
 
         return render(request, "pages/dashboard/teachers_edit.html", {
             "teacher": teacher,

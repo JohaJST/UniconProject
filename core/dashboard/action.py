@@ -170,16 +170,29 @@ def action(request, status, path, pk=None):
                 desc_ru = (post.get("courses_desc_ru") or "").strip() or raw_desc
                 desc_en = (post.get("courses_desc_en") or "").strip() or raw_desc
 
+                course_obj = None
+                new_image_name = None
                 try:
                     with transaction.atomic():
-                        Courses.objects.create(
+                        course_obj = Courses(
                             title_uz=title_uz, title_ru=title_ru, title_en=title_en,
                             name_uz=name_uz, name_ru=name_ru, name_en=name_en,
                             desc_uz=desc_uz, desc_ru=desc_ru, desc_en=desc_en,
-                            photo=photo_file,
                         )
+                        course_obj.photo = photo_file
+                        course_obj.save()
+                        new_image_name = course_obj.photo.name
                 except Exception:
-                    default_storage.delete(photo_file.name)
+                    stored_name = new_image_name
+                    if (
+                        stored_name is None
+                        and course_obj is not None
+                        and course_obj.photo
+                        and getattr(course_obj.photo, "_committed", False)
+                    ):
+                        stored_name = course_obj.photo.name
+                    if stored_name:
+                        default_storage.delete(stored_name)
                     return render(request, "pages/dashboard/courses_new.html", {
                         "error": "Не удалось создать курс. Попробуйте ещё раз.",
                         "post_data": post,
@@ -219,18 +232,31 @@ def action(request, status, path, pk=None):
                 position_ru = (post.get("teacher_position_ru") or "").strip() or raw_position
                 position_en = (post.get("teacher_position_en") or "").strip() or raw_position
 
+                teacher_obj = None
+                new_image_name = None
                 try:
                     with transaction.atomic():
-                        Teachers.objects.create(
+                        teacher_obj = Teachers(
                             fio=raw_fio,
                             phone=raw_phone,
                             position_uz=position_uz,
                             position_ru=position_ru,
                             position_en=position_en,
-                            photo=photo_file,
                         )
+                        teacher_obj.photo = photo_file
+                        teacher_obj.save()
+                        new_image_name = teacher_obj.photo.name
                 except Exception:
-                    default_storage.delete(photo_file.name)
+                    stored_name = new_image_name
+                    if (
+                        stored_name is None
+                        and teacher_obj is not None
+                        and teacher_obj.photo
+                        and getattr(teacher_obj.photo, "_committed", False)
+                    ):
+                        stored_name = teacher_obj.photo.name
+                    if stored_name:
+                        default_storage.delete(stored_name)
                     return render(request, "pages/dashboard/teachers_new.html", {
                         "error": "Не удалось добавить преподавателя. Попробуйте ещё раз.",
                         "post_data": post,
@@ -282,16 +308,29 @@ def action(request, status, path, pk=None):
                 desc_ru = (post.get("news_desc_ru") or "").strip() or raw_desc
                 desc_en = (post.get("news_desc_en") or "").strip() or raw_desc
 
+                news_obj = None
+                new_image_name = None
                 try:
                     with transaction.atomic():
-                        News.objects.create(
+                        news_obj = News(
                             title_uz=title_uz, title_ru=title_ru, title_en=title_en,
                             desc_uz=desc_uz, desc_ru=desc_ru, desc_en=desc_en,
                             date=news_date,
-                            photo=photo_file,
                         )
+                        news_obj.photo = photo_file
+                        news_obj.save()
+                        new_image_name = news_obj.photo.name
                 except Exception:
-                    default_storage.delete(photo_file.name)
+                    stored_name = new_image_name
+                    if (
+                        stored_name is None
+                        and news_obj is not None
+                        and news_obj.photo
+                        and getattr(news_obj.photo, "_committed", False)
+                    ):
+                        stored_name = news_obj.photo.name
+                    if stored_name:
+                        default_storage.delete(stored_name)
                     return render(request, "pages/dashboard/news_new.html", {
                         "error": "Не удалось добавить новость. Попробуйте ещё раз.",
                         "post_data": post,
@@ -324,15 +363,28 @@ def action(request, status, path, pk=None):
                         "post_data": post,
                     }, status=400)
 
+                partner_obj = None
+                new_image_name = None
                 try:
                     with transaction.atomic():
-                        Partners.objects.create(
+                        partner_obj = Partners(
                             name=raw_name,
                             link=raw_link,
-                            photo=photo_file,
                         )
+                        partner_obj.photo = photo_file
+                        partner_obj.save()
+                        new_image_name = partner_obj.photo.name
                 except Exception:
-                    default_storage.delete(photo_file.name)
+                    stored_name = new_image_name
+                    if (
+                        stored_name is None
+                        and partner_obj is not None
+                        and partner_obj.photo
+                        and getattr(partner_obj.photo, "_committed", False)
+                    ):
+                        stored_name = partner_obj.photo.name
+                    if stored_name:
+                        default_storage.delete(stored_name)
                     return render(request, "pages/dashboard/partners_new.html", {
                         "error": "Не удалось добавить партнёра. Попробуйте ещё раз.",
                         "post_data": post,

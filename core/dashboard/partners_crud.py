@@ -111,8 +111,17 @@ def edit_partners(request, pk):
             if new_photo_file:
                 new_image_name = partner.photo.name
     except Exception:
-        if new_photo_file:
-            default_storage.delete(new_photo_file.name)
+        stored_name = new_image_name
+        if (
+            stored_name is None
+            and new_photo_file
+            and partner.photo
+            and getattr(partner.photo, "_committed", False)
+            and partner.photo.name != old_photo_name
+        ):
+            stored_name = partner.photo.name
+        if stored_name:
+            default_storage.delete(stored_name)
 
         return render(request, "pages/dashboard/partners_edit.html", {
             "partner": partner,

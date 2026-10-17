@@ -131,8 +131,17 @@ def edit_courses(request, pk):
     except Exception:
         # Транзакция откатилась — но уже записанный на диск новый файл
         # сам по себе не исчезает, подчищаем вручную.
-        if new_photo_file:
-            default_storage.delete(new_photo_file.name)
+        stored_name = new_image_name
+        if (
+            stored_name is None
+            and new_photo_file
+            and course.photo
+            and getattr(course.photo, "_committed", False)
+            and course.photo.name != old_photo_name
+        ):
+            stored_name = course.photo.name
+        if stored_name:
+            default_storage.delete(stored_name)
 
         return render(request, "pages/dashboard/courses_edit.html", {
             "course": course,
