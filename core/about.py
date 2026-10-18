@@ -11,7 +11,7 @@ def about(request):
     # singleton-паттерн: одна запись About описывает всю страницу "О нас".
     # first() безопасно вернёт None, если запись ещё не создана в админке —
     # шаблон обязан обрабатывать about is None без 500 (см. templates/about.html).
-    about_obj = About.objects.first()
+    about_obj = About.objects.filter(id=1).first()
 
     courses = Courses.objects.all()
     teachers = Teachers.objects.all()
@@ -36,7 +36,8 @@ def about(request):
 
 
 def self(request):
-    return render(request, "module 3 test/self.html")
+    selfstudy = SelfStudy.objects.filter(id=1).first()
+    return render(request, "module 3 test/self.html", {"selfstudy": selfstudy})
 
 
 def self_check(request):
