@@ -215,7 +215,7 @@ class SelfCheckTests(TestCase):
         qn, an = q.img.name, a.img.name
 
         with patch("core.dashboard.action.default_storage.delete") as m:
-            resp = self.client.get(reverse("action", kwargs={
+            resp = self.client.post(reverse("action", kwargs={
                 "status": "delete", "path": "selfquestion", "pk": q.pk}))
 
         self.assertRedirects(resp, reverse("dlist", kwargs={"tip": "selfquestion"}))

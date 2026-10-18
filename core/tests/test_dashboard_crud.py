@@ -287,7 +287,7 @@ class DeleteMissingObjectTests(_AdminClientMixin, TestCase):
     def test_delete_nonexistent_returns_404(self):
         for path in ("courses", "teachers", "news", "partners"):
             url = reverse("action", kwargs={"status": "delete", "path": path, "pk": 9999})
-            resp = self.client.get(url)
+            resp = self.client.post(url)
             self.assertEqual(resp.status_code, 404, path)
 
     def test_delete_existing_partner_still_redirects(self):
@@ -296,7 +296,7 @@ class DeleteMissingObjectTests(_AdminClientMixin, TestCase):
             photo=process_uploaded_image(self._upload()),
         )
         url = reverse("action", kwargs={"status": "delete", "path": "partners", "pk": partner.pk})
-        resp = self.client.get(url)
+        resp = self.client.post(url)
         self.assertEqual(resp.status_code, 302)
         self.assertFalse(Partners.objects.filter(pk=partner.pk).exists())
         self.assertEqual(_list_files(self.media_root), set())

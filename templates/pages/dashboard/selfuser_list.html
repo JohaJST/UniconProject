@@ -209,12 +209,7 @@
                                       rounded-lg transition-colors inline-flex" title="Посмотреть">
                                 <i class="fa-solid fa-eye text-xs"></i>
                             </a>
-                            <a href="{% url 'action' status='delete' path='selfuser' pk=i.id %}"
-                               onclick="return confirm('Удалить пользователя и всю историю его попыток?');"
-                               class="px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10
-                                      rounded-lg transition-colors inline-flex" title="Удалить">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </a>
+                            {% include 'pages/dashboard/_delete_form.html' with path='selfuser' pk=i.id confirm='Удалить пользователя и всю историю его попыток?' classes='px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors inline-flex' %}
                         </td>
                     </tr>
                     {% empty %}

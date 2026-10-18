@@ -1,0 +1,9 @@
+<form method="post"
+      action="{% url 'action' status='delete' path=path pk=pk %}"
+      style="display:inline"
+      {% if confirm %}onsubmit="return confirm('{{ confirm|escapejs }}');"{% endif %}>
+    {% csrf_token %}
+    <button type="submit" class="{{ classes }}" title="Удалить">
+        <i class="fa-solid fa-trash text-xs"></i>
+    </button>
+</form>

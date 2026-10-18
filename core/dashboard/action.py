@@ -397,6 +397,14 @@ def action(request, status, path, pk=None):
                 return redirect("dlist", tip=path)
         return redirect("dlist", tip=path)
     elif status == "delete":
+        # Удаление — только POST: CSRF-токен проверяет CsrfViewMiddleware.
+        # GET (в т.ч. <img src=...> со стороннего сайта) ничего не удаляет.
+        if request.method != "POST":
+            # selfuser/selfresult отдаёт один и тот же список по tip="selfresult";
+            # dlist(tip="selfuser") упал бы с KeyError в _DISPLAY_NAMES.
+            fallback_tip = "selfresult" if path in ("selfuser", "selfresult") else path
+            return redirect("dlist", tip=fallback_tip)
+
         if path == "subject":
             Subject.objects.get(id=pk).delete()
             return redirect("dlist", tip=path)
