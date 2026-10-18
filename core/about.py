@@ -5,8 +5,8 @@ from django.shortcuts import render
 
 from core.models import About, Courses, News, Partners, Teachers, Test, SelfQuestion
 import random
-from core.models.self import SelfQuestion, SelfCtg, SelfResult, SelfUser
-
+from core.models.self import SelfQuestion, SelfCtg, SelfResult, SelfUser, SelfStudy
+from django.template import Template, RequestContext
 def about(request):
     # singleton-паттерн: одна запись About описывает всю страницу "О нас".
     # first() безопасно вернёт None, если запись ещё не создана в админке —
@@ -37,8 +37,16 @@ def about(request):
 
 def self(request):
     selfstudy = SelfStudy.objects.filter(id=1).first()
-    return render(request, "module 3 test/self.html", {"selfstudy": selfstudy})
+    rendered_html = ""
+    
+    if selfstudy and selfstudy.html_text:
+        template = Template(selfstudy.html_text)
+        rendered_html = template.render(RequestContext(request))
 
+    return render(request, "module 3 test/self.html", {
+        "selfstudy": selfstudy,
+        "rendered_html": rendered_html,
+    })
 
 def self_check(request):
     """
