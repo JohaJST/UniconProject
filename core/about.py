@@ -1,13 +1,31 @@
+import random
 
 from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.template import RequestContext, Template
+from django.utils import translation
 
-from core.models import About, Courses, News, Partners, Teachers, Test, SelfQuestion
-import random
-from core.models.self import SelfQuestion, SelfCtg, SelfResult, SelfUser, SelfStudy
-from django.template import Template, RequestContext
+from core.ai_presenter import VALID_LANGS, get_or_build_presentation
+from core.models import About, Courses, News, Partners, SelfQuestion, Teachers, Test
+from core.models.self import SelfCtg, SelfQuestion, SelfResult, SelfStudy, SelfUser
+
+
 def about(request):
+    if request.GET.get("ai_presenter") == "1":
+        raw_lang = request.GET.get("lang") or translation.get_language() or "uz"
+        lang = str(raw_lang).strip().lower()[:2]
+        if lang not in VALID_LANGS:
+            lang = "uz"
+
+        manifest = get_or_build_presentation(lang=lang)
+        return JsonResponse({
+            "ok": True,
+            "lang": lang,
+            "hash": manifest["hash"],
+            "scenes": manifest["scenes"],
+        })
+
     # singleton-паттерн: одна запись About описывает всю страницу "О нас".
     # first() безопасно вернёт None, если запись ещё не создана в админке —
     # шаблон обязан обрабатывать about is None без 500 (см. templates/about.html).
@@ -38,7 +56,7 @@ def about(request):
 def self(request):
     selfstudy = SelfStudy.objects.filter(id=1).first()
     rendered_html = ""
-    
+
     if selfstudy and selfstudy.html_text:
         template = Template(selfstudy.html_text)
         rendered_html = template.render(RequestContext(request))
@@ -47,6 +65,7 @@ def self(request):
         "selfstudy": selfstudy,
         "rendered_html": rendered_html,
     })
+
 
 def self_check(request):
     """
@@ -71,17 +90,17 @@ def self_check(request):
         print(1)
         data = request.POST
         print(data)
-        user, flag = SelfUser.objects.get_or_create(first_name=data['first_name'], last_name=data['last_name'])  
+        user, flag = SelfUser.objects.get_or_create(first_name=data['first_name'], last_name=data['last_name'])
         result = SelfResult.objects.create(
-            user=user, ctg_id=int(data['ctg']), 
+            user=user, ctg_id=int(data['ctg']),
             score=int(data['score']), foiz=data['percentage'],
             totalQuestions=int(data['total']),
         )
-        
+
         print(result)
         # print(user)
         return JsonResponse({'message': 'success'})
-        
+
     ctg_id = request.GET.get('ctg')
     if ctg_id is not None:
         return _self_check_questions_json(ctg_id)
