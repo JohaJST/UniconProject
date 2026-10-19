@@ -346,43 +346,286 @@ html { scroll-behavior: smooth; }
 
 
 /* ============================================================
-   PARTNERS — Marquee + mask-image (туннель)
+/* ============================================================
+   PARTNERS — Bounded Spotlight Marquee + Hover Glass Effect
    ============================================================ */
-.partners { padding: 6rem 0 4rem; background: var(--milk); position: relative; z-index: 1; }
+.partners {
+    padding: 6rem 0 4.5rem;
+    background: var(--milk);
+    position: relative;
+    z-index: 1;
+}
+
+.partners-count {
+    display: inline-block;
+    margin-top: 1.1rem;
+    padding: .35rem .95rem;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    color: var(--navy);
+    background: var(--white);
+    border: 1px solid rgba(15, 23, 42, .08);
+    border-radius: 999px;
+    box-shadow: var(--sh-sm);
+}
+
+/* Границы секции: фиксированная максимальная ширина внутри .container */
+.partners-stage {
+    position: relative;
+    max-width: 1080px;
+    margin: 0 auto;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, .35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 23, 42, .06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 10px 30px rgba(15, 23, 42, .03);
+    padding: .5rem 0;
+    overflow: hidden;
+}
+
+/* Декоративные угловые акценты границ */
+.partners-stage::before,
+.partners-stage::after {
+    content: "";
+    position: absolute;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    pointer-events: none;
+    z-index: 2;
+}
+.partners-stage::before {
+    top: 0;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, .25), rgba(234, 179, 8, .3), transparent);
+}
+.partners-stage::after {
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(239, 68, 68, .2), rgba(59, 130, 246, .2), transparent);
+}
 
 .marquee-wrap {
-    max-width: 100vw; overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    padding: 1.2rem 0;
+    --m-gap: 2rem;
+    width: 100%;
+    overflow: hidden;
+    padding: 1.4rem 0;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
 }
-/* gap заменён на margin-right у карточек, иначе при -50% на стыке был маленький "скачок" */
-.marquee-track { display: flex; gap: 0; width: max-content; animation: marquee 30s linear infinite; }
-.marquee-track:hover { animation-play-state: paused; }
-@keyframes marquee { 0%{transform:translateX(0)}100%{transform:translateX(-50%)} }
+
+.marquee-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: marquee 28s linear infinite;
+}
+
+.marquee-wrap:hover .marquee-track,
+.marquee-wrap:focus-within .marquee-track {
+    animation-play-state: paused;
+}
+
+@keyframes marquee {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+}
+
+.marquee-group {
+    list-style: none;
+    margin: 0;
+    padding: 0 calc(var(--m-gap) / 2);
+    display: flex;
+    align-items: center;
+    gap: var(--m-gap);
+}
+
+.marquee-group > li {
+    flex: 0 0 auto;
+    display: flex;
+}
+
+/* Эффект Spotlight: при наведении на полосу неактивные партнёры мягко приглушаются */
+.marquee-wrap:hover .marquee-item:not(:hover) {
+    opacity: .55;
+    transform: scale(.95);
+}
 
 .marquee-item {
-    flex-shrink: 0; width: 170px; margin-right: 2.5rem;
-    display: flex; flex-direction: column; align-items: center; gap: .7rem;
-    text-decoration: none; color: var(--muted);
-    transition: transform var(--dur) var(--ease), color var(--dur) var(--ease);
+    display: block;
+    text-decoration: none;
+    color: var(--navy);
+    outline: none;
+    transition: transform .4s var(--ease), opacity .4s var(--ease);
 }
-.marquee-item__logo {
-    width: 170px; height: 110px; padding: 14px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--white); border: 1px solid rgba(0,0,0,.06);
-    border-radius: var(--r-lg); box-shadow: var(--sh-sm);
-    transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
-}
-.marquee-item__logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.marquee-item__name {
-    max-width: 100%; text-align: center; font-size: .9rem; font-weight: 700;
-    line-height: 1.3; letter-spacing: .02em;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.marquee-item:hover { transform: translateY(-4px); color: var(--red-500); }
-.marquee-item:hover .marquee-item__logo { border-color: rgba(239,68,68,.2); box-shadow: var(--sh-glow-red), var(--sh-lg); }
 
+/* Карточка партнёра: БЕЗ фона и рамки по умолчанию */
+.marquee-item__card {
+    position: relative;
+    width: 190px;
+    padding: 1.1rem 1.2rem .95rem;
+    border-radius: var(--r-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .7rem;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    overflow: hidden;
+    transition:
+        background .4s var(--ease),
+        border-color .4s var(--ease),
+        box-shadow .4s var(--ease),
+        transform .4s var(--ease);
+}
+
+/* Диагональный световой блик при наведении */
+.marquee-item__card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 65%;
+    height: 100%;
+    background: linear-gradient(
+        115deg,
+        transparent 0%,
+        rgba(255, 255, 255, .75) 50%,
+        transparent 100%
+    );
+    transform: skewX(-20deg);
+    transition: left .65s var(--ease);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Иконка перехода по ссылке (появляется только при hover) */
+.marquee-item__ext {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--red-50);
+    color: var(--red-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translate(-6px, 6px) scale(.7);
+    transition: all .35s var(--ease);
+    z-index: 3;
+}
+.marquee-item__ext svg {
+    width: 13px;
+    height: 13px;
+}
+
+/* Контейнер логотипа — увеличенный размер, без серого фильтра */
+.marquee-item__logo {
+    width: 140px;
+    height: 92px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+}
+
+.marquee-item__logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 4px 10px rgba(15, 23, 42, .06));
+    transition: transform .45s var(--ease), filter .45s var(--ease);
+}
+
+.marquee-item__fallback {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, .25);
+}
+
+/* Название компании с анимированным индикатором снизу */
+.marquee-item__name {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    text-align: center;
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--slate);
+    line-height: 1.3;
+    padding: .2rem .5rem;
+    border-radius: 50px;
+    transition: color .35s var(--ease), background .35s var(--ease);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── HOVER / FOCUS-VISIBLE: появляется фоновое выделение и анимация ── */
+.marquee-item:hover,
+.marquee-item:focus-visible {
+    transform: translateY(-6px);
+}
+
+.marquee-item:hover .marquee-item__card,
+.marquee-item:focus-visible .marquee-item__card {
+    background: var(--white);
+    border-color: rgba(239, 68, 68, .25);
+    box-shadow:
+        var(--sh-glow-red),
+        0 18px 40px -10px rgba(15, 23, 42, .12);
+}
+
+.marquee-item:hover .marquee-item__card::before {
+    left: 140%;
+}
+
+.marquee-item:hover .marquee-item__ext,
+.marquee-item:focus-visible .marquee-item__ext {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+}
+
+.marquee-item:hover .marquee-item__logo img,
+.marquee-item:focus-visible .marquee-item__logo img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 8px 16px rgba(15, 23, 42, .12));
+}
+
+.marquee-item:hover .marquee-item__name,
+.marquee-item:focus-visible .marquee-item__name {
+    color: var(--navy);
+    background: rgba(234, 179, 8, .14);
+}
+
+@media (max-width: 768px) {
+    .partners-stage { border-radius: 20px; }
+    .marquee-wrap { --m-gap: 1.1rem; padding: 1rem 0; }
+    .marquee-item__card { width: 155px; padding: .85rem .9rem; }
+    .marquee-item__logo { width: 115px; height: 74px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marquee-wrap { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+    .marquee-track { animation: none; }
+    .marquee-group[aria-hidden="true"] { display: none; }
+}
 
 /* ============================================================
    FOOTER
@@ -480,5 +723,4 @@ html { scroll-behavior: smooth; }
     .carousel__arr { width: 36px; height: 36px; }
     .goal-panel { padding: 1.4rem; }
     .goal-tags { flex-direction: column; }
-    .marquee-item { font-size: .95rem; }
 }
