@@ -2,6 +2,7 @@
    about.css — Premium UI «Kriptologiya maktabi»
    Дизайн-система: молочный фон, glassmorphism, золото+красный
    Исправлен hero background — canvas + aurora + scroll indicator
+   + Интерактивный голосовой гид AI Presenter
    ============================================================ */
 
 /* ── Переменные ── */
@@ -228,6 +229,7 @@ html { scroll-behavior: smooth; }
 
 /* ============================================================
    COURSES — 3D + z-index fix, без overflow:hidden на гриде
+   + Программное раскрытие .c-card.ai-card-open для AI Presenter
    ============================================================ */
 .courses { padding: 6rem 0; background: var(--white); position: relative; z-index: 10; }
 .courses-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
@@ -239,7 +241,16 @@ html { scroll-behavior: smooth; }
     transform-style: preserve-3d; perspective: 800px; cursor: pointer;
     box-shadow: var(--sh-sm);
 }
-.c-card:hover { z-index: 999; box-shadow: var(--sh-glow-red), var(--sh-xl); border-color: rgba(239,68,68,.15); }
+.c-card:hover,
+.c-card.ai-card-open {
+    z-index: 999;
+    box-shadow: var(--sh-glow-red), var(--sh-xl);
+    border-color: rgba(239,68,68,.15);
+    transition: transform .5s var(--ease), box-shadow var(--dur) var(--ease), z-index 0s step-start;
+}
+.c-card.ai-card-open {
+    transform: translateY(-5px);
+}
 
 .c-card__img {
     width: 100%; height: 155px; overflow: hidden;
@@ -247,7 +258,8 @@ html { scroll-behavior: smooth; }
     background: linear-gradient(135deg,var(--blue-50),var(--blue-100));
 }
 .c-card__img img { width: 100%; height: 100%; object-fit: cover; transition: transform .55s var(--ease); }
-.c-card:hover .c-card__img img { transform: scale(1.07); }
+.c-card:hover .c-card__img img,
+.c-card.ai-card-open .c-card__img img { transform: scale(1.07); }
 .c-card__ph { width: 100%; height: 100%; display: none; align-items: center; justify-content: center; color: var(--blue-300); }
 .c-card__ph svg { width: 36px; height: 36px; }
 
@@ -271,7 +283,13 @@ html { scroll-behavior: smooth; }
 }
 .c-card__extra { left: calc(100% + 16px); }
 .c-card:nth-child(3n) .c-card__extra { left: auto; right: calc(100% + 16px); }
-.c-card:hover .c-card__extra { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
+.c-card:hover .c-card__extra,
+.c-card.ai-card-open .c-card__extra {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
 .c-card__extra h4 { font-size: .85rem; font-weight: 700; color: var(--navy); margin-bottom: .55rem; padding-bottom: .4rem; border-bottom: 1px solid rgba(239,68,68,.15); }
 .c-card__extra p { font-size: .78rem; color: var(--slate); line-height: 1.65; }
 .c-card__extra::-webkit-scrollbar { 
@@ -314,7 +332,7 @@ html { scroll-behavior: smooth; }
     background: linear-gradient(135deg,var(--navy),var(--blue-600));
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 12px rgba(15,23,42,.2);
-    overflow: hidden; /* ДОБАВЛЕНО: иначе фото преподавателя вылезает за круг */
+    overflow: hidden;
 }
 .t-card__ava span { font-size: 1.15rem; font-weight: 800; color: #fff; }
 .t-card h4 { font-size: .9rem; font-weight: 700; color: var(--navy); margin-bottom: .15rem; }
@@ -346,8 +364,8 @@ html { scroll-behavior: smooth; }
 
 
 /* ============================================================
-/* ============================================================
    PARTNERS — Bounded Spotlight Marquee + Hover Glass Effect
+   + Программный фокус .marquee-item.ai-partner-focus
    ============================================================ */
 .partners {
     padding: 6rem 0 4.5rem;
@@ -422,7 +440,8 @@ html { scroll-behavior: smooth; }
 }
 
 .marquee-wrap:hover .marquee-track,
-.marquee-wrap:focus-within .marquee-track {
+.marquee-wrap:focus-within .marquee-track,
+.marquee-wrap.ai-marquee-paused .marquee-track {
     animation-play-state: paused;
 }
 
@@ -445,8 +464,9 @@ html { scroll-behavior: smooth; }
     display: flex;
 }
 
-/* Эффект Spotlight: при наведении на полосу неактивные партнёры мягко приглушаются */
-.marquee-wrap:hover .marquee-item:not(:hover) {
+/* Эффект Spotlight: при наведении на полосу или программном фокусе неактивные партнёры мягко приглушаются */
+.marquee-wrap:hover .marquee-item:not(:hover),
+.marquee-wrap:has(.ai-partner-focus) .marquee-item:not(.ai-partner-focus) {
     opacity: .55;
     transform: scale(.95);
 }
@@ -480,7 +500,7 @@ html { scroll-behavior: smooth; }
         transform .4s var(--ease);
 }
 
-/* Диагональный световой блик при наведении */
+/* Диагональный световой блик при наведении / фокусе презентатора */
 .marquee-item__card::before {
     content: "";
     position: absolute;
@@ -500,7 +520,7 @@ html { scroll-behavior: smooth; }
     z-index: 2;
 }
 
-/* Иконка перехода по ссылке (появляется только при hover) */
+/* Иконка перехода по ссылке (появляется при hover / .ai-partner-focus) */
 .marquee-item__ext {
     position: absolute;
     top: 10px;
@@ -577,14 +597,17 @@ html { scroll-behavior: smooth; }
     overflow: hidden;
 }
 
-/* ── HOVER / FOCUS-VISIBLE: появляется фоновое выделение и анимация ── */
+/* ── HOVER / FOCUS-VISIBLE / .ai-partner-focus: фоновое выделение и блик ── */
 .marquee-item:hover,
-.marquee-item:focus-visible {
+.marquee-item:focus-visible,
+.marquee-item.ai-partner-focus {
     transform: translateY(-6px);
+    opacity: 1 !important;
 }
 
 .marquee-item:hover .marquee-item__card,
-.marquee-item:focus-visible .marquee-item__card {
+.marquee-item:focus-visible .marquee-item__card,
+.marquee-item.ai-partner-focus .marquee-item__card {
     background: var(--white);
     border-color: rgba(239, 68, 68, .25);
     box-shadow:
@@ -592,24 +615,28 @@ html { scroll-behavior: smooth; }
         0 18px 40px -10px rgba(15, 23, 42, .12);
 }
 
-.marquee-item:hover .marquee-item__card::before {
+.marquee-item:hover .marquee-item__card::before,
+.marquee-item.ai-partner-focus .marquee-item__card::before {
     left: 140%;
 }
 
 .marquee-item:hover .marquee-item__ext,
-.marquee-item:focus-visible .marquee-item__ext {
+.marquee-item:focus-visible .marquee-item__ext,
+.marquee-item.ai-partner-focus .marquee-item__ext {
     opacity: 1;
     transform: translate(0, 0) scale(1);
 }
 
 .marquee-item:hover .marquee-item__logo img,
-.marquee-item:focus-visible .marquee-item__logo img {
+.marquee-item:focus-visible .marquee-item__logo img,
+.marquee-item.ai-partner-focus .marquee-item__logo img {
     transform: scale(1.1);
     filter: drop-shadow(0 8px 16px rgba(15, 23, 42, .12));
 }
 
 .marquee-item:hover .marquee-item__name,
-.marquee-item:focus-visible .marquee-item__name {
+.marquee-item:focus-visible .marquee-item__name,
+.marquee-item.ai-partner-focus .marquee-item__name {
     color: var(--navy);
     background: rgba(234, 179, 8, .14);
 }
@@ -680,6 +707,487 @@ html { scroll-behavior: smooth; }
 
 
 /* ============================================================
+   AI PRESENTER — SPOTLIGHT & ПРОГРАММНЫЙ ФОКУС СЕКЦИЙ
+   ============================================================ */
+section {
+    transition: opacity 0.5s var(--ease), filter 0.5s var(--ease);
+}
+
+body.ai-tour-active section:not(.ai-sec-active) {
+    opacity: 0.45;
+    filter: saturate(0.7);
+    transition: opacity 0.5s, filter 0.5s;
+}
+
+body.ai-tour-active section.ai-sec-active {
+    opacity: 1;
+    filter: saturate(1);
+}
+
+/* Программная подсветка целевых элементов внутри активной секции */
+.ai-highlight {
+    opacity: 1 !important;
+    border-color: rgba(96, 165, 250, 0.55) !important;
+    box-shadow:
+        0 0 0 2px rgba(234, 179, 8, 0.35),
+        0 14px 34px -6px rgba(37, 99, 235, 0.22) !important;
+    transform: translateY(-4px) !important;
+    transition:
+        transform 0.4s var(--ease),
+        box-shadow 0.4s var(--ease),
+        border-color 0.4s var(--ease) !important;
+    position: relative;
+    z-index: 12;
+}
+
+
+/* ============================================================
+   AI PRESENTER — ВИДЖЕТ (.ai-fab и .ai-dock)
+   Стиль тёмного кибер-стекла
+   ============================================================ */
+#aiPresenterRoot {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1050;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+/* ── Плавающая кнопка запуска (.ai-fab) ── */
+.ai-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1050;
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .78rem 1.35rem .78rem 1.05rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    color: var(--white);
+    font-size: .86rem;
+    font-weight: 700;
+    letter-spacing: .01em;
+    cursor: pointer;
+    box-shadow:
+        0 14px 36px rgba(15, 23, 42, 0.42),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 0 24px rgba(37, 99, 235, 0.25);
+    transition:
+        transform var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease),
+        border-color var(--dur) var(--ease),
+        opacity var(--dur) var(--ease);
+}
+
+.ai-fab:hover {
+    transform: translateY(-3px) scale(1.02);
+    border-color: rgba(234, 179, 8, 0.55);
+    box-shadow:
+        0 18px 42px rgba(15, 23, 42, 0.52),
+        0 0 28px rgba(59, 130, 246, 0.4),
+        0 0 0 1px rgba(250, 204, 21, 0.25);
+}
+
+.ai-fab:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+.ai-fab[hidden] {
+    display: none !important;
+}
+
+/* Пульсирующий индикатор на кнопке */
+.ai-fab__pulse {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--gold-400);
+    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7);
+    animation: aiFabPulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes aiFabPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.65);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 8px rgba(250, 204, 21, 0);
+    }
+}
+
+.ai-fab__ico {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--blue-400);
+    flex-shrink: 0;
+    position: relative;
+}
+
+.ai-fab__ico svg {
+    width: 20px;
+    height: 20px;
+    transition: transform var(--dur) var(--ease), opacity .25s var(--ease);
+}
+
+.ai-fab:hover .ai-fab__svg-wave {
+    color: var(--gold-400);
+    transform: scale(1.1);
+}
+
+.ai-fab__svg-spin {
+    position: absolute;
+    inset: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ai-fab__txt {
+    white-space: nowrap;
+    background: linear-gradient(135deg, #ffffff 0%, #dbeafe 65%, #facc15 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Состояние загрузки (.ai-fab--loading), когда сервер впервые генерирует звук */
+.ai-fab--loading {
+    pointer-events: none;
+    border-color: rgba(234, 179, 8, 0.55);
+    box-shadow:
+        0 14px 36px rgba(15, 23, 42, 0.5),
+        0 0 30px rgba(234, 179, 8, 0.28);
+}
+
+.ai-fab--loading .ai-fab__pulse {
+    background: var(--blue-400);
+    animation: aiFabPulse 1s ease-in-out infinite;
+}
+
+.ai-fab--loading .ai-fab__svg-wave {
+    opacity: 0;
+    transform: scale(0.6);
+}
+
+.ai-fab--loading .ai-fab__svg-spin {
+    opacity: 1;
+    color: var(--gold-400);
+    animation: aiSpin 0.9s linear infinite;
+}
+
+@keyframes aiSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ── Раскрывающийся стеклянный мини-плеер (.ai-dock) ── */
+.ai-dock {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1050;
+    pointer-events: auto;
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    border-radius: var(--r-xl);
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    color: var(--white);
+    box-shadow:
+        0 24px 60px rgba(7, 11, 20, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 0 32px rgba(37, 99, 235, 0.18);
+    overflow: hidden;
+    transform-origin: bottom right;
+    transition:
+        opacity 0.35s var(--ease),
+        transform 0.35s var(--ease),
+        border-color 0.35s var(--ease);
+}
+
+.ai-dock[hidden] {
+    display: none !important;
+}
+
+.ai-dock.ai-dock--closing {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+    pointer-events: none;
+}
+
+/* Линия прогресса сверху плеера */
+.ai-dock__progress {
+    width: 100%;
+    height: 3px;
+    background: rgba(148, 163, 184, 0.15);
+    overflow: hidden;
+}
+
+.ai-dock__progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-500), #22d3ee, var(--gold-400));
+    transition: width 0.35s var(--ease);
+}
+
+/* Шапка плеера */
+.ai-dock__hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .9rem 1.15rem .7rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.ai-dock__status {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    flex-shrink: 0;
+}
+
+.ai-dock__state {
+    font-size: .7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--blue-400);
+}
+
+/* 5-полосный эквалайзер (.ai-eq и .ai-eq--playing) */
+.ai-eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2.5px;
+    height: 15px;
+    padding: 1px 0;
+}
+
+.ai-eq span {
+    display: block;
+    width: 3px;
+    height: 4px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--gold-400), var(--blue-400));
+    transition: height 0.2s ease;
+}
+
+.ai-eq--playing span:nth-child(1) { animation: aiEqBar 0.75s ease-in-out infinite 0.0s; }
+.ai-eq--playing span:nth-child(2) { animation: aiEqBar 0.65s ease-in-out infinite 0.15s; }
+.ai-eq--playing span:nth-child(3) { animation: aiEqBar 0.85s ease-in-out infinite 0.05s; }
+.ai-eq--playing span:nth-child(4) { animation: aiEqBar 0.70s ease-in-out infinite 0.22s; }
+.ai-eq--playing span:nth-child(5) { animation: aiEqBar 0.80s ease-in-out infinite 0.10s; }
+
+@keyframes aiEqBar {
+    0%, 100% { height: 4px; opacity: .65; }
+    50%      { height: 14px; opacity: 1; }
+}
+
+/* Мета-информация шага (01 / 06 • Секция) */
+.ai-dock__meta {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    min-width: 0;
+    font-size: .75rem;
+}
+
+.ai-dock__step {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--gold-400);
+    background: rgba(234, 179, 8, 0.12);
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    padding: .12rem .5rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.ai-dock__dot {
+    color: rgba(148, 163, 184, 0.45);
+    flex-shrink: 0;
+}
+
+.ai-dock__sec-ttl {
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Блок субтитров (.ai-Dock__subs) */
+.ai-Dock__subs,
+.ai-dock__subs {
+    padding: .9rem 1.15rem;
+    min-height: 86px;
+    max-height: 136px;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    background: rgba(7, 11, 20, 0.38);
+}
+
+.ai-Dock__subs-text,
+.ai-dock__subs-text {
+    margin: 0;
+    font-size: .85rem;
+    line-height: 1.58;
+    color: #f1f5f9;
+    transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+}
+
+.ai-Dock__subs-text.ai-subs-fade,
+.ai-dock__subs-text.ai-subs-fade {
+    opacity: 0;
+    transform: translateY(5px);
+}
+
+.ai-Dock__subs::-webkit-scrollbar,
+.ai-dock__subs::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ai-Dock__subs::-webkit-scrollbar-thumb,
+.ai-dock__subs::-webkit-scrollbar-thumb {
+    background: rgba(96, 165, 250, 0.3);
+    border-radius: 8px;
+}
+
+/* Нижняя панель управления */
+.ai-dock__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    padding: .75rem 1.15rem .9rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.ai-dock__nav,
+.ai-dock__actions {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.ai-dock__btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s var(--ease);
+    flex-shrink: 0;
+}
+
+.ai-dock__btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.ai-dock__btn:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--blue-400);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+
+.ai-dock__btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* Кнопка Пауза / Пуск */
+.ai-dock__btn--play {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
+    border-color: rgba(96, 165, 250, 0.5);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+}
+
+.ai-dock__btn--play:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--blue-500), var(--blue-400));
+    border-color: var(--gold-400);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.55);
+}
+
+/* Переключение иконок Play / Pause внутри кнопки */
+.ai-dock__btn--play .ai-ico-pause {
+    display: none;
+}
+.ai-dock.ai-dock--playing .ai-dock__btn--play .ai-ico-play {
+    display: none;
+}
+.ai-dock.ai-dock--playing .ai-dock__btn--play .ai-ico-pause {
+    display: block;
+}
+
+/* Кнопка «Вернуть фокус» */
+.ai-dock__refocus {
+    display: inline-flex;
+    align-items: center;
+    gap: .38rem;
+    padding: .42rem .8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(234, 179, 8, 0.45);
+    background: rgba(234, 179, 8, 0.14);
+    color: var(--gold-400);
+    font-size: .73rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s var(--ease);
+    white-space: nowrap;
+}
+
+.ai-dock__refocus[hidden] {
+    display: none !important;
+}
+
+.ai-dock__refocus svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.ai-dock__refocus:hover {
+    background: rgba(234, 179, 8, 0.26);
+    border-color: var(--gold-400);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+
+/* Кнопка «Закрыть» */
+.ai-dock__btn--close:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--red-400);
+    color: var(--red-400);
+}
+
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1024px) {
@@ -706,7 +1214,8 @@ html { scroll-behavior: smooth; }
         border-radius: 0 0 var(--r-lg) var(--r-lg) !important;
         padding-top: .5rem !important; border-top: 1px solid rgba(0,0,0,.05) !important;
     }
-    .c-card:hover .c-card__extra { transform: none !important; }
+    .c-card:hover .c-card__extra,
+    .c-card.ai-card-open .c-card__extra { transform: none !important; }
 
     .t-card { flex: 0 0 calc((100% - 0rem) / 1.45); }
     .n-card { flex: 0 0 calc((100% - 0rem) / 1.55); }
@@ -714,6 +1223,38 @@ html { scroll-behavior: smooth; }
     .footer-bottom { flex-direction: column; text-align: center; }
     .hero-btns { flex-direction: column; align-items: center; }
     .btn { width: 100%; justify-content: center; max-width: 260px; }
+
+    /* Адаптация AI Presenter на мобильных экранах (отступы 12px по ширине экрана) */
+    #aiPresenterRoot {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+    }
+    .ai-fab {
+        right: 12px;
+        bottom: 12px;
+        padding: .7rem 1.15rem .7rem .95rem;
+        font-size: .82rem;
+    }
+    .ai-dock {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        max-width: none;
+        border-radius: var(--r-lg);
+    }
+    .ai-dock__hdr {
+        padding: .75rem .95rem .6rem;
+    }
+    .ai-Dock__subs,
+    .ai-dock__subs {
+        padding: .75rem .95rem;
+        min-height: 74px;
+    }
+    .ai-dock__bar {
+        padding: .65rem .95rem .75rem;
+    }
 }
 
 @media (max-width: 480px) {

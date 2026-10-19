@@ -325,6 +325,161 @@
             </div>
         </div>
     </footer>
-
+    <!-- ============================================================
+             AI PRESENTER — Интерактивный голосовой ИИ-гид
+             ============================================================ -->
+        <div id="aiPresenterRoot"
+             class="ai-presenter"
+             data-lang="{{ LANGUAGE_CODE|default:'uz' }}"
+             data-api-url="{{ request.path }}?ai_presenter=1">
+    
+            <!-- Плавающая кнопка запуска (.ai-fab) -->
+            <button type="button"
+                    class="ai-fab"
+                    id="aiPresenterFab"
+                    aria-label="{% trans 'AI Prezintatsiya' %}"
+                    aria-expanded="false"
+                    aria-controls="aiPresenterDock">
+                <span class="ai-fab__pulse" aria-hidden="true"></span>
+    
+                <span class="ai-fab__ico" aria-hidden="true">
+                    <!-- Иконка нейро-звуковой волны -->
+                    <svg class="ai-fab__svg-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 10v3"/>
+                        <path d="M6 6v11"/>
+                        <path d="M10 3v18"/>
+                        <path d="M14 8v7"/>
+                        <path d="M18 5v13"/>
+                        <path d="M22 10v3"/>
+                    </svg>
+                    <!-- Спиннер загрузки (активируется при .ai-fab--loading) -->
+                    <svg class="ai-fab__svg-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                        <path d="M12 2a10 10 0 1 0 10 10"/>
+                    </svg>
+                </span>
+    
+                <span class="ai-fab__txt">{% trans "AI Prezintatsiya" %}</span>
+            </button>
+    
+            <!-- Раскрывающийся стеклянный мини-плеер (.ai-dock) -->
+            <aside class="ai-dock"
+                   id="aiPresenterDock"
+                   role="region"
+                   aria-label="{% trans 'AI Prezintatsiya' %}"
+                   aria-hidden="true"
+                   hidden>
+    
+                <!-- Прогресс-полоса экскурсии -->
+                <div class="ai-dock__progress" aria-hidden="true">
+                    <div class="ai-dock__progress-bar" id="aiDockProgressBar"></div>
+                </div>
+    
+                <!-- Шапка: статус, 5-полосный эквалайзер, счётчик шагов и название секции -->
+                <header class="ai-dock__hdr">
+                    <div class="ai-dock__status">
+                        <div class="ai-eq" id="aiPresenterEq" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <span class="ai-dock__state" id="aiPresenterState">{% trans "AI Гид" %}</span>
+                    </div>
+    
+                    <div class="ai-dock__meta">
+                        <span class="ai-dock__step" id="aiPresenterStep">01 / 06</span>
+                        <span class="ai-dock__dot" aria-hidden="true">•</span>
+                        <span class="ai-dock__sec-ttl" id="aiPresenterSecTitle">Kriptologiya maktabi</span>
+                    </div>
+                </header>
+    
+                <!-- Блок субтитров (.ai-Dock__subs) с плавной сменой текста -->
+                <div class="ai-Dock__subs ai-dock__subs" id="aiPresenterSubs" aria-live="polite">
+                    <p class="ai-Dock__subs-text ai-dock__subs-text" id="aiPresenterSubsText">
+                        {% trans "Подготовка голосовой презентации..." %}
+                    </p>
+                </div>
+    
+                <!-- Панель управления -->
+                <footer class="ai-dock__bar">
+                    <div class="ai-dock__nav">
+                        <!-- Предыдущий шаг -->
+                        <button type="button"
+                                class="ai-dock__btn"
+                                id="aiBtnPrev"
+                                data-ai-action="prev"
+                                title="{% trans 'Предыдущий шаг' %}"
+                                aria-label="{% trans 'Предыдущий шаг' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="19 20 9 12 19 4 19 20"/>
+                                <line x1="5" y1="19" x2="5" y2="5"/>
+                            </svg>
+                        </button>
+    
+                        <!-- Пауза / Пуск -->
+                        <button type="button"
+                                class="ai-dock__btn ai-dock__btn--play"
+                                id="aiBtnPlayPause"
+                                data-ai-action="toggle"
+                                title="{% trans 'Пауза / Пуск' %}"
+                                aria-label="{% trans 'Пауза / Пуск' %}">
+                            <!-- Иконка Play -->
+                            <svg class="ai-ico-play" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="6 4 20 12 6 20 6 4"/>
+                            </svg>
+                            <!-- Иконка Pause -->
+                            <svg class="ai-ico-pause" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16" rx="1"/>
+                                <rect x="14" y="4" width="4" height="16" rx="1"/>
+                            </svg>
+                        </button>
+    
+                        <!-- Следующий шаг -->
+                        <button type="button"
+                                class="ai-dock__btn"
+                                id="aiBtnNext"
+                                data-ai-action="next"
+                                title="{% trans 'Следующий шаг' %}"
+                                aria-label="{% trans 'Следующий шаг' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="5 4 15 12 5 20 5 4"/>
+                                <line x1="19" y1="5" x2="19" y2="19"/>
+                            </svg>
+                        </button>
+                    </div>
+    
+                    <div class="ai-dock__actions">
+                        <!-- Вернуть фокус (показывается, только если пользователь сдвинул скролл вручную) -->
+                        <button type="button"
+                                class="ai-dock__refocus"
+                                id="aiBtnRefocus"
+                                data-ai-action="refocus"
+                                hidden
+                                title="{% trans 'Вернуть фокус' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+                            </svg>
+                            <span>{% trans "Вернуть фокус" %}</span>
+                        </button>
+    
+                        <!-- Закрыть -->
+                        <button type="button"
+                                class="ai-dock__btn ai-dock__btn--close"
+                                id="aiBtnClose"
+                                data-ai-action="close"
+                                title="{% trans 'Закрыть' %}"
+                                aria-label="{% trans 'Закрыть' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </footer>
+            </aside>
+        </div>
+    
     <script src="{% static 'about.js' %}"></script>
 {% endblock %}
