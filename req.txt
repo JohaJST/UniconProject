@@ -31,3 +31,5 @@ redis>=5.0.0
 django-modeltranslation
 openpyxl>=3.1.2
 python-docx>=1.1.2
+
+edge-tts
