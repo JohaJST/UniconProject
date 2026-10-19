@@ -12,184 +12,578 @@
             rel="stylesheet"
         />
         <link rel="stylesheet" href="{% static 'auth/style.css' %}" />
+
+        <style>
+            :root {
+                --cyan: #22d3ee;
+                --nav-text: #94a3b8;
+                --nav-text-act: #f1f5f9;
+                --pw: 440px;      /* ширина боковой панели */
+                --gap: 24px;
+                --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            }
+
+            /* ── Фон: grid вместо flex, плиток всегда с запасом ── */
+            body { overflow-x: hidden; overflow-y: auto; }
+            .bg-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, 60px);
+                grid-auto-rows: 60px;
+                align-content: start;
+                gap: 2px;
+            }
+            .bg-grid span { width: auto; height: auto; flex: none; }
+
+            /* ── Главный блок ── */
+            .auth-wrapper {
+                max-width: 600px;
+                margin: auto;
+                transition: transform .75s cubic-bezier(.22, 1, .36, 1);
+            }
+            .auth-wrapper.panel-open { transform: translateX(calc((var(--pw) + var(--gap)) / -2)); }
+            .auth-card { position: relative; padding: 2.5rem 2.5rem 2.25rem; overflow: hidden; }
+            /* бегущая линия по верху карточки */
+            .auth-card::before {
+                content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 2px;
+                background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+                animation: topScan 4.5s linear infinite;
+            }
+            @keyframes topScan { to { left: 100%; } }
+
+            /* ── Шапка: бренд слева, языки справа ── */
+            .auth-header {
+                display: flex; align-items: flex-end; justify-content: space-between;
+                flex-wrap: wrap; gap: 1rem; text-align: left; margin-bottom: 2rem;
+            }
+            .brand { min-width: 0; }
+            .auth-logo { width: 72px; height: 72px; margin: 0 0 .85rem; }
+            .sec-chip {
+                display: inline-flex; align-items: center; gap: .45rem; margin-bottom: .6rem;
+                font-family: var(--mono); font-size: .65rem; letter-spacing: .12em; color: var(--cyan);
+                background: rgba(34, 211, 238, .08); border: 1px solid rgba(34, 211, 238, .25);
+                padding: .2rem .6rem; border-radius: 999px;
+            }
+            .sec-chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); animation: blink 1.4s infinite; }
+            @keyframes blink { 50% { opacity: .2; } }
+
+            /* переключатель языков (как в base.css) */
+            .lang-switcher {
+                display: flex; align-items: center; gap: .15rem; padding: .2rem;
+                background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09); border-radius: 999px;
+            }
+            .lang-switcher__icon { width: 14px; height: 14px; color: var(--nav-text); margin: 0 .15rem 0 .4rem; opacity: .8; }
+            .lang-form { display: inline-flex; }
+            .lang-btn {
+                background: transparent; border: none; color: var(--nav-text); font-family: inherit;
+                font-size: .7rem; font-weight: 700; letter-spacing: .03em; padding: .32rem .62rem;
+                border-radius: 999px; cursor: pointer;
+                transition: color var(--dur) var(--ease), background var(--dur) var(--ease),
+                            transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+            }
+            .lang-btn:hover { color: var(--nav-text-act); background: rgba(255,255,255,.08); transform: translateY(-1px); }
+            .lang-btn.active { color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-light)); box-shadow: 0 2px 10px rgba(78,117,173,.5); }
+
+            /* ── Поля-кнопки ── */
+            .fld {
+                width: 100%; display: flex; align-items: center; gap: .85rem; text-align: left;
+                min-height: 58px; padding: .7rem .95rem; cursor: pointer; color: var(--text); font-family: inherit;
+                background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 12px;
+                transition: border-color .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease);
+            }
+            .fld:hover { border-color: var(--accent-light); background: rgba(78,117,173,.08); }
+            .fld.on { border-color: var(--cyan); background: rgba(34,211,238,.06); box-shadow: 0 0 0 3px rgba(34,211,238,.14), 0 0 24px rgba(34,211,238,.12); }
+            .fld.dim { opacity: .55; }
+            .fld.shake { border-color: #f87171; animation: shake .45s; }
+            @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)} }
+            .badge {
+                flex: 0 0 36px; width: 36px; height: 36px; border-radius: 10px; color: #fff;
+                display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700;
+                background: linear-gradient(135deg, var(--accent), var(--accent-light));
+                box-shadow: 0 4px 12px rgba(78,117,173,.35);
+            }
+            .badge.round { border-radius: 50%; }
+            .badge svg { width: 17px; height: 17px; }
+            .fld-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+            .fld-main { font-size: .95rem; font-weight: 600; line-height: 1.35; word-break: break-word; overflow-wrap: anywhere; }
+            .fld-main.ph { color: var(--text-muted); font-weight: 400; }
+            .fld-sub { font-family: var(--mono); font-size: .7rem; color: var(--cyan); }
+            .fld-arrow { flex: 0 0 18px; width: 18px; height: 18px; color: var(--text-muted); transition: transform .35s var(--ease), color .25s; }
+            .fld.on .fld-arrow { color: var(--cyan); transform: translateX(4px); }
+
+            /* ── Боковая панель ── */
+            .panel {
+                position: absolute; top: 50%; left: calc(100% - 1.25rem + var(--gap)); width: var(--pw);
+                height: min(78vh, 640px); display: flex; flex-direction: column;
+                background: rgba(9, 15, 33, .93); border: 1px solid rgba(34,211,238,.28); border-radius: 18px;
+                box-shadow: 0 30px 70px rgba(0,0,0,.65), 0 0 40px rgba(34,211,238,.08);
+                backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+                overflow: hidden; z-index: 5;
+                opacity: 0; visibility: hidden; pointer-events: none;
+                transform: translateY(-50%) translateX(-50px) scale(.94);
+                transition: transform .75s cubic-bezier(.22,1,.36,1), opacity .5s var(--ease), visibility .5s;
+            }
+            .panel-open .panel { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(-50%) translateX(0) scale(1); }
+            .panel::before { /* сканирующая линия */
+                content: ""; position: absolute; left: 0; right: 0; height: 80px; top: -80px; z-index: 0; pointer-events: none;
+                background: linear-gradient(180deg, transparent, rgba(34,211,238,.07), transparent);
+                animation: scanY 5s linear infinite;
+            }
+            @keyframes scanY { to { top: 100%; } }
+            .cb { position: absolute; width: 14px; height: 14px; border: 2px solid var(--cyan); opacity: .8; z-index: 2; pointer-events: none; }
+            .cb.tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+            .cb.tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+            .cb.bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+            .cb.br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+            .p-head { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: .6rem; padding: 1.1rem 1.1rem .6rem 1.4rem; }
+            .p-titles { flex: 1; min-width: 0; }
+            .p-tag { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; color: var(--cyan); }
+            .p-tag::after { content: "_"; animation: blink 1s infinite; }
+            .p-title { margin-top: .25rem; font-size: 1rem; font-weight: 700; line-height: 1.3; word-break: break-word; overflow-wrap: anywhere; }
+            .p-btn {
+                flex: 0 0 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
+                background: rgba(255,255,255,.04); color: var(--text-muted); cursor: pointer; font-size: .9rem;
+                transition: color .2s, background .2s, border-color .2s;
+            }
+            .p-btn:hover { color: #fff; background: rgba(34,211,238,.12); border-color: rgba(34,211,238,.4); }
+            .p-btn[hidden] { display: none; }
+            .p-bar { position: relative; z-index: 1; height: 2px; margin: 0 1.1rem; background: rgba(255,255,255,.06); overflow: hidden; }
+            .p-bar::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; background: linear-gradient(90deg, transparent, var(--cyan)); animation: bar 1.6s linear infinite; }
+            @keyframes bar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+
+            .p-search { position: relative; z-index: 1; padding: .8rem 1.1rem .4rem; }
+            .p-search svg { position: absolute; left: 1.9rem; top: 50%; transform: translateY(-35%); width: 15px; height: 15px; color: var(--text-muted); pointer-events: none; }
+            .p-search input {
+                width: 100%; background: rgba(255,255,255,.05); border: 1px solid transparent; border-radius: 9px;
+                color: var(--text); font-family: inherit; font-size: .875rem; padding: .6rem .75rem .6rem 2.3rem; outline: none;
+                transition: border-color .2s, background .2s;
+            }
+            .p-search input:focus { border-color: var(--cyan); background: rgba(34,211,238,.07); }
+            .p-search input::placeholder { color: var(--text-muted); }
+
+            .p-list { position: relative; z-index: 1; flex: 1; min-height: 0; overflow-y: auto; list-style: none; padding: .4rem .8rem .8rem 1.1rem; scrollbar-width: thin; scrollbar-color: #334155 transparent; transition: opacity .2s; }
+            .p-list.out { opacity: 0; }
+            .p-list::-webkit-scrollbar { width: 6px; }
+            .p-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+            .p-foot { position: relative; z-index: 1; padding: .5rem 1.4rem .8rem; font-family: var(--mono); font-size: .68rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,.05); }
+            .p-empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: .875rem; }
+
+            .pi {
+                display: flex; align-items: flex-start; gap: .75rem; padding: .7rem .75rem; margin-bottom: 4px;
+                border-radius: 10px; border: 1px solid transparent; cursor: pointer; position: relative;
+                opacity: 0; transform: translateX(16px); animation: piIn .45s var(--ease) forwards; animation-delay: calc(var(--i, 0) * 30ms);
+                transition: background .2s, border-color .2s;
+            }
+            @keyframes piIn { to { opacity: 1; transform: none; } }
+            .pi:hover, .pi.act { background: rgba(34,211,238,.07); border-color: rgba(34,211,238,.25); }
+            .pi.sel { background: rgba(78,117,173,.22); border-color: rgba(107,147,204,.55); }
+            .pi.picked { background: rgba(34,211,238,.2); border-color: var(--cyan); }
+            .pi-n { flex: 0 0 auto; min-width: 1.5rem; padding-top: .2rem; font-family: var(--mono); font-size: .7rem; font-weight: 700; color: var(--cyan); }
+            .pi-av { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; color: #fff; }
+            .pi-text { flex: 1; min-width: 0; position: relative; font-size: .92rem; font-weight: 600; line-height: 1.4; word-break: break-word; overflow-wrap: anywhere; padding-top: .1rem; }
+            .pi-text .scr { display: none; position: absolute; inset: 0; overflow: hidden; font-family: var(--mono); color: var(--cyan); word-break: break-all; }
+            .pi.scr-on .ghost { opacity: 0; }
+            .pi.scr-on .scr { display: block; }
+            .pi-cnt { flex: 0 0 auto; margin-top: .15rem; font-family: var(--mono); font-size: .7rem; font-weight: 700; color: var(--accent-light); background: rgba(78,117,173,.2); border-radius: 999px; padding: .1rem .5rem; }
+            .pi-chk { flex: 0 0 18px; width: 18px; height: 18px; margin-top: .1rem; color: #4ade80; }
+
+            /* ── Осколки: квадратики падают вниз ── */
+            .shards { position: fixed; inset: 0; z-index: 100; pointer-events: none; overflow: hidden; }
+            .shards i {
+                position: absolute; background: rgba(78,117,173,.55); border: 1px solid rgba(34,211,238,.55);
+                animation: fall .95s cubic-bezier(.45,0,.85,.4) forwards;
+            }
+            .shards i:nth-child(3n) { background: rgba(34,211,238,.4); }
+            .shards i:nth-child(5n) { background: rgba(255,255,255,.35); }
+            @keyframes fall {
+                0% { transform: none; opacity: 1; }
+                12% { transform: translate(var(--jx), -4px); opacity: 1; }
+                100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
+            }
+
+            /* ── Адаптив ── */
+            @media (max-width: 1099px) { :root { --pw: 380px; } }
+            @media (max-width: 999px) {
+                .auth-wrapper.panel-open { transform: none; }
+                .panel {
+                    position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; height: 72vh;
+                    border-radius: 18px 18px 0 0; transform: translateY(100%);
+                }
+                .panel-open .panel { transform: translateY(0); }
+            }
+            @media (max-width: 560px) {
+                .auth-card { padding: 1.75rem 1.25rem; }
+                .auth-header { align-items: flex-start; }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .auth-card::before, .panel::before, .p-bar::after { animation: none; }
+            }
+        </style>
     </head>
     <body>
         {% trans "Выберите ученика" as select_student_placeholder %}
+        {% trans "Выберите поток" as select_potok_placeholder %}
+        {% trans "Сначала выберите поток" as first_potok_placeholder %}
+        {% trans "Поиск" as t_search %}
+        {% trans "Ничего не найдено" as t_empty %}
+        {% trans "Поток" as t_potok %}
+        {% trans "Ученик" as t_student %}
+        {% get_current_language as CURRENT_LANGUAGE %}
+
         <div class="bg-grid" id="bgGrid"></div>
 
-        <main class="auth-wrapper">
+        <main class="auth-wrapper" id="wrap">
             <div class="auth-card">
                 <header class="auth-header">
-                    <img
-                        src="{% static 'auth/logo.png' %}"
-                        alt="{% trans 'logoAlt' %}"
-                        class="auth-logo"
-                    />
-                    <h1 class="auth-title">{{ APP_NAME }}</h1>
-                    <p class="auth-subtitle">{% trans "Войдите в свою учётную запись" %}</p>
+                    <div class="brand">
+                        <img src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAlt' %}" class="auth-logo" />
+                        <div><span class="sec-chip"><i></i>ENCRYPTED SESSION</span></div>
+                        <h1 class="auth-title">{{ APP_NAME }}</h1>
+                        <p class="auth-subtitle" style="margin:0">{% trans "Войдите в свою учётную запись" %}</p>
+                    </div>
+
+                    <div class="lang-switcher">
+                        <svg class="lang-switcher__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/>
+                        </svg>
+                        <form action="{% url 'set_language' %}" method="post" class="lang-form">
+                            {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" name="language" value="uz" class="lang-btn{% if CURRENT_LANGUAGE == 'uz' %} active{% endif %}">UZ</button>
+                        </form>
+                        <form action="{% url 'set_language' %}" method="post" class="lang-form">
+                            {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" name="language" value="ru" class="lang-btn{% if CURRENT_LANGUAGE == 'ru' %} active{% endif %}">RU</button>
+                        </form>
+                        <form action="{% url 'set_language' %}" method="post" class="lang-form">
+                            {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" name="language" value="en" class="lang-btn{% if CURRENT_LANGUAGE == 'en' %} active{% endif %}">EN</button>
+                        </form>
+                    </div>
                 </header>
 
                 {% if error %}
                 <div class="auth-alert" role="alert">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {{ error }}
                 </div>
                 {% endif %}
 
-                <form method="post" class="auth-form">
+                <form method="post" class="auth-form" id="loginForm" novalidate>
                     {% csrf_token %}
+                    <input type="hidden" name="potok" id="potokValue" value="">
+                    <input type="hidden" name="user" id="userValue" value="">
 
                     <div class="form-group">
-                        <label class="form-label" for="mainSelect">{% trans "Поток" %}</label>
-                        <div class="select-wrapper">
-                            <select
-                                required
-                                name="potok"
-                                id="mainSelect"
-                                class="form-select"
-                                onchange="updateOptions()"
-                            >
-                                <option value="" disabled selected>
-                                    {% trans "Выберите поток" %}…
-                                </option>
-                                {% for i in c %}
-                                    <option value="{{ i.id }}">{{ i.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <span class="select-icon" aria-hidden="true">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
+                        <label class="form-label">{{ t_potok }}</label>
+                        <button type="button" class="fld" id="fPotok">
+                            <span class="badge" id="bPotok">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                             </span>
-                        </div>
+                            <span class="fld-text"><span class="fld-main ph" id="mPotok"></span><span class="fld-sub" id="sPotok"></span></span>
+                            <svg class="fld-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg>
+                        </button>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="dependentSelect">{% trans "Ученик" %}</label>
-                        <div class="select-wrapper">
-                            <select
-                                required
-                                name="user"
-                                id="dependentSelect"
-                                class="form-select"
-                            >
-                                <option value="" disabled selected>
-                                    {% trans "Сначала выберите поток" %}…
-                                </option>
-                            </select>
-                            <span class="select-icon" aria-hidden="true">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
+                        <label class="form-label">{{ t_student }}</label>
+                        <button type="button" class="fld dim" id="fStudent">
+                            <span class="badge round" id="bStudent">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             </span>
-                        </div>
+                            <span class="fld-text"><span class="fld-main ph" id="mStudent"></span></span>
+                            <svg class="fld-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg>
+                        </button>
                     </div>
 
                     <button type="submit" class="auth-btn">
                         {% trans "Войти" %}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="18"
-                            height="18"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                            <polyline points="12 5 19 12 12 19" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
                         </svg>
                     </button>
                 </form>
+
                 <form method="post" class="auth-form">
                     {% csrf_token %}
                     <input type="hidden" name="user" value="{{ ADMINID }}">
                     <button type="submit" class="auth-btn-2">
                         {% trans "Панель управления" %}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="18"
-                            height="18"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                            <polyline points="12 5 19 12 12 19" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
                         </svg>
                     </button>
                 </form>
             </div>
+
+            <!-- ── Вторая панель: список потоков / учеников ── -->
+            <aside class="panel" id="panel" aria-hidden="true">
+                <span class="cb tl"></span><span class="cb tr"></span><span class="cb bl"></span><span class="cb br"></span>
+                <div class="p-head">
+                    <button type="button" class="p-btn" id="pBack" hidden title="{{ t_potok }}">←</button>
+                    <div class="p-titles">
+                        <div class="p-tag" id="pTag"></div>
+                        <div class="p-title" id="pTitle"></div>
+                    </div>
+                    <button type="button" class="p-btn" id="pClose">✕</button>
+                </div>
+                <div class="p-bar"></div>
+                <div class="p-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="pSearch" placeholder="{{ t_search }}…" autocomplete="off">
+                </div>
+                <ul class="p-list" id="pList" role="listbox"></ul>
+                <div class="p-foot" id="pFoot"></div>
+            </aside>
         </main>
 
         <script>
-    /* ── Generate grid tiles ── */
-    (function () {
-      var grid = document.getElementById('bgGrid');
-      var CELL = 62;
-      var cols = Math.ceil(window.innerWidth  / CELL) + 1;
-      var rows = Math.ceil(window.innerHeight / CELL) + 1;
-      var frag = document.createDocumentFragment();
-      for (var i = 0; i < cols * rows; i++) {
-        frag.appendChild(document.createElement('span'));
-      }
-      grid.appendChild(frag);
-    })();
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
 
-    /* ── Cascade-select logic ── */
-    var optionsData = {
-      {% for i in c %}
-      "{{ i.id }}": [
-        {% for j in u %}
-          {% if j.subject_id == i.id %}
-            { id: "{{ j.id }}", name: "{{ j.full_name|escapejs }}" },
-          {% endif %}
-        {% endfor %}
-      ],
-      {% endfor %}
-    };
+  /* ══ Фон: плиток всегда с запасом, пересчёт при ресайзе/зуме ══ */
+  var grid = $('bgGrid'), built = 0, rt;
+  function fillGrid() {
+    var w = Math.max(window.innerWidth, screen.width);
+    var h = Math.max(window.innerHeight, screen.height);
+    var need = (Math.ceil(w / 62) + 2) * (Math.ceil(h / 62) + 2);
+    if (need <= built) return;
+    var f = document.createDocumentFragment();
+    for (; built < need; built++) f.appendChild(document.createElement('span'));
+    grid.appendChild(f);
+  }
+  fillGrid();
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(fillGrid, 150); });
 
-    function updateOptions() {
-      var main = document.getElementById('mainSelect');
-      var dep  = document.getElementById('dependentSelect');
+  /* ══ Данные (те же, что раньше) ══ */
+  var POTOKS = [
+    {% for i in c %}{ id: "{{ i.id }}", name: "{{ i.name|escapejs }}" },
+    {% endfor %}
+  ];
+  var OPT = {
+    {% for i in c %}"{{ i.id }}": [
+      {% for j in u %}{% if j.subject_id == i.id %}{ id: "{{ j.id }}", name: "{{ j.full_name|escapejs }}" },
+      {% endif %}{% endfor %}
+    ],
+    {% endfor %}
+  };
 
-      dep.innerHTML = '<option value="" disabled selected>{{ select_student_placeholder|escapejs }}\u2026</option>';
-      
-      var students = optionsData[main.value] || [];
-      students.forEach(function(student) {
-        var newOpt = new Option(student.name, student.id);
-        dep.add(newOpt);
-      });
+  var L_POTOK = "{{ t_potok|escapejs }}", L_STUDENT = "{{ t_student|escapejs }}";
+  var PH_POTOK = "{{ select_potok_placeholder|escapejs }}";
+  var PH_STUDENT = "{{ select_student_placeholder|escapejs }}";
+  var PH_FIRST = "{{ first_potok_placeholder|escapejs }}";
+  var T_EMPTY = "{{ t_empty|escapejs }}";
+
+  /* ══ Утилиты ══ */
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var isSheet = function () { return window.matchMedia('(max-width: 999px)').matches; };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function initials(name) {
+    var w = (name || '').split(/\s+/).filter(function (x) { return /^[A-Za-z\u0400-\u04FF\u0100-\u024F]/.test(x); });
+    return ((w[0] || '?').charAt(0) + (w[1] ? w[1].charAt(0) : '')).toUpperCase();
+  }
+  var HUES = [[78,117,173],[99,102,241],[16,185,129],[245,158,11],[236,72,153],[14,165,233]];
+  function hue(i) { var h = HUES[i % HUES.length]; return 'background:linear-gradient(135deg,rgb(' + h.join(',') + '),rgba(' + h.join(',') + ',.6))'; }
+  var CHECK = '<svg class="pi-chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+
+  /* ══ Элементы ══ */
+  var wrap = $('wrap'), panel = $('panel'), list = $('pList'), search = $('pSearch');
+  var tag = $('pTag'), title = $('pTitle'), back = $('pBack'), foot = $('pFoot');
+  var fPotok = $('fPotok'), fStudent = $('fStudent');
+  var mPotok = $('mPotok'), sPotok = $('sPotok'), bPotok = $('bPotok');
+  var mStudent = $('mStudent'), bStudent = $('bStudent');
+  var S = { mode: null, potok: null, student: null }, vis = [], act = -1, busy = false;
+  var potokBadgeDefault = bPotok.innerHTML, studentBadgeDefault = bStudent.innerHTML;
+
+  mPotok.textContent = PH_POTOK + '…';
+  mStudent.textContent = PH_FIRST + '…';
+
+  /* ══ Расшифровка текста ══ */
+  var CH = '01ABCDEF#$%&<>/\\|';
+  function scramble(li, final, delay) {
+    var scr = li.querySelector('.scr');
+    li.classList.add('scr-on');
+    setTimeout(function () {
+      var dur = 450 + Math.min(final.length * 9, 550), t0 = performance.now();
+      (function tick(now) {
+        if (!scr.parentNode) return;
+        var p = Math.min(1, (now - t0) / dur), n = Math.floor(p * final.length), out = final.slice(0, n);
+        for (var i = n; i < final.length; i++) out += final.charAt(i) === ' ' ? ' ' : CH.charAt(Math.random() * CH.length | 0);
+        scr.textContent = out;
+        if (p < 1) requestAnimationFrame(tick); else li.classList.remove('scr-on');
+      })(t0);
+    }, delay);
+  }
+
+  /* ══ Панель ══ */
+  function head() {
+    if (S.mode === 'potok') {
+      tag.textContent = '// ' + L_POTOK.toUpperCase() + ' [' + POTOKS.length + ']';
+      title.textContent = PH_POTOK;
+      back.hidden = true;
+    } else {
+      tag.textContent = '// ' + L_STUDENT.toUpperCase() + ' [' + (OPT[S.potok.id] || []).length + ']';
+      title.textContent = S.potok.name;
+      back.hidden = false;
     }
-</script>
+  }
+
+  function render(anim) {
+    var src = S.mode === 'potok' ? POTOKS : (OPT[S.potok.id] || []);
+    var q = search.value.trim().toLowerCase();
+    vis = src.filter(function (it) { return !q || it.name.toLowerCase().indexOf(q) !== -1; });
+    act = -1;
+    foot.textContent = vis.length + ' / ' + src.length;
+    if (!vis.length) { list.innerHTML = '<li class="p-empty">' + esc(T_EMPTY) + '</li>'; return; }
+    var selId = S.mode === 'potok' ? (S.potok && S.potok.id) : (S.student && S.student.id);
+    list.innerHTML = vis.map(function (it, n) {
+      var sel = String(it.id) === String(selId);
+      var lead = S.mode === 'potok'
+        ? '<span class="pi-n">' + pad(n + 1) + '</span>'
+        : '<span class="pi-av" style="' + hue(n) + '">' + esc(initials(it.name)) + '</span>';
+      var tail = S.mode === 'potok' ? '<span class="pi-cnt">' + (OPT[it.id] || []).length + '</span>' : '';
+      return '<li class="pi' + (sel ? ' sel' : '') + '" role="option" data-i="' + n + '" style="--i:' + Math.min(n, 14) + '">' +
+        lead + '<span class="pi-text"><span class="ghost">' + esc(it.name) + '</span><span class="scr" aria-hidden="true"></span></span>' +
+        tail + (sel ? CHECK : '') + '</li>';
+    }).join('');
+    if (anim && !reduce) {
+      var els = list.querySelectorAll('.pi');
+      for (var k = 0; k < els.length && k < 14; k++) scramble(els[k], vis[k].name, 120 + k * 30);
+    }
+  }
+
+  function setMode(m) {
+    S.mode = m;
+    fPotok.classList.toggle('on', m === 'potok');
+    fStudent.classList.toggle('on', m === 'student');
+  }
+
+  function openPanel(m) {
+    if (busy) return;
+    setMode(m);
+    wrap.classList.add('panel-open');
+    panel.setAttribute('aria-hidden', 'false');
+    search.value = '';
+    head(); render(true);
+    if (!isSheet()) setTimeout(function () { search.focus({ preventScroll: true }); }, 550);
+  }
+  function closePanel() {
+    if (busy) return;
+    wrap.classList.remove('panel-open');
+    panel.setAttribute('aria-hidden', 'true');
+    setMode(null);
+  }
+  function isOpen() { return wrap.classList.contains('panel-open'); }
+
+  /* ══ Эффект: список ломается на квадратики и падает ══ */
+  function shatter(done) {
+    var lr = list.getBoundingClientRect(), layer = document.createElement('div');
+    layer.className = 'shards';
+    var items = list.querySelectorAll('.pi');
+    if (reduce || !items.length) { done(); return; }
+    for (var k = 0; k < items.length; k++) {
+      var r = items[k].getBoundingClientRect();
+      if (r.bottom < lr.top || r.top > lr.bottom) continue;
+      var cols = Math.max(6, Math.round(r.width / 24)), rows = Math.max(2, Math.round(r.height / 20));
+      var sw = r.width / cols, sh = r.height / rows;
+      for (var rr = 0; rr < rows; rr++) for (var c = 0; c < cols; c++) {
+        var s = document.createElement('i');
+        s.style.cssText = 'left:' + (r.left + c * sw) + 'px;top:' + (r.top + rr * sh) + 'px;width:' + (sw - 1) + 'px;height:' + (sh - 1) + 'px;' +
+          '--jx:' + ((Math.random() * 10 - 5) | 0) + 'px;--dx:' + ((Math.random() * 120 - 60) | 0) + 'px;--dy:' + (260 + Math.random() * 420 | 0) + 'px;' +
+          '--rot:' + ((Math.random() * 360 - 180) | 0) + 'deg;animation-delay:' + (Math.random() * 280 + (k % 8) * 25 | 0) + 'ms';
+        layer.appendChild(s);
+      }
+    }
+    document.body.appendChild(layer);
+    list.classList.add('out');
+    setTimeout(function () { layer.remove(); list.classList.remove('out'); done(); }, 1250);
+  }
+
+  /* ══ Обновление полей главной карточки ══ */
+  function updPotok() {
+    if (!S.potok) return;
+    var idx = POTOKS.findIndex(function (p) { return p.id === S.potok.id; });
+    mPotok.classList.remove('ph'); mPotok.textContent = S.potok.name;
+    sPotok.textContent = '> ' + (OPT[S.potok.id] || []).length + ' ' + L_STUDENT.toLowerCase();
+    bPotok.textContent = idx + 1; bPotok.setAttribute('style', hue(idx));
+    $('potokValue').value = S.potok.id;
+  }
+  function resetStudent() {
+    S.student = null; $('userValue').value = '';
+    mStudent.classList.add('ph'); mStudent.textContent = PH_STUDENT + '…';
+    bStudent.innerHTML = studentBadgeDefault; bStudent.removeAttribute('style');
+    fStudent.classList.remove('dim');
+  }
+  function updStudent() {
+    mStudent.classList.remove('ph'); mStudent.textContent = S.student.name;
+    bStudent.textContent = initials(S.student.name);
+    bStudent.setAttribute('style', 'background:linear-gradient(135deg,#4e75ad,#6b93cc)');
+    $('userValue').value = S.student.id;
+  }
+
+  /* ══ Выбор ══ */
+  function pickPotok(it, li) {
+    if (busy) return; busy = true;
+    var changed = !S.potok || S.potok.id !== it.id;
+    S.potok = it; updPotok();
+    if (changed) resetStudent(); else fStudent.classList.remove('dim');
+    li.classList.add('picked');
+    setTimeout(function () {
+      shatter(function () {
+        setMode('student'); search.value = ''; head(); render(true); busy = false;
+      });
+    }, 160);
+  }
+  function pickStudent(it, li) {
+    if (busy) return; busy = true;
+    S.student = it; updStudent();
+    li.classList.add('picked');
+    setTimeout(function () { busy = false; closePanel(); }, 380);
+  }
+  list.addEventListener('click', function (e) {
+    var li = e.target.closest('.pi'); if (!li) return;
+    var it = vis[+li.getAttribute('data-i')]; if (!it) return;
+    S.mode === 'potok' ? pickPotok(it, li) : pickStudent(it, li);
+  });
+  back.addEventListener('click', function () {
+    if (busy) return; busy = true;
+    shatter(function () { setMode('potok'); search.value = ''; head(); render(true); busy = false; });
+  });
+
+  /* ══ События ══ */
+  function shake(el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+  fPotok.addEventListener('click', function () { isOpen() && S.mode === 'potok' ? closePanel() : openPanel('potok'); });
+  fStudent.addEventListener('click', function () {
+    if (!S.potok) { shake(fPotok); openPanel('potok'); return; }
+    isOpen() && S.mode === 'student' ? closePanel() : openPanel('student');
+  });
+  $('pClose').addEventListener('click', closePanel);
+  search.addEventListener('input', function () { render(false); });
+  search.addEventListener('keydown', function (e) {
+    var els = list.querySelectorAll('.pi'); if (!els.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      act = (act + (e.key === 'ArrowDown' ? 1 : -1) + els.length) % els.length;
+      for (var i = 0; i < els.length; i++) els[i].classList.toggle('act', i === act);
+      els[act].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      var i2 = act >= 0 ? act : (vis.length === 1 ? 0 : -1);
+      if (i2 >= 0) els[i2].click();
+    }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
+  document.addEventListener('click', function (e) { if (isOpen() && !wrap.contains(e.target)) closePanel(); });
+
+  $('loginForm').addEventListener('submit', function (e) {
+    if (!S.potok) { e.preventDefault(); shake(fPotok); openPanel('potok'); }
+    else if (!S.student) { e.preventDefault(); shake(fStudent); openPanel('student'); }
+  });
+})();
+        </script>
     </body>
 </html>

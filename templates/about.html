@@ -236,8 +236,22 @@
         {% if partners %}
         <div class="marquee-wrap">
             <div class="marquee-track">
-                {% for p in partners %}<span class="marquee-item">{{ p.name }}</span>{% endfor %}
-                {% for p in partners %}<span class="marquee-item">{{ p.name }}</span>{% endfor %}
+                {% for p in partners %}
+                <a class="marquee-item" href="{{ p.link }}" target="_blank" rel="noopener noreferrer" title="{{ p.name }}">
+                    <span class="marquee-item__logo">
+                        {% if p.photo %}<img src="{{ p.photo.url }}" alt="{{ p.name }}" loading="lazy">{% endif %}
+                    </span>
+                    <span class="marquee-item__name">{{ p.name }}</span>
+                </a>
+                {% endfor %}
+                {% for p in partners %}
+                <a class="marquee-item" href="{{ p.link }}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+                    <span class="marquee-item__logo">
+                        {% if p.photo %}<img src="{{ p.photo.url }}" alt="" loading="lazy">{% endif %}
+                    </span>
+                    <span class="marquee-item__name">{{ p.name }}</span>
+                </a>
+                {% endfor %}
             </div>
         </div>
         {% endif %}
