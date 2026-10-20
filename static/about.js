@@ -29,6 +29,11 @@
         initHeroParallax();
         initSmoothScroll();
         initAIPresenter();
+        // Digital rain на светлых секциях: goals → courses → teachers → news → partners
+        // (hero и footer тёмные — не трогаем)
+        if (window.initDigitalRain) {
+            window.initDigitalRain('#goals, #courses, #teachers, #news, #partners');
+        }
     }
 
     // ================================================================
