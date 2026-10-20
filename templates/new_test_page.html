@@ -46,138 +46,177 @@
                 pointer-events: none;
             }
 
-            /* ── Кнопка-капля ── */
+            /* ── Кнопка-капля (water drop) ── */
             .water-btn {
+                --mx: 50%; --my: 40%;   /* позиция курсора внутри кнопки (JS) */
+                --tx: 0px; --ty: 0px;   /* «магнит»: смещение к курсору (JS) */
                 position: relative;
-                min-width: 260px;
-                padding: 1.35rem 3.2rem;
-                border: 0;
-                border-radius: 999px;
-                cursor: pointer;
-                overflow: hidden;
                 isolation: isolate;
-                color: #f8fafc;
+                overflow: hidden;
+                cursor: pointer;
+                min-width: 300px;
+                min-height: 84px;
+                padding: 1.3rem 3.6rem 1.6rem;
+                border: 1px solid rgba(255,255,255,.38);
+                border-radius: 44px / 42px;
+                color: #f1f5f9;
                 font-size: 1.6rem;
                 font-weight: 500;
                 letter-spacing: .02em;
-                text-shadow: 0 1px 0 rgba(255,255,255,.35), 0 2px 8px rgba(0,0,0,.35);
                 background:
-                    radial-gradient(120% 140% at 25% 15%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 45%),
-                    radial-gradient(90% 120% at 80% 100%, rgba(148,163,184,.55) 0%, rgba(148,163,184,0) 60%),
-                    linear-gradient(160deg, rgba(226,232,240,.38), rgba(100,116,139,.32));
+                    radial-gradient(120% 140% at 22% 12%, rgba(255,255,255,.42) 0%, rgba(255,255,255,0) 46%),
+                    radial-gradient(90% 120% at 82% 105%, rgba(186,200,215,.38) 0%, rgba(186,200,215,0) 60%),
+                    linear-gradient(165deg, rgba(210,218,228,.30), rgba(110,122,138,.34));
                 -webkit-backdrop-filter: blur(10px) saturate(140%);
                 backdrop-filter: blur(10px) saturate(140%);
-                border: 1px solid rgba(255,255,255,.45);
                 box-shadow:
-                    inset 0 2px 3px rgba(255,255,255,.8),          /* верхний блик */
-                    inset 0 -10px 18px rgba(30,41,59,.28),          /* объём снизу */
-                    inset 0 0 0 6px rgba(255,255,255,.07),          /* поверхностное натяжение */
-                    0 18px 40px rgba(0,0,0,.35),
-                    0 4px 10px rgba(0,0,0,.25);
-                transform-origin: 50% 70%;
-                transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s ease;
-                animation: waterIdle 4.5s ease-in-out infinite;
+                    inset 0 2px 3px rgba(255,255,255,.75),
+                    inset 0 -12px 20px rgba(20,30,45,.35),
+                    inset 0 0 0 5px rgba(255,255,255,.06),
+                    0 20px 44px rgba(0,0,0,.40),
+                    0 0 30px rgba(170,200,225,.12);
+                translate: var(--tx) var(--ty);
+                transition:
+                    translate .25s ease-out,
+                    transform .18s cubic-bezier(.3,1.5,.5,1),
+                    box-shadow .4s ease,
+                    filter .4s ease;
+                animation: waterBreath 5.5s ease-in-out infinite,
+                           waterIdleShape 9s ease-in-out infinite;
             }
+            
+            /* Покой: «дыхание» + едва заметное колебание формы */
+            @keyframes waterBreath { 0%,100% { scale: 1; } 50% { scale: 1.02; } }
+            @keyframes waterIdleShape {
+                0%,100% { border-radius: 44px / 42px; }
+                50%     { border-radius: 46px 42px 45px 43px / 42px 45px 41px 44px; }
+            }
+            
+            /* Hover: капля «дрожит» (blob), блики контрастнее */
             .water-btn:hover {
-                transform: translateY(-3px) scale(1.03);
-                animation-play-state: paused;
+                filter: brightness(1.12) contrast(1.06);
+                box-shadow:
+                    inset 0 2px 4px rgba(255,255,255,.95),
+                    inset 0 -12px 22px rgba(20,30,45,.38),
+                    inset 0 0 0 5px rgba(255,255,255,.10),
+                    0 26px 54px rgba(0,0,0,.45),
+                    0 0 44px rgba(170,210,235,.28);
+                animation: waterBreath 5.5s ease-in-out infinite,
+                           waterBlob 2.6s ease-in-out infinite;
             }
-            .water-btn:focus-visible {
-                outline: 2px solid rgba(255,255,255,.9);
-                outline-offset: 5px;
+            @keyframes waterBlob {
+                0%,100% { border-radius: 46px 38px 50px 40px / 40px 50px 38px 46px; }
+                33%     { border-radius: 40px 50px 38px 48px / 48px 38px 50px 40px; }
+                66%     { border-radius: 50px 40px 46px 38px / 38px 46px 40px 50px; }
             }
-
-            /* Лёгкое «дыхание» капли в покое */
-            @keyframes waterIdle {
-                0%, 100% { border-radius: 999px; }
-                50%      { border-radius: 999px / 70%; transform: scale(1.012, .99); }
-            }
-
-            /* Блик-линза сверху */
-            .water-btn::before {
-                content: "";
-                position: absolute;
-                top: 6%;
-                left: 6%;
-                width: 62%;
-                height: 38%;
-                border-radius: 999px;
-                background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,0));
-                filter: blur(1px);
+            
+            /* Нажатие: упругое сжатие */
+            .water-btn:active { transform: scale(.93, .88); }
+            
+            /* После клика: желейный возврат формы */
+            .water-btn.is-jelly {
                 pointer-events: none;
-                z-index: 1;
+                animation: waterBreath 5.5s ease-in-out infinite,
+                           waterBlob 2.6s ease-in-out infinite,
+                           waterJelly .9s cubic-bezier(.36,.07,.19,.97) forwards;
             }
-
-            /* Микропузырьки */
-            .water-btn::after {
-                content: "";
-                position: absolute;
-                inset: 0;
-                border-radius: inherit;
+            @keyframes waterJelly {
+                0%   { transform: scale(.93, .88); }
+                25%  { transform: scale(1.07, .94); }
+                45%  { transform: scale(.97, 1.06); }
+                65%  { transform: scale(1.02, .99); }
+                82%  { transform: scale(.995, 1.005); }
+                100% { transform: scale(1); }
+            }
+            
+            .water-btn:focus-visible { outline: 2px solid rgba(255,255,255,.9); outline-offset: 5px; }
+            
+            /* Слои внутри капли */
+            .water-btn__lens {            /* верхний блик-линза */
+                position: absolute; top: 7%; left: 6%; width: 62%; height: 36%;
+                border-radius: 999px;
+                background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0));
+                filter: blur(1px);
+                pointer-events: none; z-index: 1;
+            }
+            .water-btn::before {          /* свет, «притянутый» курсором */
+                content: ""; position: absolute; inset: 0; border-radius: inherit;
+                background: radial-gradient(circle 110px at var(--mx) var(--my),
+                            rgba(255,255,255,.38), rgba(255,255,255,0) 70%);
+                opacity: .35; transition: opacity .4s ease;
+                pointer-events: none; z-index: 1;
+            }
+            .water-btn:hover::before { opacity: 1; }
+            
+            .water-btn::after {           /* микропузырьки */
+                content: ""; position: absolute; inset: 0; border-radius: inherit;
                 background:
                     radial-gradient(circle 3px at 82% 38%, rgba(255,255,255,.9) 0 55%, transparent 60%),
                     radial-gradient(circle 2px at 72% 66%, rgba(255,255,255,.75) 0 55%, transparent 60%),
                     radial-gradient(circle 2px at 18% 70%, rgba(255,255,255,.6) 0 55%, transparent 60%),
                     radial-gradient(circle 1.5px at 40% 82%, rgba(255,255,255,.6) 0 55%, transparent 60%);
-                pointer-events: none;
-                z-index: 1;
+                pointer-events: none; z-index: 2;
             }
-
-            .water-btn__label { position: relative; z-index: 2; display: inline-block; }
-
-            /* Отражение/преломление текста под поверхностью */
+            
+            .water-btn__sheen {           /* редкая бегущая рябь/блик */
+                position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+                background: linear-gradient(100deg, transparent, rgba(255,255,255,.32), transparent);
+                transform: skewX(-20deg);
+                animation: waterSheen 7s ease-in-out infinite;
+                pointer-events: none; z-index: 1;
+            }
+            @keyframes waterSheen { 0% { left: -60%; } 38%,100% { left: 130%; } }
+            
+            .water-btn__rings {           /* концентрические круги вокруг курсора (hover) */
+                position: absolute; inset: 0; border-radius: inherit;
+                background: repeating-radial-gradient(circle at var(--mx) var(--my),
+                            rgba(255,255,255,0) 0 14px, rgba(255,255,255,.22) 16px, rgba(255,255,255,0) 20px);
+                -webkit-mask-image: radial-gradient(circle 120px at var(--mx) var(--my), #000, transparent 100%);
+                        mask-image: radial-gradient(circle 120px at var(--mx) var(--my), #000, transparent 100%);
+                opacity: 0; transition: opacity .4s ease;
+                pointer-events: none; z-index: 1;
+            }
+            .water-btn:hover .water-btn__rings { opacity: 1; }
+            
+            /* Текст: рефракция + отражение под «водой» */
+            .water-btn__label {
+                position: relative; z-index: 3; display: inline-block;
+                filter: url(#water-refract-soft);
+                text-shadow: 0 1px 0 rgba(255,255,255,.35), 0 2px 8px rgba(0,0,0,.35);
+                transition: transform .45s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+            }
             .water-btn__label::after {
                 content: attr(data-text);
-                position: absolute;
-                left: 0;
-                top: 100%;
-                margin-top: -.15em;
+                position: absolute; left: 0; top: 100%; margin-top: -.15em;
                 white-space: nowrap;
-                transform: scaleY(-1) skewX(-12deg);
-                transform-origin: 0 0;
-                color: rgba(15,23,42,.28);
-                text-shadow: none;
+                transform: scaleY(-1) skewX(-12deg); transform-origin: 0 0;
+                color: rgba(15,23,42,.30); text-shadow: none;
                 -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 70%);
-                mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 70%);
-                filter: blur(.6px);
+                        mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 70%);
+                filter: url(#water-refract);
                 pointer-events: none;
+                transition: color .4s ease;
             }
-
-            /* Рябь от нажатия */
+            .water-btn:hover .water-btn__label { transform: translateY(-2px); }
+            .water-btn:hover .water-btn__label::after { color: rgba(15,23,42,.42); }
+            .water-btn:active .water-btn__label,
+            .water-btn.is-jelly .water-btn__label { transform: translateY(3px) scale(.97); opacity: .85; }
+            
+            /* Рябь от клика */
             .water-ripple {
-                position: absolute;
-                z-index: 0;
-                width: 20px;
-                height: 20px;
-                margin: -10px 0 0 -10px;
+                position: absolute; z-index: 2;
+                width: 20px; height: 20px; margin: -10px 0 0 -10px;
                 border-radius: 50%;
                 border: 2px solid rgba(255,255,255,.75);
                 background: radial-gradient(circle, rgba(255,255,255,.35), rgba(255,255,255,0) 70%);
-                transform: scale(0);
-                opacity: .9;
-                pointer-events: none;
+                transform: scale(0); opacity: .9; pointer-events: none;
                 animation: waterRipple .9s cubic-bezier(.2,.7,.3,1) forwards;
             }
-            @keyframes waterRipple {
-                to { transform: scale(22); opacity: 0; }
-            }
-
-            /* Нажатие: капля проседает и покачивается */
-            .water-btn.is-pressed {
-                animation: dropWobble .85s cubic-bezier(.36,.07,.19,.97) forwards;
-                pointer-events: none;
-            }
-            @keyframes dropWobble {
-                0%   { transform: scale(1, 1); }
-                15%  { transform: scale(1.1, .82) translateY(6px); }
-                35%  { transform: scale(.94, 1.12) translateY(-5px); }
-                55%  { transform: scale(1.05, .95) translateY(2px); }
-                75%  { transform: scale(.98, 1.03); }
-                100% { transform: scale(1.12, 1.12); opacity: 0; }
-            }
-
+            @keyframes waterRipple { to { transform: scale(22); opacity: 0; } }
+            
             @media (prefers-reduced-motion: reduce) {
-                .water-btn, .water-btn.is-pressed { animation: none; }
+                .water-btn, .water-btn:hover, .water-btn.is-jelly { animation: none; }
+                .water-btn__sheen { animation: none; display: none; }
                 .water-ripple { animation-duration: .01s; }
             }
         </style>
@@ -307,9 +346,30 @@
     </div>
 </div>
 
+<!-- SVG-фильтры: искажение текста «сквозь воду» -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="water-refract" x="-5%" y="-20%" width="110%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.05" numOctaves="2" seed="3" result="n">
+            <animate attributeName="baseFrequency" dur="9s" repeatCount="indefinite"
+                     values="0.012 0.05;0.018 0.07;0.012 0.05"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="water-refract-soft" x="-5%" y="-20%" width="110%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" seed="8" result="n">
+            <animate attributeName="baseFrequency" dur="11s" repeatCount="indefinite"
+                     values="0.01 0.04;0.015 0.055;0.01 0.04"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+</svg>
+
 <!-- Start gate: серая вуаль + кнопка «Начать тест» -->
 <div id="start-gate" class="start-gate">
     <button type="button" id="start-test-btn" class="water-btn">
+        <span class="water-btn__lens"></span>
+        <span class="water-btn__sheen"></span>
+        <span class="water-btn__rings"></span>
         <span class="water-btn__label" data-text="{% trans 'startQuiz' %}">{% trans 'startQuiz' %}</span>
     </button>
 </div>
@@ -385,37 +445,63 @@
             const gate = document.getElementById('start-gate');
             const btn  = document.getElementById('start-test-btn');
             if (!gate || !btn) { testStarted = true; startStopwatch(); return; }
-
+        
+            function resetPointer() {
+                btn.style.setProperty('--mx', '50%');
+                btn.style.setProperty('--my', '40%');
+                btn.style.setProperty('--tx', '0px');
+                btn.style.setProperty('--ty', '0px');
+            }
+        
+            // «Магнит»: блики и сама капля слегка тянутся к курсору
+            btn.addEventListener('pointermove', function (e) {
+                if (testStarted) return;
+                const r  = btn.getBoundingClientRect();
+                const px = (e.clientX - r.left) / r.width;
+                const py = (e.clientY - r.top)  / r.height;
+                btn.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+                btn.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+                btn.style.setProperty('--tx', ((px - 0.5) * 2 * 6).toFixed(1) + 'px');
+                btn.style.setProperty('--ty', ((py - 0.5) * 2 * 4).toFixed(1) + 'px');
+            });
+            btn.addEventListener('pointerleave', resetPointer);
+        
+            function spawnRipple(x, y, delay) {
+                const ripple = document.createElement('span');
+                ripple.className = 'water-ripple';
+                ripple.style.left = x + 'px';
+                ripple.style.top  = y + 'px';
+                if (delay) ripple.style.animationDelay = delay + 'ms';
+                btn.appendChild(ripple);
+                setTimeout(function () { ripple.remove(); }, 1200 + (delay || 0));
+            }
+        
             btn.addEventListener('click', function (e) {
                 if (testStarted) return;
                 testStarted = true;
-
-                // Рябь из точки клика
+        
+                // Рябь из точки клика (при клике с клавиатуры — из центра)
                 const rect = btn.getBoundingClientRect();
-                const ripple = document.createElement('span');
-                ripple.className = 'water-ripple';
-                ripple.style.left = ((e.clientX || rect.left + rect.width / 2) - rect.left) + 'px';
-                ripple.style.top  = ((e.clientY || rect.top  + rect.height / 2) - rect.top) + 'px';
-                btn.appendChild(ripple);
-
-                // Капля «проседает» и колышется
-                btn.classList.add('is-pressed');
-
-                // Тест и таймер стартуют сразу, серая вуаль плавно уходит
+                const kbd  = (e.detail === 0);
+                const x = kbd ? rect.width / 2  : e.clientX - rect.left;
+                const y = kbd ? rect.height / 2 : e.clientY - rect.top;
+                spawnRipple(x, y, 0);
+                spawnRipple(x, y, 140);
+        
+                // Желейный возврат формы
+                resetPointer();
+                btn.classList.add('is-jelly');
+        
+                // Тест и таймер стартуют сразу, вуаль уходит после «покачивания» капли
                 elapsedSeconds = 0;
                 updateStopwatchDisplay();
                 startStopwatch();
                 document.body.classList.remove('test-locked');
-
-                setTimeout(function () {
-                    gate.classList.add('is-hidden');
-                }, 450);
-                setTimeout(function () {
-                    gate.remove();
-                }, 1300);
+        
+                setTimeout(function () { gate.classList.add('is-hidden'); }, 750);
+                setTimeout(function () { gate.remove(); }, 1500);
             });
         })();
-        
           // Функция получения CSRF-токена из cookie (стандарт для Django)
           function getCookie(name) {
               let cookieValue = null;
