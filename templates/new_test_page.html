@@ -221,31 +221,12 @@
             }
 
             /* ═════════ Бинарный водяной знак на фоне (за контейнером) ═════════ */
-            .bin-bg {
-                position: fixed; inset: 0;
-                z-index: -1;               /* позади белой карточки теста */
-                pointer-events: none; overflow: hidden;
-            }
-            .bin-col {
-                position: absolute; bottom: 1vh; margin: 0;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
-                font-weight: 700;
-                font-size: clamp(26px, 3.1vw, 54px);
-                line-height: 1.35; letter-spacing: .04em;
-                color: rgba(71, 105, 120, .26);   /* блёклый серо-голубой; для зелёного: rgba(22,163,74,.22) */
-                white-space: pre; user-select: none;
-                -webkit-mask-image: linear-gradient(to top, #000 0%, #000 30%, transparent 100%);
-                        mask-image: linear-gradient(to top, #000 0%, #000 30%, transparent 100%);
-            }
-            .bin-col--l { left: 1.5vw; text-align: left; }
-            .bin-col--r { right: 1.5vw; text-align: right; }
-            @media (max-width: 900px) { .bin-col { opacity: .5; } }
-    </head>
+            
+
+                </style>
+                </head>
     <body class="bg-slate-50 text-slate-900 test-locked">
-<div class="bin-bg" aria-hidden="true">
-    <pre class="bin-col bin-col--l" id="binL"></pre>
-    <pre class="bin-col bin-col--r" id="binR"></pre>
-</div>
+
 <script>
 /* Локализованные строки для JS (confirm/alert) — через {# trans #}|escapejs,
        чтобы переводы не ломали синтаксис скрипта при любых кавычках. */
@@ -260,9 +241,9 @@
 
             <div class="flex items-center gap-4">
                 <nav class="flex gap-3 text-xs font-bold mr-2 uppercase">
-                    <a href="?lang=ru" class="text-blue-600 underline{{else}}text-slate-400 hover:text-slate-700{{end}">RU</a>
-                    <a href="?lang=uz" class="text-blue-600 underline{{else}}text-slate-400 hover:text-slate-700">UZ</a>
-                    <a href="?lang=en" class="text-blue-600 underline">EN</a>
+                    <a href="?lang=ru" class="text-slate-400 hover:text-slate-700">RU</a>
+                    <a href="?lang=uz" class="text-slate-400 hover:text-slate-700">UZ</a>
+                    <a href="?lang=en" class="text-slate-400 hover:text-slate-700">EN</a>
                 </nav>
                     <a href="{% url 'user_profile'%}" class="bg-slate-100 px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-200 transition text-slate-700">
                         {{ request.user.last_name }} {{ request.user.name }}
@@ -431,27 +412,6 @@
         // }
 
         // startTimer();
-        /* Бинарный водяной знак: группы "0110 1011", разные каждую загрузку */
-        (function () {
-            function row() {
-                var s = '';
-                for (var g = 0; g < 2; g++) {
-                    for (var i = 0; i < 4; i++) s += Math.random() < 0.5 ? '0' : '1';
-                    if (g === 0) s += ' ';
-                }
-                return s;
-            }
-            function fill(id, n) {
-                var el = document.getElementById(id);
-                if (!el) return;
-                var rows = [];
-                for (var i = 0; i < n; i++) rows.push(row());
-                el.textContent = rows.join('\n');
-            }
-            fill('binL', 9);
-            fill('binR', 9);
-        })();
-
         const MAX_TEST_SECONDS = 32000;
 
         let elapsedSeconds = 0;
@@ -629,6 +589,8 @@
           }
     </script>
 
+    <script src="{% static 'rain.js' %}"></script>
+    <script>window.initDigitalRainBackground({ theme: 'light', edgeMin: 0.4 });</script>
+
     </body>
 </html>
-<!-- {{end}} -->

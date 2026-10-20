@@ -18,10 +18,8 @@
 
     <script src="{% static 'rain.js' %}"></script>
     <script>
-    (function () {
-        function go() { window.initDigitalRainInBlocks(document.getElementById('selfStudyRoot')); }
-        if (document.readyState === 'complete') go();
-        else window.addEventListener('load', go);
-    })();
+        window.addEventListener('load', function () {
+            window.initDigitalRainBackground({ theme: 'auto', edgeMin: 0.4 });
+        });
     </script>
 {% endblock %}

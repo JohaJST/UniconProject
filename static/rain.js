@@ -1,27 +1,40 @@
-/* static/rain.js — зелёный "digital rain" на белом фоне (канвас прозрачный) */
+/* static/rain.js — Cipher Rain: фоновый "цифровой дождь".
+   ОДИН fixed-canvas за контентом, атлас спрайтов, 3 слоя глубины,
+   слова-шифры и реакция на курсор. */
 (function () {
     'use strict';
 
-    var CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
-    var DEFAULTS = {
-        color: '22,163,74',   // RGB зелёного (tailwind green-600)
-        fontSize: 16,         // размер символа, px
-        frameMs: 60,          // период кадра (больше = медленнее)
-        fade: 0.07,           // скорость затухания хвоста (меньше = длиннее хвост)
-        density: 0.55,        // доля активных колонок 0..1
-        opacity: 0.45         // общая прозрачность слоя 0..1
+    var CHARSET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-<>/\\|#$%&*+=:.';
+    var RANDSRC = '0123456789ABCDEF0123456789ABCDEF<>/|#$%&*+=:';
+    var WORDS = ['AES-256', 'RSA-4096', 'SHA-3', 'ECC', 'HMAC', 'TLS', 'PKI',
+                 'XOR', '0XFF', 'KEY', 'SALT', 'HASH', 'CRYPTO', 'UNICON.UZ'];
+    var RAND = [];
+    for (var i = 0; i < RANDSRC.length; i++) RAND.push(CHARSET.indexOf(RANDSRC.charAt(i)));
+
+    var PALETTE = {
+        // светлый фон: тёмно-зелёный хвост + насыщенная светящаяся "голова"
+        light: { body: 'rgb(20,83,45)',    head: 'rgb(22,163,74)',   glow: 'rgba(34,197,94,0.95)' },
+        // тёмный фон: яркий зелёный хвост + почти белая "голова"
+        dark:  { body: 'rgb(34,197,94)',   head: 'rgb(220,252,231)', glow: 'rgba(74,222,128,0.95)' }
     };
 
-    function injectStyle() {
-        if (document.getElementById('rain-style')) return;
-        var st = document.createElement('style');
-        st.id = 'rain-style';
-        st.textContent =
-            '.rain-host{isolation:isolate;}' +
-            '.rain-canvas{position:absolute;top:0;left:0;width:100%;height:100%;' +
-            'z-index:-1;pointer-events:none;}';
-        document.head.appendChild(st);
-    }
+    // speed — строк за кадр (при 30 fps), len — длина хвоста, alpha — прозрачность слоя
+    var LAYERS = [
+        { fs: 12, speed: 0.10, len: [8, 14],  alpha: 0.55, density: 0.32 },
+        { fs: 17, speed: 0.17, len: [10, 18], alpha: 0.80, density: 0.38 },
+        { fs: 24, speed: 0.26, len: [12, 22], alpha: 1.00, density: 0.24 }
+    ];
+
+    var DEFAULTS = {
+        theme: 'auto',   // 'auto' | 'light' | 'dark'
+        edgeMin: 0.45,   // яркость в центре экрана (0..1), у краёв всегда 1
+        maxFps: 30,
+        intensity: 1,    // множитель плотности колонок
+        zIndex: -1,
+        pointer: true,   // реакция на курсор
+        radius: 170,     // радиус "зоны дешифровки", px
+        words: true
+    };
 
     function merge(o) {
         var r = {}, k;
@@ -30,121 +43,248 @@
         return r;
     }
 
-    function Rain(host, o) {
-        if (host.__rain) return;
-        host.__rain = true;
-        if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
-        host.classList.add('rain-host');
-
-        var canvas = document.createElement('canvas');
-        canvas.className = 'rain-canvas';
-        canvas.setAttribute('aria-hidden', 'true');
-        canvas.style.opacity = o.opacity;
-        host.insertBefore(canvas, host.firstChild);
-
-        var ctx = canvas.getContext('2d');
-        var fs = o.fontSize, w = 0, h = 0, cols = 0;
-        var drops = [], speeds = [], active = [];
-        var raf = 0, last = 0, visible = false;
-
-        function resize() {
-            w = host.clientWidth; h = host.clientHeight;
-            if (!w || !h) return;
-            var dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = w * dpr; canvas.height = h * dpr;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.font = 'bold ' + fs + 'px "Courier New", monospace';
-            ctx.textBaseline = 'top';
-            var n = Math.ceil(w / fs);
-            if (n !== cols) {
-                cols = n; drops = []; speeds = []; active = [];
-                for (var i = 0; i < cols; i++) {
-                    drops.push(Math.floor(Math.random() * -(h / fs)));
-                    speeds.push(0.4 + Math.random() * 0.6);
-                    active.push(Math.random() < o.density);
-                }
-            }
-        }
-
-        function frame(t) {
-            raf = requestAnimationFrame(frame);
-            if (t - last < o.frameMs || !cols) return;
-            last = t;
-
-            // плавно "стираем" прошлые кадры (канвас прозрачный -> destination-out)
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.fillStyle = 'rgba(0,0,0,' + o.fade + ')';
-            ctx.fillRect(0, 0, w, h);
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = 'rgba(' + o.color + ',0.95)';
-
-            for (var i = 0; i < cols; i++) {
-                if (!active[i] || Math.random() > speeds[i]) continue;
-                var y = drops[i] * fs;
-                if (y >= 0 && y < h) {
-                    ctx.fillText(CHARS[(Math.random() * CHARS.length) | 0], i * fs, y);
-                }
-                drops[i]++;
-                if (y > h && Math.random() > 0.975) drops[i] = Math.floor(Math.random() * -20);
-            }
-        }
-
-        function start() { if (!raf) raf = requestAnimationFrame(frame); }
-        function stop() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
-
-        resize();
-
-        if ('ResizeObserver' in window) new ResizeObserver(resize).observe(host);
-        else window.addEventListener('resize', resize);
-
-        // анимация идёт только пока блок на экране
-        if ('IntersectionObserver' in window) {
-            new IntersectionObserver(function (e) {
-                visible = e[0].isIntersecting;
-                visible ? start() : stop();
-            }, { threshold: 0 }).observe(host);
-        } else start();
-    }
-
-    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    /** targets: CSS-селектор | NodeList | массив элементов */
-    window.initDigitalRain = function (targets, opts) {
-        if (reduce) return;
-        injectStyle();
-        var o = merge(opts);
-        var els = typeof targets === 'string' ? document.querySelectorAll(targets) : targets;
-        Array.prototype.forEach.call(els, function (el) { Rain(el, o); });
-    };
-
-    /* ── авто-поиск БЕЛЫХ блоков внутри root (для контента из БД) ── */
-    function bg(el) {
-        var cs = getComputedStyle(el);
-        var m = cs.backgroundColor.match(/rgba?\(([^)]+)\)/);
-        if (!m) return { a: 0 };
+    function parseRGB(str) {
+        var m = /rgba?\(([^)]+)\)/.exec(str || '');
+        if (!m) return null;
         var p = m[1].split(/[,\s\/]+/).filter(Boolean).map(parseFloat);
         return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
     }
-    function collect(parent, depth, out) {
-        Array.prototype.forEach.call(parent.children, function (el) {
-            if (/^(SCRIPT|STYLE|LINK|META|TEMPLATE|CANVAS)$/.test(el.tagName)) return;
-            var b = bg(el);
-            if (b.a > 0.5) {
-                // непрозрачный фон: белый -> хост; цветной (синий hero и т.п.) -> пропускаем целиком
-                if (b.r >= 225 && b.g >= 225 && b.b >= 225 && el.offsetHeight >= 80) out.push(el);
-                return;
+
+    function detectTheme() {
+        var els = [document.body, document.documentElement];
+        for (var i = 0; i < els.length; i++) {
+            var c = parseRGB(getComputedStyle(els[i]).backgroundColor);
+            if (c && c.a > 0.05) {
+                var lum = (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+                return lum > 0.5 ? 'light' : 'dark';
             }
-            if (depth < 3 && el.children.length) collect(el, depth + 1, out);
-        });
+        }
+        return 'light';
     }
-    window.initDigitalRainInBlocks = function (root, opts) {
-        if (!root) return;
-        var hosts = [];
-        collect(root, 0, hosts);
-        // ручная разметка в HTML из БД: class="rain-bg" или data-rain
-        Array.prototype.forEach.call(root.querySelectorAll('.rain-bg,[data-rain]'), function (el) {
-            if (hosts.indexOf(el) === -1) hosts.push(el);
-        });
-        window.initDigitalRain(hosts, opts);
-    };
+
+    function start(opts) {
+        var o = merge(opts);
+        var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var theme = o.theme === 'auto' ? detectTheme() : o.theme;
+        var pal = PALETTE[theme] || PALETTE.light;
+        var frameMs = 1000 / o.maxFps;
+        var R = o.radius, R2 = R * R;
+
+        var canvas = document.createElement('canvas');
+        canvas.id = 'rain-bg';
+        canvas.setAttribute('aria-hidden', 'true');
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;' +
+            'pointer-events:none;z-index:' + o.zIndex + ';';
+        document.body.insertBefore(canvas, document.body.firstChild);
+        var ctx = canvas.getContext('2d');
+
+        var W = 0, H = 0, dpr = 1, layers = [], atlasKey = '';
+        var px = -9999, py = -9999;
+        var raf = 0, last = 0, wordTimer = 0;
+
+        /* ── Атлас: все символы одного слоя, строка 0 = хвост, строка 1 = светящаяся голова ── */
+        function buildAtlas(L) {
+            var n = CHARSET.length;
+            L.cwp = Math.round(L.cw * dpr);
+            L.chp = Math.round(L.ch * dpr);
+            var cv = document.createElement('canvas');
+            cv.width = L.cwp * n;
+            cv.height = L.chp * 2;
+            var g = cv.getContext('2d');
+            g.scale(L.cwp / L.cw, L.chp / L.ch);
+            g.font = 'bold ' + L.fs + 'px "Courier New", ui-monospace, Menlo, Consolas, monospace';
+            g.textAlign = 'center';
+            g.textBaseline = 'middle';
+            for (var row = 0; row < 2; row++) {
+                g.shadowBlur = row ? L.fs * 0.7 : 0;
+                g.shadowColor = pal.glow;
+                g.fillStyle = row ? pal.head : pal.body;
+                for (var i = 0; i < n; i++) {
+                    g.fillText(CHARSET.charAt(i),
+                        i * L.cw + L.pad + L.colW / 2,
+                        row * L.ch + L.pad + L.rowH / 2);
+                }
+            }
+            L.atlas = cv;
+        }
+
+        function spawn(L, c, initial) {
+            c.head = initial ? Math.random() * L.rows * 1.2 - L.rows * 0.2
+                             : -(Math.random() * L.rows * 0.5 + 2);
+            c.speed = L.speed * (0.7 + Math.random() * 0.6);
+            c.len = (L.len[0] + Math.random() * (L.len[1] - L.len[0])) | 0;
+            c.active = Math.random() < L.density * o.intensity;
+            c.b = 0;
+            c.mark.fill(0);
+            for (var r = 0; r < c.chars.length; r++) c.chars[r] = RAND[(Math.random() * RAND.length) | 0];
+        }
+
+        function buildLayers() {
+            var mobile = W < 700;
+            layers = [];
+            LAYERS.forEach(function (cfg, idx) {
+                if (mobile && idx === 0) return;              // на мобильных без дальнего слоя
+                var L = {
+                    fs: cfg.fs, speed: cfg.speed, len: cfg.len, alpha: cfg.alpha,
+                    density: cfg.density * (mobile ? 0.7 : 1)
+                };
+                L.colW = Math.round(L.fs * 0.62);
+                L.rowH = Math.round(L.fs * 1.12);
+                L.pad = Math.ceil(L.fs * 0.45);
+                L.cw = L.colW + 2 * L.pad;
+                L.ch = L.rowH + 2 * L.pad;
+                L.rows = Math.ceil(H / L.rowH) + 2;
+                var ncols = Math.ceil(W / L.colW);
+                L.cols = [];
+                for (var i = 0; i < ncols; i++) {
+                    var c = {
+                        x: i * L.colW,
+                        chars: new Uint8Array(L.rows + 1),
+                        mark: new Uint8Array(L.rows + 1)
+                    };
+                    var nx = (c.x + L.colW / 2) / W;
+                    c.edge = o.edgeMin + (1 - o.edgeMin) * Math.pow(Math.abs(nx * 2 - 1), 1.1);
+                    spawn(L, c, true);
+                    L.cols.push(c);
+                }
+                buildAtlas(L);
+                layers.push(L);
+            });
+        }
+
+        function resize() {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.round(W * dpr);
+            canvas.height = Math.round(H * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            buildLayers();
+            if (reduce) { draw(); }
+        }
+
+        /* ── Слово-шифр "проявляется" в падающей колонке крупного слоя ── */
+        function injectWord() {
+            var L = layers[layers.length - 1];
+            if (!L || document.hidden) return;
+            var w = WORDS[(Math.random() * WORDS.length) | 0];
+            var c = L.cols[(Math.random() * L.cols.length) | 0];
+            var r0 = Math.floor(L.rows * (0.2 + Math.random() * 0.4));
+            if (r0 + w.length >= L.rows) return;
+            spawn(L, c, false);
+            c.active = true;
+            c.head = -2;
+            c.len = Math.max(c.len, w.length + 8);
+            for (var j = 0; j < w.length; j++) {
+                c.chars[r0 + j] = CHARSET.indexOf(w.charAt(j));
+                c.mark[r0 + j] = 1;
+            }
+        }
+
+        function step() {
+            for (var li = 0; li < layers.length; li++) {
+                var L = layers[li];
+                for (var ci = 0; ci < L.cols.length; ci++) {
+                    var c = L.cols[ci], b = 0;
+                    if (c.active && px > -9000) {
+                        var dx = c.x + L.colW * 0.5 - px, dy = c.head * L.rowH - py;
+                        var d2 = dx * dx + dy * dy;
+                        if (d2 < R2) b = 1 - Math.sqrt(d2) / R;
+                    }
+                    c.b = b;
+                    c.head += c.speed * (1 + b * 1.1);
+                    if (c.head - c.len > L.rows) {
+                        spawn(L, c, false);
+                    } else if (c.active && Math.random() < 0.22) {
+                        var r = Math.floor(c.head - Math.random() * c.len);
+                        if (r >= 0 && r < L.rows && !c.mark[r]) {
+                            c.chars[r] = RAND[(Math.random() * RAND.length) | 0];
+                        }
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            for (var li = 0; li < layers.length; li++) {
+                var L = layers[li];
+                var at = L.atlas, cw = L.cw, ch = L.ch, cwp = L.cwp, chp = L.chp;
+                var pad = L.pad, rowH = L.rowH, rows = L.rows;
+                for (var ci = 0; ci < L.cols.length; ci++) {
+                    var c = L.cols[ci];
+                    if (!c.active) continue;
+                    var h = Math.floor(c.head), len = c.len;
+                    var base = L.alpha * c.edge * (1 + 0.6 * c.b);
+                    var x = c.x - pad;
+                    for (var k = 0; k <= len; k++) {
+                        var r = h - k;
+                        if (r < 0) break;
+                        if (r >= rows) continue;
+                        var t = 1 - k / (len + 1);
+                        var a = t * t, row = 0, gi = c.chars[r];
+                        if (k === 0) {                                   // мерцающая светящаяся голова
+                            row = 1; a = 1;
+                            gi = RAND[(Math.random() * RAND.length) | 0];
+                        } else if (c.mark[r]) {                          // буквы слова-шифра
+                            row = 1;
+                            a = Math.max(a, 0.7 * Math.min(1, (len - k + 1) / 4));
+                        }
+                        a *= base;
+                        if (a > 1) a = 1;
+                        if (a < 0.03) continue;
+                        ctx.globalAlpha = a;
+                        ctx.drawImage(at, gi * cwp, row * chp, cwp, chp, x, r * rowH - pad, cw, ch);
+                    }
+                }
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function loop(ts) {
+            raf = requestAnimationFrame(loop);
+            if (ts - last < frameMs - 2) return;
+            last = ts;
+            step();
+            draw();
+        }
+
+        function run() {
+            if (reduce || raf) return;
+            raf = requestAnimationFrame(loop);
+            if (o.words && !wordTimer) wordTimer = setInterval(injectWord, 3800);
+        }
+        function stop() {
+            if (raf) { cancelAnimationFrame(raf); raf = 0; }
+            if (wordTimer) { clearInterval(wordTimer); wordTimer = 0; }
+        }
+
+        if (o.pointer && !reduce) {
+            window.addEventListener('pointermove', function (e) { px = e.clientX; py = e.clientY; }, { passive: true });
+            document.addEventListener('pointerleave', function () { px = py = -9999; });
+        }
+        var rt;
+        window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(resize, 200); });
+        document.addEventListener('visibilitychange', function () { document.hidden ? stop() : run(); });
+
+        resize();
+        run();
+        return { stop: stop, run: run, canvas: canvas };
+    }
+
+    var instance = null;
+    function boot(opts) {
+        if (instance) return instance;
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded', function () { boot(opts); });
+            return null;
+        }
+        instance = start(opts);
+        return instance;
+    }
+
+    window.initDigitalRainBackground = boot;
+    // обратная совместимость: старые вызовы (about.js, self.html) теперь тоже запускают фон
+    window.initDigitalRain = function (_targets, opts) { return boot(opts); };
+    window.initDigitalRainInBlocks = function (_root, opts) { return boot(opts); };
 })();
