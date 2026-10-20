@@ -3,26 +3,6 @@ core/ai_presenter.py
 ────────────────────
 Бэкенд-сервис интерактивного голосового гида «AI Presenter» для страницы
 «О нас» (templates/about.html) на трёх языках (uz, ru, en).
-
-Этап 1:
-  1. collect_about_context(lang) — сбор актуальных данных из моделей
-     About, Courses, Teachers, News, Partners с учётом локали и правил
-     отображения секций в шаблоне about.html.
-  2. compute_state_hash(context_dict, lang) — детерминированный SHA-256
-     отпечаток состояния БД и языка (16 hex-символов).
-  3. generate_presentation_script(context_dict, lang) — генерация живого
-     JSON-сценария экскурсии через DeepSeek API (deepseek-chat) с защитой
-     от падений и автоматическим переключением на динамический фолбэк.
-
-Этап 2:
-  4. synthesize_scene_speech(text, lang) — генерация MP3 через edge-tts
-     (uz-UZ-MadinaNeural, ru-RU-SvetlanaNeural, en-US-AvaMultilingualNeural)
-     с поддержкой опционального переключения на Azure Speech REST API
-     или OpenAI TTS через переменные окружения в .env.
-  5. get_or_build_presentation(lang) — посегментное кэширование MP3 и
-     manifest.json в default_storage (media/ai_presenter/<lang>/<state_hash>/),
-     дублирование в django.core.cache.cache, защита Redis-локом при
-     перегенерации и автоматическая очистка устаревших файлов предыдущего хэша.
 """
 from __future__ import annotations
 
@@ -30,19 +10,24 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import logging
 import os
 import re
 import time
 from typing import Any
+from urllib.parse import quote
 from xml.sax.saxutils import escape as xml_escape
 
 import requests
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from django.urls import NoReverseMatch, reverse
 from django.utils import translation
 
 from core.models import About, Courses, News, Partners, Teachers
+
+logger = logging.getLogger(__name__)
 
 VALID_LANGS = ("uz", "ru", "en")
 DEFAULT_LANG = "uz"
@@ -51,10 +36,9 @@ _AI_TIMEOUT = 45
 _TTS_TIMEOUT = 30
 _DEFAULT_MODEL = "deepseek-chat"
 
-# Снимает ведущий ```/```json и завершающий ``` (как в core/dashboard/ai_translate.py)
+_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 _FENCE_RE = re.compile(r"^```(?:json)?\n?|\n?```$")
 
-# Строгий порядок секций на странице templates/about.html
 SECTION_ORDER = ("hero", "goals", "courses", "teachers", "news", "partners")
 
 SECTION_SELECTORS = {
@@ -93,7 +77,53 @@ DEFAULT_TITLES = {
     },
 }
 
-# Нейронные голоса Microsoft (для edge-tts и Azure Speech REST API)
+DEFAULT_GOALS_TASKS = {
+    "uz": [
+        "01: Kriptologiya sohasida malakali kadrlarni tayyorlash va qayta tayyorlash",
+        "02: Zamonaviy kriptografik himoya vositalari bo'yicha ilmiy-tadqiqot ishlarini olib borish",
+        "03: Axborot xavfsizligi va kiberxavfsizlik bo'yicha amaliy ko'nikmalarni shakllantirish",
+    ],
+    "ru": [
+        "01: Подготовка и переподготовка квалифицированных кадров в области криптологии",
+        "02: Проведение научных исследований по современным средствам криптографической защиты",
+        "03: Формирование прикладных навыков в сфере информационной и кибербезопасности",
+    ],
+    "en": [
+        "01: Training and retraining qualified specialists in the field of cryptology",
+        "02: Conducting scientific research on modern cryptographic protection tools",
+        "03: Building practical skills in information security and cybersecurity",
+    ],
+}
+
+DEFAULT_SCENE_ACTIONS: dict[str, list[dict[str, Any]]] = {
+    "hero": [
+        {"selector": ".hero-chip", "at": 0.0},
+        {"selector": ".hero-heading", "at": 0.33},
+        {"selector": ".hero-btns", "at": 0.66},
+    ],
+    "goals": [
+        {"selector": ".goal-panel:first-child", "at": 0.0},
+        {"selector": ".goal-panel:last-child", "at": 0.5},
+        {"selector": ".task-row", "at": 0.65},
+    ],
+    "courses": [
+        {"selector": "#coursesGrid .c-card:nth-child(1)", "at": 0.0, "class": "ai-focus"},
+        {"selector": "#coursesGrid .c-card:nth-child(2)", "at": 0.34, "class": "ai-focus"},
+        {"selector": "#coursesGrid .c-card:nth-child(3)", "at": 0.67, "class": "ai-focus"},
+    ],
+    "teachers": [
+        {"selector": "[data-carousel='teachers'] .t-card", "at": 0.0},
+        {"selector": "[data-carousel='teachers'] .carousel__arr--next", "at": 0.5, "action": "click"},
+    ],
+    "news": [
+        {"selector": "[data-carousel='news'] .n-card", "at": 0.0},
+        {"selector": "[data-carousel='news'] .carousel__arr--next", "at": 0.5, "action": "click"},
+    ],
+    "partners": [
+        {"selector": ".marquee-group:first-child .marquee-item", "at": 0.0, "class": "ai-focus"},
+    ],
+}
+
 EDGE_TTS_VOICES = {
     "uz": "uz-UZ-MadinaNeural",
     "ru": "ru-RU-SvetlanaNeural",
@@ -113,16 +143,19 @@ _LANGUAGE_INSTRUCTIONS = {
     "uz": (
         "Язык ответа: УЗБЕКСКИЙ (строго латиница — O'zbek lotin alifbosida). "
         "Используй современный, живой, грамотный литературный узбекский язык. "
+        "Числа и даты пиши словами или в удобной для диктора форме. "
         "Избегай машинного калькирования: текст должен звучать естественно "
         "для носителя языка при озвучке диктором."
     ),
     "ru": (
         "Язык ответа: РУССКИЙ. "
-        "Используй уверенный, живой, современный деловой стиль без канцеляризмов."
+        "Используй уверенный, живой, современный деловой стиль без канцеляризмов. "
+        "Числа и даты формулируй удобно для голосового чтения."
     ),
     "en": (
         "Response language: ENGLISH. "
-        "Use a confident, engaging, modern professional tone suitable for a tech academy."
+        "Use a confident, engaging, modern professional tone suitable for a tech academy. "
+        "Format numbers and dates naturally for spoken narration."
     ),
 }
 
@@ -137,7 +170,7 @@ _SYSTEM_PROMPT = (
     "дополнять экран, живо объяснять ценность и плавно переводить внимание от "
     "одной секции к другой.\n"
     "2. ТАЙМИНГ И ДЛИНА: Для КАЖДОЙ активной сцены поле 'speech_text' должно "
-    "содержать ровно 2–3 предложения (примерно 22–38 слов, что соответствует "
+    "содержать ровно 2–3 предложения (примерно 22–35 слов, что соответствует "
     "8–12 секундам живой речи).\n"
     "3. ГОТОВНОСТЬ К TTS (ОЗВУЧКЕ): В 'speech_text' не используй списки, "
     "кавычки-ёлочки, слэши, звёздочки, эмодзи, сложные аббревиатуры или URL. "
@@ -179,6 +212,29 @@ class AIPresenterTTSError(Exception):
 # Вспомогательные утилиты
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _build_https_url(host_parts: tuple[str, ...], path_parts: tuple[str, ...]) -> str:
+    """
+    Собирает HTTPS URL из кортежей без точек и слэшей в литералах кода,
+    чтобы парсеры Markdown не превращали строку в [url](url) при копировании.
+    """
+    scheme = "https"
+    sep = "://"
+    host = ".".join(part.strip(".") for part in host_parts if part)
+    path = "/".join(part.strip("/") for part in path_parts if part)
+    return f"{scheme}{sep}{host}/{path}" if path else f"{scheme}{sep}{host}"
+
+
+def _sanitize_url(url: str) -> str:
+    """Очищает URL от случайных Markdown-скобок вида [url](url) и дублей схемы."""
+    cleaned = (url or "").strip()
+    cleaned = _MD_LINK_RE.sub(r"\2", cleaned)
+    double_prefix = "https" + "://" + "https" + "://"
+    single_prefix = "https" + "://"
+    while cleaned.startswith(double_prefix):
+        cleaned = single_prefix + cleaned[len(double_prefix):]
+    return cleaned
+
+
 def _normalize_lang(lang: str | None) -> str:
     if not lang:
         return DEFAULT_LANG
@@ -200,8 +256,7 @@ def _get_localized(obj: Any, field: str, lang: str) -> str:
     """
     Безопасно извлекает переводимое поле django-modeltranslation.
     Если перевод на выбранный язык (ru/en) в БД не заполнен, берёт активное
-    значение или fallback на основной язык (uz), чтобы LLM-сценарист всегда
-    получал осмысленную фактуру.
+    значение или fallback на основной язык (uz).
     """
     if obj is None:
         return ""
@@ -221,6 +276,15 @@ def _get_voice_for_lang(lang: str) -> str:
     return (os.getenv(env_key) or "").strip() or EDGE_TTS_VOICES[lang]
 
 
+def _get_about_base_path(lang: str) -> str:
+    """Безопасно определяет URL страницы about через reverse('about')."""
+    try:
+        with translation.override(lang):
+            return reverse("about")
+    except NoReverseMatch:
+        return "/"
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Сборщик контекста страницы (collect_about_context)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -234,9 +298,9 @@ def collect_about_context(lang: str = DEFAULT_LANG) -> dict[str, Any]:
 
     with translation.override(lang):
         about_obj = About.objects.filter(id=1).first()
-        courses_qs = list(Courses.objects.all().order_by("-created")[:6])
+        courses_qs = list(Courses.objects.all().order_by("-created")[:4])
         teachers_qs = list(Teachers.objects.all().order_by("-created")[:6])
-        news_qs = list(News.objects.all().order_by("-date")[:4])
+        news_qs = list(News.objects.all().order_by("-date")[:3])
 
         partners_enabled = bool(about_obj and about_obj.partners)
         partners_qs = list(Partners.objects.all().order_by("-created")[:10]) if partners_enabled else []
@@ -273,8 +337,6 @@ def collect_about_context(lang: str = DEFAULT_LANG) -> dict[str, Any]:
             if (p.name or "").strip()
         ]
 
-        # В templates/about.html секция #goals рендерится только {% if about %},
-        # а секция #partners — только {% if about.partners and partners %}.
         sections = {
             "hero": {
                 "active": True,
@@ -287,11 +349,7 @@ def collect_about_context(lang: str = DEFAULT_LANG) -> dict[str, Any]:
                 "active": bool(about_obj is not None),
                 "section": "#goals",
                 "goals_info": _get_localized(about_obj, "goals_info", lang),
-                "focus_areas": [
-                    "Cryptographic protection / Kriptografik himoya",
-                    "Scientific research / Ilmiy-tadqiqot",
-                    "Training of cybersecurity specialists",
-                ],
+                "tasks": DEFAULT_GOALS_TASKS.get(lang, DEFAULT_GOALS_TASKS["uz"]),
             },
             "courses": {
                 "active": True,
@@ -339,8 +397,7 @@ def collect_about_context(lang: str = DEFAULT_LANG) -> dict[str, Any]:
 def compute_state_hash(context_dict: dict[str, Any], lang: str) -> str:
     """
     Вычисляет детерминированный SHA-256 хэш (16 символов) от канонизированного
-    JSON контекста и языка. Любое изменение курса, новости, преподавателя или
-    партнёра в дашборде автоматически изменит этот хэш.
+    JSON контекста и языка.
     """
     lang = _normalize_lang(lang)
     canonical_payload = {
@@ -355,9 +412,25 @@ def compute_state_hash(context_dict: dict[str, Any], lang: str) -> str:
 # 3. Генерация сценария через DeepSeek (generate_presentation_script)
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _enrich_scene_dict(sec_id: str, title: str, speech_text: str, subtitles: str) -> dict[str, Any]:
+    """Формирует унифицированный словарь сцены со всеми ключами и actions."""
+    selector = SECTION_SELECTORS[sec_id]
+    return {
+        "id": sec_id,
+        "scene_id": sec_id,
+        "section": selector,
+        "section_selector": selector,
+        "title": title,
+        "speech_text": speech_text,
+        "subtitles": subtitles,
+        "subtitle_text": subtitles,
+        "actions": DEFAULT_SCENE_ACTIONS.get(sec_id, []),
+    }
+
+
 def _call_deepseek_presenter(context_dict: dict[str, Any], lang: str) -> dict[str, Any]:
     """Отправляет запрос к DeepSeek API и возвращает распарсенный JSON."""
-    api_key = (os.getenv("AI_API_KEY") or "").strip()
+    api_key = (os.getenv("AI_API_KEY") or "").strip().strip("'").strip('"')
     if not api_key:
         raise AIPresenterError("missing_api_key")
 
@@ -393,9 +466,12 @@ def _call_deepseek_presenter(context_dict: dict[str, Any], lang: str) -> dict[st
         "Authorization": f"Bearer {api_key}",
     }
 
+    default_deepseek_url = _build_https_url(("api", "deepseek", "com"), ("chat", "completions"))
+    api_url = _sanitize_url(os.getenv("AI_PRESENTER_API_URL") or default_deepseek_url)
+
     try:
         resp = requests.post(
-            "[https://api.deepseek.com/chat/completions](https://api.deepseek.com/chat/completions)",
+            api_url,
             json=payload,
             headers=headers,
             timeout=_AI_TIMEOUT,
@@ -403,6 +479,7 @@ def _call_deepseek_presenter(context_dict: dict[str, Any], lang: str) -> dict[st
         resp.raise_for_status()
         data = resp.json()
     except requests.RequestException as exc:
+        logger.warning("AI Presenter DeepSeek request failed: %s", exc)
         raise AIPresenterError("ai_unavailable") from exc
 
     try:
@@ -423,7 +500,7 @@ def _call_deepseek_presenter(context_dict: dict[str, Any], lang: str) -> dict[st
     return parsed
 
 
-def generate_presentation_script(context_dict: dict[str, Any], lang: str = DEFAULT_LANG) -> list[dict[str, str]]:
+def generate_presentation_script(context_dict: dict[str, Any], lang: str = DEFAULT_LANG) -> list[dict[str, Any]]:
     """
     Генерирует сценарий презентации для активных секций страницы.
     Если AI_API_KEY отсутствует, API недоступен или вернул неполный ответ —
@@ -439,11 +516,11 @@ def generate_presentation_script(context_dict: dict[str, Any], lang: str = DEFAU
     except AIPresenterError:
         return fallback_scenes
 
-    ai_scenes_by_id: dict[str, dict[str, str]] = {}
+    ai_scenes_by_id: dict[str, dict[str, Any]] = {}
     for raw_scene in ai_data.get("scenes", []):
         if not isinstance(raw_scene, dict):
             continue
-        sec_id = str(raw_scene.get("id") or "").strip().lower()
+        sec_id = str(raw_scene.get("id") or raw_scene.get("scene_id") or "").strip().lower()
         if sec_id not in SECTION_SELECTORS or sec_id not in active_ids:
             continue
 
@@ -451,19 +528,20 @@ def generate_presentation_script(context_dict: dict[str, Any], lang: str = DEFAU
         if not speech_text:
             continue
 
-        subtitles = _clean_text(raw_scene.get("subtitles"), max_len=300) or speech_text
+        subtitles = (
+            _clean_text(raw_scene.get("subtitles") or raw_scene.get("subtitle_text"), max_len=300)
+            or speech_text
+        )
         title = _clean_text(raw_scene.get("title"), max_len=80) or DEFAULT_TITLES[lang][sec_id]
 
-        ai_scenes_by_id[sec_id] = {
-            "id": sec_id,
-            "section": SECTION_SELECTORS[sec_id],
-            "title": title,
-            "speech_text": speech_text,
-            "subtitles": subtitles,
-        }
+        ai_scenes_by_id[sec_id] = _enrich_scene_dict(
+            sec_id=sec_id,
+            title=title,
+            speech_text=speech_text,
+            subtitles=subtitles,
+        )
 
-    # Гарантируем строгий порядок секций и заполняем возможные пропуски из фолбэка
-    final_scenes: list[dict[str, str]] = []
+    final_scenes: list[dict[str, Any]] = []
     for sec_id in active_ids:
         if sec_id in ai_scenes_by_id:
             final_scenes.append(ai_scenes_by_id[sec_id])
@@ -477,7 +555,7 @@ def generate_presentation_script(context_dict: dict[str, Any], lang: str = DEFAU
 # 4. Безотказный динамический фолбэк (build_fallback_script)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_fallback_script(context_dict: dict[str, Any], lang: str = DEFAULT_LANG) -> list[dict[str, str]]:
+def build_fallback_script(context_dict: dict[str, Any], lang: str = DEFAULT_LANG) -> list[dict[str, Any]]:
     """
     Формирует качественный сценарий на нужном языке (uz, ru, en), подставляя
     реальные названия курсов, имена преподавателей, заголовки новостей и
@@ -636,24 +714,25 @@ def build_fallback_script(context_dict: dict[str, Any], lang: str = DEFAULT_LANG
             ),
         }
 
-    scenes: list[dict[str, str]] = []
+    scenes: list[dict[str, Any]] = []
     for sec_id in active_ids:
         if sec_id not in SECTION_SELECTORS:
             continue
         text = templates.get(sec_id, "")
-        scenes.append({
-            "id": sec_id,
-            "section": SECTION_SELECTORS[sec_id],
-            "title": DEFAULT_TITLES[lang][sec_id],
-            "speech_text": text,
-            "subtitles": text,
-        })
+        scenes.append(
+            _enrich_scene_dict(
+                sec_id=sec_id,
+                title=DEFAULT_TITLES[lang][sec_id],
+                speech_text=text,
+                subtitles=text,
+            )
+        )
 
     return scenes
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5. Синтез речи (TTS): edge-tts + опционально Azure Speech / OpenAI TTS
+# 5. Синтез речи (TTS): edge-tts + Azure / OpenAI + HTTP TTS Fallback
 # ─────────────────────────────────────────────────────────────────────────────
 
 async def _edge_tts_stream_bytes(text: str, voice: str, rate: str = "+0%", pitch: str = "+0Hz") -> bytes:
@@ -678,8 +757,7 @@ async def _edge_tts_stream_bytes(text: str, voice: str, rate: str = "+0%", pitch
 def _synthesize_with_edge_tts(text: str, lang: str) -> bytes:
     """
     Синхронная обёртка над асинхронным edge-tts с использованием asyncio.run().
-    Если в текущем потоке уже запущен event loop (например, под ASGI),
-    выполняет asyncio.run() в отдельном рабочем потоке.
+    Если в текущем потоке уже запущен event loop, выполняет в отдельном потоке.
     """
     voice = _get_voice_for_lang(lang)
     rate = (os.getenv("AI_PRESENTER_TTS_RATE") or "+0%").strip()
@@ -725,10 +803,11 @@ def _synthesize_with_azure_rest(text: str, lang: str) -> bytes:
         f"</speak>"
     )
 
-    endpoint = (
-        (os.getenv("AZURE_SPEECH_ENDPOINT") or "").strip()
-        or f"https://{speech_region}[.tts.speech.microsoft.com/cognitiveservices/v1](https://.tts.speech.microsoft.com/cognitiveservices/v1)"
+    default_azure_url = _build_https_url(
+        (speech_region, "tts", "speech", "microsoft", "com"),
+        ("cognitiveservices", "v1"),
     )
+    endpoint = _sanitize_url(os.getenv("AZURE_SPEECH_ENDPOINT") or default_azure_url)
     headers = {
         "Ocp-Apim-Subscription-Key": speech_key,
         "Content-Type": "application/ssml+xml; charset=utf-8",
@@ -760,10 +839,8 @@ def _synthesize_with_openai_tts(text: str, lang: str) -> bytes:
     if not api_key:
         raise AIPresenterTTSError("missing_openai_tts_key")
 
-    endpoint = (
-        (os.getenv("OPENAI_TTS_URL") or "").strip()
-        or "[https://api.openai.com/v1/audio/speech](https://api.openai.com/v1/audio/speech)"
-    )
+    default_openai_url = _build_https_url(("api", "openai", "com"), ("v1", "audio", "speech"))
+    endpoint = _sanitize_url(os.getenv("OPENAI_TTS_URL") or default_openai_url)
     model = (os.getenv("OPENAI_TTS_MODEL") or "tts-1").strip()
     voice = (os.getenv("OPENAI_TTS_VOICE") or "nova").strip()
 
@@ -793,12 +870,76 @@ def _synthesize_with_openai_tts(text: str, lang: str) -> bytes:
         raise AIPresenterTTSError("openai_tts_unavailable") from exc
 
 
+def _split_text_into_tts_chunks(text: str, max_chars: int = 180) -> list[str]:
+    """Разбивает текст по предложениям/словам на куски <= max_chars для HTTP TTS фолбэка."""
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+    chunks: list[str] = []
+    current = ""
+    for sent in sentences:
+        if not sent:
+            continue
+        if len(current) + len(sent) + 1 <= max_chars:
+            current = f"{current} {sent}".strip()
+        else:
+            if current:
+                chunks.append(current)
+            if len(sent) <= max_chars:
+                current = sent
+            else:
+                words = sent.split(" ")
+                sub = ""
+                for w in words:
+                    if len(sub) + len(w) + 1 <= max_chars:
+                        sub = f"{sub} {w}".strip()
+                    else:
+                        if sub:
+                            chunks.append(sub)
+                        sub = w
+                current = sub
+    if current:
+        chunks.append(current)
+    return chunks or [text[:max_chars]]
+
+
+def _synthesize_with_google_tts_fallback(text: str, lang: str) -> bytes:
+    """
+    Резервный HTTP-синтезатор (не требует пакета edge-tts и ключей).
+    Используется автоматически, если edge-tts не установлен в окружении
+    или WebSocket Microsoft недоступен.
+    """
+    tl = _normalize_lang(lang)
+    chunks = _split_text_into_tts_chunks(text, max_chars=180)
+    mp3_parts: list[bytes] = []
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        )
+    }
+
+    base_tts_url = _build_https_url(("translate", "googleapis", "com"), ("translate_tts",))
+    for chunk in chunks:
+        url = f"{base_tts_url}?ie=UTF-8&client=tw-ob&tl={tl}&q={quote(chunk)}"
+        try:
+            resp = requests.get(url, headers=headers, timeout=15)
+            resp.raise_for_status()
+            if resp.content:
+                mp3_parts.append(resp.content)
+        except requests.RequestException as exc:
+            raise AIPresenterTTSError(f"google_tts_fallback_failed: {exc}") from exc
+
+    combined = b"".join(mp3_parts)
+    if not combined:
+        raise AIPresenterTTSError("empty_google_tts_audio")
+    return combined
+
+
 def synthesize_scene_speech(text: str, lang: str = DEFAULT_LANG) -> bytes:
     """
     Единая точка синтеза речи (MP3) для одной сцены.
     Выбирает провайдера по AI_PRESENTER_TTS_PROVIDER (edge | azure | openai)
-    или автоматически использует Azure/OpenAI при наличии их ключей в .env,
-    с безотказным откатом на edge-tts в случае ошибки внешнего API.
+    с автоматическим откатом на edge-tts, а при недоступности edge-tts —
+    на встроенный HTTP TTS фолбэк.
     """
     lang = _normalize_lang(lang)
     clean_speech = _clean_text(text, max_len=600)
@@ -810,16 +951,20 @@ def synthesize_scene_speech(text: str, lang: str = DEFAULT_LANG) -> bytes:
     if provider == "azure" or (not provider and os.getenv("AZURE_SPEECH_KEY") and os.getenv("AZURE_SPEECH_REGION")):
         try:
             return _synthesize_with_azure_rest(clean_speech, lang)
-        except AIPresenterTTSError:
-            return _synthesize_with_edge_tts(clean_speech, lang)
+        except AIPresenterTTSError as exc:
+            logger.warning("Azure TTS failed (%s), falling back to edge-tts", exc)
 
     if provider == "openai":
         try:
             return _synthesize_with_openai_tts(clean_speech, lang)
-        except AIPresenterTTSError:
-            return _synthesize_with_edge_tts(clean_speech, lang)
+        except AIPresenterTTSError as exc:
+            logger.warning("OpenAI TTS failed (%s), falling back to edge-tts", exc)
 
-    return _synthesize_with_edge_tts(clean_speech, lang)
+    try:
+        return _synthesize_with_edge_tts(clean_speech, lang)
+    except AIPresenterTTSError as exc:
+        logger.warning("edge-tts failed (%s), falling back to HTTP TTS", exc)
+        return _synthesize_with_google_tts_fallback(clean_speech, lang)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -847,6 +992,18 @@ def _scene_audio_storage_path(lang: str, state_hash: str, idx: int, scene_id: st
     return f"ai_presenter/{lang}/{state_hash}/scene_{idx}_{safe_id}.mp3"
 
 
+def _normalize_media_url(raw_url: str) -> str:
+    """Гарантирует ведущий слэш и прямые слэши в URL медиафайла."""
+    if not raw_url:
+        return ""
+    cleaned = raw_url.replace("\\", "/")
+    http_prefix = "http" + "://"
+    https_prefix = "https" + "://"
+    if cleaned.startswith((http_prefix, https_prefix, "/")):
+        return cleaned
+    return "/" + cleaned.lstrip("/")
+
+
 def _save_to_storage_exact(rel_path: str, content_bytes: bytes) -> str:
     """
     Сохраняет файл в default_storage строго по указанному пути
@@ -861,7 +1018,7 @@ def _manifest_is_valid_and_files_exist(manifest: Any, lang: str, state_hash: str
     """
     Проверяет, что структура манифеста валидна, его хэш совпадает с текущим,
     а сам manifest.json и все сгенерированные MP3-файлы сцен физически существуют
-    в default_storage.
+    в default_storage и не пусты.
     """
     if not isinstance(manifest, dict):
         return False
@@ -881,9 +1038,13 @@ def _manifest_is_valid_and_files_exist(manifest: Any, lang: str, state_hash: str
             return False
         scene_id = scene.get("id") or f"s{idx}"
         expected_audio_path = _scene_audio_storage_path(lang, state_hash, idx, scene_id)
-        # Если для сцены был сохранён audio_url, сам MP3 обязан лежать в storage
         if not scene.get("audio_url") or not default_storage.exists(expected_audio_path):
             return False
+        try:
+            if default_storage.size(expected_audio_path) <= 0:
+                return False
+        except Exception:
+            pass
 
     return True
 
@@ -914,10 +1075,6 @@ def _cleanup_hash_directory(lang: str, old_hash: str) -> None:
     prefix_dir = f"ai_presenter/{lang}/{old_hash}"
 
     try:
-        if not default_storage.exists(prefix_dir):
-            # Даже если сама директория не определяется через exists(),
-            # пробуем listdir() на случай S3/кастомного стораджа
-            pass
         _, files = default_storage.listdir(prefix_dir)
         for filename in files:
             file_rel_path = f"{prefix_dir}/{filename}"
@@ -926,7 +1083,6 @@ def _cleanup_hash_directory(lang: str, old_hash: str) -> None:
             except Exception:
                 pass
     except Exception:
-        # Фолбэк: пробуем удалить стандартные пути напрямую
         for idx, sec_id in enumerate(SECTION_ORDER):
             candidate = _scene_audio_storage_path(lang, old_hash, idx, sec_id)
             if default_storage.exists(candidate):
@@ -957,13 +1113,7 @@ def _cleanup_stale_lang_dirs(lang: str, keep_hash: str, previous_hash: str | Non
 
 def get_or_build_presentation(lang: str = DEFAULT_LANG) -> dict[str, Any]:
     """
-    Главная точка входа для получения JSON-манифеста презентации:
-      1. Вычисляет актуальный state_hash по данным БД и языку.
-      2. Если state_hash не менялся и файлы сцен существуют в default_storage —
-         мгновенно возвращает готовый манифест без вызова DeepSeek и TTS.
-      3. Если данные изменились — ставит Redis-лок, генерирует новый сценарий
-         и MP3-файлы каждой сцены, сохраняет manifest.json в media/ и кэш,
-         обновляет ai_presenter:latest_hash:<lang> и удаляет старые файлы.
+    Главная точка входа для получения JSON-манифеста презентации.
     """
     lang = _normalize_lang(lang)
     context_dict = collect_about_context(lang)
@@ -990,8 +1140,6 @@ def get_or_build_presentation(lang: str = DEFAULT_LANG) -> dict[str, Any]:
     lock_acquired = cache.add(lock_key, "1", timeout=_LOCK_TIMEOUT)
 
     if not lock_acquired:
-        # Параллельный запрос уже генерирует презентацию для этого языка —
-        # ждём завершения (до ~12 секунд) и проверяем кэш/диск.
         for _ in range(24):
             time.sleep(0.5)
             ready = cache.get(manifest_key) or _load_manifest_from_storage(lang, state_hash)
@@ -999,16 +1147,17 @@ def get_or_build_presentation(lang: str = DEFAULT_LANG) -> dict[str, Any]:
                 cache.set(manifest_key, ready, timeout=_MANIFEST_CACHE_TTL)
                 return ready
 
-        # Если параллельный воркер ещё не успел закончить — отдаём
-        # предыдущий валидный манифест (если есть) или быстрый фолбэк без ожидания
         prev_hash = cache.get(latest_hash_key)
         if prev_hash:
-            prev_manifest = cache.get(_manifest_cache_key(lang, prev_hash)) or _load_manifest_from_storage(lang, prev_hash)
+            prev_manifest = (
+                cache.get(_manifest_cache_key(lang, prev_hash))
+                or _load_manifest_from_storage(lang, prev_hash)
+            )
             if prev_manifest and isinstance(prev_manifest.get("scenes"), list):
                 return prev_manifest
 
         fallback_scenes = [
-            {**scene, "audio_url": None}
+            {**scene, "audio_url": None, "audio_stream_url": None}
             for scene in build_fallback_script(context_dict, lang)
         ]
         return {
@@ -1020,6 +1169,7 @@ def get_or_build_presentation(lang: str = DEFAULT_LANG) -> dict[str, Any]:
 
     try:
         previous_hash = cache.get(latest_hash_key)
+        about_base_path = _get_about_base_path(lang)
 
         raw_scenes = generate_presentation_script(context_dict, lang)
         scenes_with_audio: list[dict[str, Any]] = []
@@ -1028,24 +1178,40 @@ def get_or_build_presentation(lang: str = DEFAULT_LANG) -> dict[str, Any]:
         for idx, scene in enumerate(raw_scenes):
             scene_id = scene.get("id") or f"s{idx}"
             speech_text = scene.get("speech_text") or ""
+            subtitles = scene.get("subtitles") or speech_text
+            title = scene.get("title") or DEFAULT_TITLES[lang].get(scene_id, "")
+            selector = scene.get("section") or SECTION_SELECTORS.get(scene_id, f"#{scene_id}")
+
             audio_url: str | None = None
+            audio_stream_url: str | None = None
 
             try:
                 mp3_bytes = synthesize_scene_speech(speech_text, lang=lang)
                 rel_audio_path = _scene_audio_storage_path(lang, state_hash, idx, scene_id)
                 saved_audio_path = _save_to_storage_exact(rel_audio_path, mp3_bytes)
-                audio_url = default_storage.url(saved_audio_path)
-            except Exception:
+                audio_url = _normalize_media_url(default_storage.url(saved_audio_path))
+                filename = os.path.basename(rel_audio_path)
+                audio_stream_url = (
+                    f"{about_base_path}?ai_presenter_audio=1&lang={lang}&hash={state_hash}&file={filename}"
+                )
+            except Exception as exc:
+                logger.error("AI Presenter TTS failed for scene %s (%s): %s", scene_id, lang, exc)
                 all_audio_ok = False
                 audio_url = None
+                audio_stream_url = None
 
             scenes_with_audio.append({
                 "id": scene_id,
-                "section": scene.get("section") or SECTION_SELECTORS.get(scene_id, f"#{scene_id}"),
-                "title": scene.get("title") or DEFAULT_TITLES[lang].get(scene_id, ""),
+                "scene_id": scene_id,
+                "section": selector,
+                "section_selector": selector,
+                "title": title,
                 "speech_text": speech_text,
-                "subtitles": scene.get("subtitles") or speech_text,
+                "subtitles": subtitles,
+                "subtitle_text": subtitles,
+                "actions": scene.get("actions") or DEFAULT_SCENE_ACTIONS.get(scene_id, []),
                 "audio_url": audio_url,
+                "audio_stream_url": audio_stream_url,
             })
 
         manifest_data: dict[str, Any] = {
@@ -1055,7 +1221,6 @@ def get_or_build_presentation(lang: str = DEFAULT_LANG) -> dict[str, Any]:
             "scenes": scenes_with_audio,
         }
 
-        # Сохраняем manifest.json и обновляем latest_hash, если аудио успешно сгенерировано
         if all_audio_ok and scenes_with_audio:
             manifest_rel_path = _manifest_storage_path(lang, state_hash)
             manifest_bytes = json.dumps(manifest_data, ensure_ascii=False, indent=2).encode("utf-8")
@@ -1064,7 +1229,6 @@ def get_or_build_presentation(lang: str = DEFAULT_LANG) -> dict[str, Any]:
             cache.set(manifest_key, manifest_data, timeout=_MANIFEST_CACHE_TTL)
             cache.set(latest_hash_key, state_hash, timeout=_MANIFEST_CACHE_TTL)
 
-            # Очищаем устаревшие файлы предыдущего state_hash
             _cleanup_stale_lang_dirs(lang, keep_hash=state_hash, previous_hash=previous_hash)
 
         return manifest_data

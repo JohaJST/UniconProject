@@ -1,7 +1,9 @@
 import random
+import re
 
+from django.core.files.storage import default_storage
 from django.db.models import Count
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.template import RequestContext, Template
 from django.utils import translation
@@ -10,8 +12,37 @@ from core.ai_presenter import VALID_LANGS, get_or_build_presentation
 from core.models import About, Courses, News, Partners, SelfQuestion, Teachers, Test
 from core.models.self import SelfCtg, SelfQuestion, SelfResult, SelfStudy, SelfUser
 
+_SAFE_HASH_RE = re.compile(r"^[a-f0-9]{16}$")
+_SAFE_FILE_RE = re.compile(r"^scene_\d+_[a-z0-9_-]+\.mp3$")
+
 
 def about(request):
+    # 1. Безопасная раздача сгенерированного MP3 (резервный канал, если /media/ не настроен в urls.py)
+    if request.GET.get("ai_presenter_audio") == "1":
+        lang = str(request.GET.get("lang") or "uz").strip().lower()[:2]
+        state_hash = str(request.GET.get("hash") or "").strip().lower()
+        filename = str(request.GET.get("file") or "").strip()
+
+        if (
+            lang not in VALID_LANGS
+            or not _SAFE_HASH_RE.fullmatch(state_hash)
+            or not _SAFE_FILE_RE.fullmatch(filename)
+        ):
+            raise Http404("Invalid audio path")
+
+        rel_path = f"ai_presenter/{lang}/{state_hash}/{filename}"
+        if not default_storage.exists(rel_path):
+            raise Http404("Audio not found")
+
+        with default_storage.open(rel_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
+
+        response = HttpResponse(audio_bytes, content_type="audio/mpeg")
+        response["Accept-Ranges"] = "bytes"
+        response["Cache-Control"] = "public, max-age=604800"
+        return response
+
+    # 2. Отдача JSON-манифеста голосового гида AI Presenter
     if request.GET.get("ai_presenter") == "1":
         raw_lang = request.GET.get("lang") or translation.get_language() or "uz"
         lang = str(raw_lang).strip().lower()[:2]
@@ -68,24 +99,6 @@ def self(request):
 
 
 def self_check(request):
-    """
-    Self-Check тест.
-
-    ХОТФИК/ФИЧА: раньше сюда сразу подставлялось 2 случайных вопроса из
-    ВСЕХ категорий разом. Теперь пользователь сперва выбирает категорию
-    (SelfCtg) на клиенте, и только после выбора сюда же летит AJAX-запрос
-    с ?ctg=<id> — тем же самым URL 'self_check' (core/urls.py — no-touch
-    zone, поэтому НЕ заводим отдельный роут, а разруливаем через query-
-    параметр прямо в этом view).
-
-    GET  (без ?ctg)  -> обычный HTML: форма ФИО + список категорий.
-    GET  ?ctg=<id>   -> JsonResponse: до 20 случайных вопросов ИМЕННО этой
-                        категории с перемешанными вариантами ответов —
-                        та же логика рандомизации, что была раньше
-                        (order_by('?') + random.shuffle), просто теперь
-                        она масштабируется на категорию, а не на всю таблицу
-                        (быстрее: меньше строк до сортировки RANDOM()).
-    """
     if request.method == "POST":
         print(1)
         data = request.POST
@@ -98,37 +111,24 @@ def self_check(request):
         )
 
         print(result)
-        # print(user)
         return JsonResponse({'message': 'success'})
 
     ctg_id = request.GET.get('ctg')
     if ctg_id is not None:
         return _self_check_questions_json(ctg_id)
 
-    # Только непустые категории — нет смысла показывать пользователю
-    # категорию, в которой нет ни одного вопроса.
     ctgs = (
         SelfCtg.objects
         .annotate(question_count=Count('selfquestion'))
         .filter(question_count__gt=0)
         .order_by('name_uz')
     )
-    # print(ctgs)
-    # print(request.GET)
-    # print(1)
     return render(request, 'module 3 test/test.html', {
         'ctgs': ctgs,
     })
 
 
 def _self_check_questions_json(ctg_id):
-    """
-    Возвращает до 20 случайных вопросов категории ``ctg_id`` вместе
-    с перемешанными вариантами ответов, в формате, который напрямую
-    скармливается JS-массиву ``questions`` в module3test/script.js
-    (см. showQuetions/optionSelected — они не тронуты и продолжают
-    работать с этим же форматом объектов).
-    """
     if not str(ctg_id).isdigit():
         return JsonResponse({"ok": False, "error": "invalid_ctg"}, status=400)
 
@@ -136,8 +136,6 @@ def _self_check_questions_json(ctg_id):
     if ctg is None:
         return JsonResponse({"ok": False, "error": "not_found"}, status=404)
 
-    # Фильтр по категории ДО случайной сортировки — меньше строк для
-    # ORDER BY RANDOM(), поэтому быстрее, чем прежний вариант без фильтра.
     random_questions = list(
         SelfQuestion.objects
         .filter(ctg=ctg)
@@ -159,8 +157,6 @@ def _self_check_questions_json(ctg_id):
                 {"text": a.text, "img": a.img.url if a.img else None}
                 for a in answers
             ],
-            # answer сопоставляется по тексту в script.js (optionSelected) —
-            # сохраняем тот же контракт, что был раньше.
             "answer": correct.text if correct else None,
         })
 
