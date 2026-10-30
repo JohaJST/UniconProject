@@ -20,7 +20,8 @@ from core.models import (
     SelfResult,
     SelfStudy,
     SelfUser,
-    SelfCtg
+    SelfCtg,
+    NewsImage
 )
 
 from .resource import (
@@ -93,8 +94,14 @@ class TeachersAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = TeachersResource
 
 
+class NewsImageInline(admin.TabularInline):
+    model = NewsImage
+    extra = 0
+
+
 class NewsAdmin(TranslationAdmin, ImportExportModelAdmin):
     resource_class = NewsResource
+    inlines = [NewsImageInline]
 
 class SelfResultAdmin(ImportExportModelAdmin):
     resource_class = SelfResultResource

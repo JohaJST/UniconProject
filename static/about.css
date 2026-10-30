@@ -1199,3 +1199,19 @@ body.ai-tour-active section.ai-sec-active {
     .goal-panel { padding: 1.4rem; }
     .goal-tags { flex-direction: column; }
 }
+
+
+/* ── News card: кликабельная карточка + стеклянный бейдж с числом фото ── */
+a.n-card { display: block; color: inherit; text-decoration: none; cursor: pointer; }
+.n-card__img { position: relative; }
+.n-card__count {
+    position: absolute; top: 10px; left: 10px; z-index: 2;
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .22rem .65rem; border-radius: 999px;
+    font-size: .72rem; font-weight: 700; color: #fff; letter-spacing: .02em;
+    background: rgba(15, 23, 42, .5);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, .22);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .25);
+    font-variant-numeric: tabular-nums;
+}

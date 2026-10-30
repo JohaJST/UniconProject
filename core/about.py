@@ -4,7 +4,7 @@ import re
 from django.core.files.storage import default_storage
 from django.db.models import Count
 from django.http import Http404, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.template import RequestContext, Template
 from django.utils import translation
 
@@ -64,7 +64,7 @@ def about(request):
 
     courses = Courses.objects.all()
     teachers = Teachers.objects.all()
-    news = News.objects.all().order_by('-date')
+    news = News.objects.annotate(gallery_count=Count("images")).order_by('-date')
 
     # Блок партнёров управляется флагом About.partners — если about_obj
     # отсутствует или флаг снят, секция должна рендериться пустой.
@@ -161,3 +161,36 @@ def _self_check_questions_json(ctg_id):
         })
 
     return JsonResponse({"ok": True, "questions": data})
+
+
+def news_page(request, pk=None):
+    """
+    Публичная страница новостей: выбранная новость (галерея + единое описание)
+    и Bento-подборка «Другие новости». Без pk показывается самая свежая.
+    """
+    base_qs = News.objects.prefetch_related("images")
+
+    if pk is None:
+        current = base_qs.order_by("-date", "-id").first()
+    else:
+        current = get_object_or_404(base_qs, pk=pk)
+
+    if current is None:
+        return render(request, "news.html", {"news_item": None, "slides": [], "others": []})
+
+    slides = []
+    if current.photo:
+        slides.append({"url": current.photo.url})
+    slides.extend({"url": img.image.url} for img in current.images.all() if img.image)
+
+    others = list(
+        News.objects.exclude(pk=current.pk)
+        .annotate(gallery_count=Count("images"))
+        .order_by("-date", "-id")[:3]
+    )
+
+    return render(request, "news.html", {
+        "news_item": current,
+        "slides": slides,
+        "others": others,
+    })

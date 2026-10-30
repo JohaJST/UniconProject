@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% if news_item %}{{ news_item.title }}{% else %}{% trans "Yangiliklar" %}{% endif %}{% endblock %}
+
+{% block header %}
+    <link rel="stylesheet" href="{% static 'about.css' %}" />
+    <link rel="stylesheet" href="{% static 'news.css' %}" />
+    <style>
+        /* Тот же шрифт/фон, что и на about.html — удалите блок, если нужен нейтральный шрифт */
+        body { background: #fdfcf8 !important; color: #0f172a !important; }
+        body, button, input, textarea, select {
+            font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive, sans-serif !important;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="bg-grid"></div>
+    <div class="bg-orb bg-orb--a"></div>
+    <div class="bg-orb bg-orb--b"></div>
+
+    <main class="news-page">
+        <div class="news-wrap">
+
+            <nav class="crumbs" aria-label="breadcrumb">
+                <a href="{% url 'about' %}">{% trans 'about' %}</a>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                <a href="{% url 'news' %}">{% trans "Yangiliklar" %}</a>
+                {% if news_item %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                <span aria-current="page">{{ news_item.title|truncatechars:48 }}</span>
+                {% endif %}
+            </nav>
+
+            {% if news_item %}
+            <div class="news-main">
+
+                <header class="news-head">
+                    <span class="sec-chip">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:.3rem"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{{ news_item.date|date:"d M, Y" }}
+                    </span>
+                    <h1 class="news-title">{{ news_item.title }}</h1>
+                </header>
+
+                {% if slides %}
+                <!-- ═════ Interactive Cinema Stage ═════ -->
+                <section class="cinema" aria-label="Gallery">
+                    <div class="stage" id="stage" tabindex="0">
+                        {% for s in slides %}
+                        <img class="stage__slide{% if forloop.first %} is-active{% endif %}"
+                             src="{{ s.url }}" alt="{{ news_item.title }}"
+                             {% if not forloop.first %}loading="lazy"{% endif %} draggable="false">
+                        {% endfor %}
+                        <div class="stage__shade"></div>
+
+                        <span class="stage__zoom" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                        </span>
+
+                        {% if slides|length > 1 %}
+                        <button type="button" class="stage__btn stage__btn--prev" id="stagePrev" aria-label="{% trans 'Oldingi' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <button type="button" class="stage__btn stage__btn--next" id="stageNext" aria-label="{% trans 'Keyingi' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                        <span class="stage__counter" id="stageCounter">01 / {{ slides|length|stringformat:"02d" }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if slides|length > 1 %}
+                    <div class="thumbs" id="thumbs">
+                        {% for s in slides %}
+                        <button type="button" class="thumb{% if forloop.first %} is-active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}">
+                            <img src="{{ s.url }}" alt="" loading="lazy" draggable="false">
+                        </button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </section>
+                {% endif %}
+
+                <!-- ═════ Единое описание ═════ -->
+                <article class="story glass-card">
+                    <div class="story__text">{{ news_item.desc|linebreaks }}</div>
+                </article>
+            </div>
+
+            <!-- ═════ Другие новости: Bento ═════ -->
+            {% if others %}
+            <section class="more">
+                <header class="sec-hdr" style="text-align:left;margin-bottom:1.8rem">
+                    <span class="sec-chip">{% trans "Yangiliklar" %}</span>
+                    <h2 class="sec-ttl">{% trans "So'nggi yangiliklar" %}</h2>
+                </header>
+
+                <div class="bento bento--{{ others|length }}">
+                    {% for item in others %}
+                    <a class="bento-card{% if forloop.first %} bento-card--lead{% endif %}" href="{% url 'news_detail' pk=item.pk %}">
+                        {% if item.photo %}<img src="{{ item.photo.url }}" alt="" loading="lazy">{% endif %}
+                        <div class="bento-card__veil"></div>
+                        <span class="bento-card__count">📷 {{ item.gallery_count|add:1 }}</span>
+                        <div class="bento-card__body">
+                            <span class="bento-card__date">{{ item.date|date:"d M, Y" }}</span>
+                            <h3>{{ item.title }}</h3>
+                            {% if forloop.first %}<p>{{ item.desc|truncatewords:26 }}</p>{% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% else %}
+            <div class="news-empty glass-card">
+                <p>{% trans "Yangiliklar hali qo'shilmagan" %}</p>
+                <a class="btn btn--fill" href="{% url 'about' %}">{% trans 'about' %}</a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    {% if slides %}
+    <!-- ═════ Lightbox ═════ -->
+    <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+        <button type="button" class="lb__close" id="lbClose" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        {% if slides|length > 1 %}
+        <button type="button" class="lb__nav lb__nav--prev" id="lbPrev" aria-label="{% trans 'Oldingi' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button type="button" class="lb__nav lb__nav--next" id="lbNext" aria-label="{% trans 'Keyingi' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        {% endif %}
+        <img class="lb__img" id="lbImg" src="" alt="" draggable="false">
+        <span class="lb__counter" id="lbCounter"></span>
+    </div>
+
+    {{ slides|json_script:"news-slides" }}
+    <script src="{% static 'news.js' %}"></script>
+    {% endif %}
+{% endblock %}

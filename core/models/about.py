@@ -79,3 +79,16 @@ class Partners(models.Model):
 
     def __str__(self):
         return self.name
+
+class NewsImage(models.Model):
+    news = models.ForeignKey(News, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="news/gallery/")
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "Фото новости"
+        verbose_name_plural = "Фото новостей"
+
+    def __str__(self):
+        return f"NewsImage #{self.pk} → News #{self.news_id}"

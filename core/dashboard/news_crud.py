@@ -1,28 +1,14 @@
 """
 core/dashboard/news_crud.py
 ────────────────────────────────
-CRUD-view для новостей (News) в дашборде.
+CRUD-view для новостей (News) + галерея дополнительных фото (NewsImage).
 
-Реализованы просмотр (view_news) и редактирование (edit_news).
-Создание — в core/dashboard/action.py (status="create", path="news"),
-удаление — там же (status="delete", path="news") с физической
-чисткой файла фото.
+Паттерн картинок (как в self_check.py): process_uploaded_image() вызывается
+ДО transaction.atomic(), старые файлы удаляются физически только ПОСЛЕ commit,
+а файлы, записанные в упавшей транзакции, подчищаются вручную.
 
-RBAC и sliding-window таймаут дашборда проверяет DashboardSecurityMiddleware —
-свои проверки прав здесь не нужны.
-
-Обработка фото — по паттерну core/dashboard/self_check.py:
-process_uploaded_image() вызывается ДО transaction.atomic() (декодирование/
-ресайз в Pillow не должны держать транзакцию открытой), а старый файл
-удаляется физически только ПОСЛЕ успешного commit. Чекбокса "удалить фото"
-здесь нет (как и у Courses/Teachers) — фото News обязательно, поэтому оно
-либо остаётся прежним, либо заменяется новым.
-
-Поле date — обычный DateField, НЕ переводится (в отличие от title/desc,
-зарегистрированных в core/translation.py через django-modeltranslation).
-Валидация даты — тот же паттерн, что в core/dashboard/potok_crud.py::edit_potok
-и core/dashboard/action.py (создание News): мусорная строка не должна
-ронять 500 (ValidationError/ValueError ловятся явно).
+Удаление фото галереи защищено от IDOR: NewsImage ищется только среди
+фото ЭТОЙ новости (filter(news=news, id__in=...)).
 """
 from __future__ import annotations
 
@@ -34,14 +20,54 @@ from django.db.models.fields import DateField
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.media_utils import InvalidImageError, process_uploaded_image
-from core.models import News
+from core.models import News, NewsImage
+
+# Должно совпадать с data-max в templates/pages/dashboard/_gallery_input.html
+MAX_GALLERY_PHOTOS = 20
+
+
+def process_gallery(files, field: str = "news_gallery"):
+    """
+    Обрабатывает ВСЕ загруженные фото галереи через process_uploaded_image.
+    Вызывать ДО transaction.atomic().
+    :return: (list[ContentFile], None) либо ([], "текст ошибки")
+    """
+    raw = [f for f in files.getlist(field) if f]
+    if len(raw) > MAX_GALLERY_PHOTOS:
+        return [], f"Слишком много фото в галерее (максимум {MAX_GALLERY_PHOTOS})"
+
+    processed = []
+    for i, f in enumerate(raw, start=1):
+        try:
+            processed.append(process_uploaded_image(f))
+        except InvalidImageError as exc:
+            return [], f"Фото галереи №{i}: {exc}"
+    return processed, None
+
+
+def save_gallery(news, processed_files, saved_names: list) -> None:
+    """
+    Создаёт NewsImage для каждого файла (внутри transaction.atomic()).
+    Имена реально записанных на диск файлов копятся в saved_names — по ним
+    вызывающий код чистит диск, если транзакция откатилась.
+    """
+    for f in processed_files:
+        img = NewsImage(news=news)
+        img.image = f
+        try:
+            img.save()
+        except Exception:
+            if img.image and getattr(img.image, "_committed", False):
+                saved_names.append(img.image.name)
+            raise
+        saved_names.append(img.image.name)
 
 
 @login_required(login_url="login")
 def view_news(request, pk):
-    """Карточка новости: заголовок/описание на 3 языках, дата, фото."""
+    """Карточка новости: заголовок/описание на 3 языках, дата, фото + галерея."""
     news = get_object_or_404(News, pk=pk)
-    ctx = {"news": news}
+    ctx = {"news": news, "gallery": news.images.all()}
     return render(request, "pages/dashboard/news_detail.html", ctx)
 
 
@@ -50,26 +76,24 @@ def edit_news(request, pk):
     """
     Редактирование новости.
 
-    GET  — форма с текущими данными.
-    POST — валидация обязательных полей (title/desc/date) -> обработка
-           нового фото (если пришло) ДО транзакции -> одна атомарная
-           транзакция сохранения полей + (опционально) фото. Старое фото
-           удаляется с диска только после успешного commit и только если
-           оно реально было заменено.
-
-    Fallback-паттерн как у subject_crud/courses_crud: пустой uz-перевод
-    заполняется значением видимого поля формы; ru/en остаются как
-    прислала форма (пустыми, если явного перевода не было).
+    POST — валидация -> обработка главного фото И новых фото галереи ДО
+    транзакции -> одна атомарная транзакция (поля, удаление отмеченных фото
+    галереи, добавление новых). Старые файлы удаляются после commit.
     """
     news = get_object_or_404(News, pk=pk)
 
     if request.method != "POST":
-        return render(request, "pages/dashboard/news_edit.html", {
-            "news": news,
-        })
+        return render(request, "pages/dashboard/news_edit.html", {"news": news})
 
     post = request.POST
     files = request.FILES
+
+    def fail(message):
+        return render(request, "pages/dashboard/news_edit.html", {
+            "news": news,
+            "error": message,
+            "post_data": post,
+        }, status=400)
 
     raw_title = (post.get("news_title") or "").strip()
     raw_desc = (post.get("news_desc") or "").strip()
@@ -93,24 +117,26 @@ def edit_news(request, pk):
             errors.append("Неверный формат даты. Используйте формат: 2026-05-22")
 
     if errors:
-        return render(request, "pages/dashboard/news_edit.html", {
-            "news": news,
-            "error": "; ".join(errors),
-            "post_data": post,
-        }, status=400)
+        return fail("; ".join(errors))
 
-    # ── Картинка: обработка ДО транзакции (см. self_check.py) ─────────────
+    # ── Главное фото: ДО транзакции ───────────────────────────────────────
     new_photo_file = None
     raw_photo = files.get("news_photo")
     if raw_photo:
         try:
             new_photo_file = process_uploaded_image(raw_photo)
         except InvalidImageError as exc:
-            return render(request, "pages/dashboard/news_edit.html", {
-                "news": news,
-                "error": f"Ошибка изображения: {exc}",
-                "post_data": post,
-            }, status=400)
+            return fail(f"Ошибка изображения: {exc}")
+
+    # ── Галерея: ДО транзакции ────────────────────────────────────────────
+    gallery_files, gallery_error = process_gallery(files)
+    if gallery_error:
+        return fail(gallery_error)
+
+    delete_ids = {int(x) for x in post.getlist("gallery_delete") if x.isdigit()}
+    kept = news.images.exclude(id__in=delete_ids).count()
+    if kept + len(gallery_files) > MAX_GALLERY_PHOTOS:
+        return fail(f"В галерее может быть не более {MAX_GALLERY_PHOTOS} фото")
 
     title_uz = (post.get("news_title_uz") or "").strip() or raw_title
     title_ru = (post.get("news_title_ru") or "").strip()
@@ -121,6 +147,8 @@ def edit_news(request, pk):
 
     old_photo_name = news.photo.name if news.photo else None
     new_image_name = None
+    new_gallery_names: list[str] = []
+    stale_gallery_names: list[str] = []
 
     try:
         with transaction.atomic():
@@ -139,9 +167,15 @@ def edit_news(request, pk):
 
             if new_photo_file:
                 new_image_name = news.photo.name
+
+            # IDOR-защита: удаляем только фото ЭТОЙ новости.
+            if delete_ids:
+                doomed = list(NewsImage.objects.filter(news=news, id__in=delete_ids))
+                stale_gallery_names = [d.image.name for d in doomed if d.image]
+                NewsImage.objects.filter(pk__in=[d.pk for d in doomed]).delete()
+
+            save_gallery(news, gallery_files, new_gallery_names)
     except Exception:
-        # Транзакция откатилась — но уже записанный на диск новый файл
-        # сам по себе не исчезает, подчищаем вручную.
         stored_name = new_image_name
         if (
             stored_name is None
@@ -153,15 +187,15 @@ def edit_news(request, pk):
             stored_name = news.photo.name
         if stored_name:
             default_storage.delete(stored_name)
+        for name in new_gallery_names:
+            default_storage.delete(name)
 
-        return render(request, "pages/dashboard/news_edit.html", {
-            "news": news,
-            "error": "Не удалось сохранить новость. Попробуйте ещё раз.",
-            "post_data": post,
-        }, status=400)
+        return fail("Не удалось сохранить новость. Попробуйте ещё раз.")
 
-    # ── Успех: старое фото удаляем ТОЛЬКО если оно реально было заменено ──
+    # ── Успех: физически удаляем заменённое/убранное ──────────────────────
     if new_image_name and old_photo_name and old_photo_name != new_image_name:
         default_storage.delete(old_photo_name)
+    for name in stale_gallery_names:
+        default_storage.delete(name)
 
     return redirect("action", status="view", path="news", pk=news.id)

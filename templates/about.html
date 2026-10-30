@@ -218,7 +218,7 @@
                 <button class="carousel__arr carousel__arr--prev" aria-label="{% trans 'Oldingi' %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
                 <div class="carousel__vp"><div class="carousel__track" id="newsTrack">
                     {% for item in news %}
-                    <div class="n-card">
+                    <a class="n-card" href="{% url 'news_detail' pk=item.pk %}">
                         <div class="n-card__img">
                             {% if item.photo %}
                             <img src="{{ item.photo.url }}" alt="" loading="lazy"
@@ -227,13 +227,18 @@
                             <div class="n-card__ph"{% if not item.photo %} style="display:flex;"{% endif %}>
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="3" width="20" height="18" rx="2"/></svg>
                             </div>
+                            {% if item.photo %}
+                            <span class="n-card__count" title="Фото">📷 {{ item.gallery_count|add:1 }}</span>
+                            {% elif item.gallery_count %}
+                            <span class="n-card__count" title="Фото">📷 {{ item.gallery_count }}</span>
+                            {% endif %}
                         </div>
                         <div class="n-card__body">
                             <span>{{ item.date|date:"d M, Y" }}</span>
                             <h4>{{ item.title }}</h4>
                             <p>{{ item.desc|truncatewords:30 }}</p>
                         </div>
-                    </div>
+                    </a>
                     {% empty %}
                     <p>{% trans "Yangiliklar hali qo'shilmagan" %}</p>
                     {% endfor %}

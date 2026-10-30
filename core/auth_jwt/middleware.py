@@ -29,7 +29,10 @@ _IGNORED_EXACT_PATHS = {"/login/", "/", "/about/", "/self/", "/self/check/", "/J
 # /static/ и /media/ публичные — иначе при истёкшем access_token запросы к
 # картинкам/CSS/JS редиректятся на /login/ и браузер получает HTML вместо
 # бинарника — картинки «пропадают» (битые/404).
-_IGNORED_PREFIXES = ("/JustAdmin/", "/i18n/", "/self", "/static/", "/media/")
+_IGNORED_PREFIXES = ("/JustAdmin/", "/i18n/", "/self", "/static/", "/media/", "/news/")
+# Публичные i18n-страницы с pk в пути — для редиректа на языковой префикс
+# (как у /login/ и /about/), чтобы авторизованный пользователь не получил 404.
+_I18N_PUBLIC_PREFIXES = ("/news/",)
 
 _LANGUAGE_PREFIX_RE = re.compile(r"^/(uz|ru|en)(/.*)?$")
 
@@ -203,7 +206,7 @@ class JWTAuthenticationMiddleware:
         # иначе ассеты (CSS/JS/картинки) авторизованного пользователя
         # уехали бы на несуществующий /en/static/... и сломались 404-ми.
         _path = _strip_language_prefix(request.path)
-        if _path not in _IGNORED_EXACT_PATHS:
+        if _path not in _IGNORED_EXACT_PATHS and not _path.startswith(_I18N_PUBLIC_PREFIXES):
             return None
 
         lang = request.user.lang or "uz"

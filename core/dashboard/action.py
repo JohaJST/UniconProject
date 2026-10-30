@@ -15,7 +15,7 @@ from core.dashboard.selfctg_crud import view_selfctg, edit_selfctg
 # Импорты заведены заранее по явному требованию текущего этапа.
 from core.dashboard.courses_crud import view_courses, edit_courses
 from core.dashboard.teachers_crud import view_teachers, edit_teachers
-from core.dashboard.news_crud import view_news, edit_news
+from core.dashboard.news_crud import view_news, edit_news, process_gallery, save_gallery
 from core.dashboard.partners_crud import (
     view_partners, edit_partners, is_safe_http_url, _LINK_ERROR,
 )
@@ -30,7 +30,7 @@ from core.models import (
     User,
     Variant,
 )
-from core.models.about import Courses, News, Partners, Teachers
+from core.models.about import Courses, News, NewsImage, Partners, Teachers
 from core.dashboard.selfuser_crud import view_selfuser
 from core.models.self import SelfCtg, SelfQuestion, SelfResult, SelfUser
 
@@ -297,6 +297,11 @@ def action(request, status, path, pk=None):
                 if photo_error:
                     errors.append(photo_error)
 
+                # Доп. фото галереи — тоже ДО транзакции
+                gallery_files, gallery_error = process_gallery(files)
+                if gallery_error:
+                    errors.append(gallery_error)
+
                 if errors:
                     return render(request, "pages/dashboard/news_new.html", {
                         "error": "; ".join(errors),
@@ -312,6 +317,7 @@ def action(request, status, path, pk=None):
 
                 news_obj = None
                 new_image_name = None
+                gallery_names = []
                 try:
                     with transaction.atomic():
                         news_obj = News(
@@ -322,6 +328,7 @@ def action(request, status, path, pk=None):
                         news_obj.photo = photo_file
                         news_obj.save()
                         new_image_name = news_obj.photo.name
+                        save_gallery(news_obj, gallery_files, gallery_names)
                 except Exception:
                     stored_name = new_image_name
                     if (
@@ -333,6 +340,8 @@ def action(request, status, path, pk=None):
                         stored_name = news_obj.photo.name
                     if stored_name:
                         default_storage.delete(stored_name)
+                    for name in gallery_names:
+                        default_storage.delete(name)
                     return render(request, "pages/dashboard/news_new.html", {
                         "error": "Не удалось добавить новость. Попробуйте ещё раз.",
                         "post_data": post,
@@ -486,9 +495,13 @@ def action(request, status, path, pk=None):
         elif path == "news":
             obj = get_object_or_404(News, id=pk)
             photo_name = obj.photo.name if obj.photo else None
+            # Имена файлов галереи собираем ДО delete(): строки NewsImage уйдут каскадом.
+            gallery_names = [i.image.name for i in obj.images.all() if i.image]
             obj.delete()
             if photo_name:
                 default_storage.delete(photo_name)
+            for name in gallery_names:
+                default_storage.delete(name)
             return redirect("dlist", tip=path)
         elif path == "partners":
             obj = get_object_or_404(Partners, id=pk)

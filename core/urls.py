@@ -1,7 +1,7 @@
 from django.urls import path, include
 
 from core.auth import refresh_token_view
-from .about import about, self, self_check
+from .about import about, self, self_check, news_page
 from core.auth import change_account_language, sign_in, sign_out
 from core.quiz import (
     create_test,
@@ -25,6 +25,8 @@ from .dashboard.self_check import create_or_edit_self_question
 # Оборачиваются в i18n_patterns() в src/urls.py (корневом URLConf).
 i18n_urlpatterns = [
     path("", about, name="about"),
+    path("news/", news_page, name="news"),
+    path("news/<int:pk>/", news_page, name="news_detail"),
     path("self/", self, name="self"),
     path("self/check/", self_check, name="self_check"),
     path("login/", sign_in, name="login"),

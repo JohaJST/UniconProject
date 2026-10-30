@@ -1,0 +1,83 @@
+<div class="mb-5">
+    <label class="text-sm font-medium text-slate-300 mb-1.5 block" for="news_gallery">
+        Дополнительные фото (галерея)
+    </label>
+    <input type="file" id="news_gallery" name="news_gallery" accept="image/*" multiple data-max="20"
+           class="w-full text-xs text-slate-400 bg-slate-800 border border-slate-600
+                  rounded-xl px-3 py-2
+                  file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0
+                  file:bg-indigo-600 file:text-white file:text-xs file:font-medium
+                  file:cursor-pointer cursor-pointer">
+    <p class="text-[11px] text-slate-500 mt-1.5">
+        До 20 фото. Можно выбирать несколько раз подряд — кадры добавляются к уже выбранным.
+        <span id="galleryCounter" class="text-slate-400"></span>
+    </p>
+    <div id="galleryPreview" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3"></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+    var input = document.getElementById('news_gallery');
+    var box = document.getElementById('galleryPreview');
+    var counter = document.getElementById('galleryCounter');
+    if (!input || !box || typeof DataTransfer === 'undefined') return;
+
+    var MAX = parseInt(input.getAttribute('data-max'), 10) || 20;
+    var list = [];
+    var urls = [];
+
+    function sync() {
+        var dt = new DataTransfer();
+        list.forEach(function (f) { dt.items.add(f); });
+        input.files = dt.files;   // программная установка не вызывает 'change'
+        render();
+    }
+
+    function render() {
+        urls.forEach(function (u) { URL.revokeObjectURL(u); });
+        urls = [];
+        box.textContent = '';
+        counter.textContent = list.length ? '· выбрано: ' + list.length : '';
+
+        list.forEach(function (file, i) {
+            var url = URL.createObjectURL(file);
+            urls.push(url);
+
+            var cell = document.createElement('div');
+            cell.className = 'relative group';
+
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            img.className = 'w-full h-20 object-cover rounded-lg border border-slate-700';
+
+            var name = document.createElement('span');
+            name.textContent = file.name;
+            name.className = 'absolute left-1 right-1 bottom-1 truncate text-[10px] text-slate-200 bg-slate-900/80 rounded px-1.5 py-0.5';
+
+            var rm = document.createElement('button');
+            rm.type = 'button';
+            rm.textContent = '✕';
+            rm.title = 'Убрать';
+            rm.className = 'absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-[10px] leading-5 text-center';
+            rm.addEventListener('click', function () { list.splice(i, 1); sync(); });
+
+            cell.appendChild(img);
+            cell.appendChild(name);
+            cell.appendChild(rm);
+            box.appendChild(cell);
+        });
+    }
+
+    input.addEventListener('change', function () {
+        Array.prototype.forEach.call(input.files, function (f) {
+            var dup = list.some(function (x) {
+                return x.name === f.name && x.size === f.size && x.lastModified === f.lastModified;
+            });
+            if (!dup && list.length < MAX) list.push(f);
+        });
+        sync();
+    });
+})();
+</script>

@@ -16,6 +16,7 @@ from .about import (
     Courses,
     Teachers,
     News,
+    NewsImage,
 )
 
 from .self import SelfAnswer, SelfQuestion, SelfResult, SelfStudy, SelfUser, SelfCtg
