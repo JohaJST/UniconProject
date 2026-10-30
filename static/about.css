@@ -162,32 +162,45 @@ body {
 }
 @keyframes dotPulse { 0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.5)}50%{box-shadow:0 0 0 7px rgba(34,211,238,0)} }
 
-/* ИСПРАВЛЕНО: line-height 1.22 + padding-bottom не обрезают нижние хвостики букв p, g, y */
+/* Полная отрисовка выносных элементов букв p, g, y, q без обрезки градиентом */
 .hero-heading {
-    font-size: clamp(2.5rem, 6.2vw, 4.8rem);
+    font-size: clamp(2.4rem, 5.8vw, 4.5rem);
     font-weight: 900;
-    letter-spacing: -.025em;
-    line-height: 1.22;
+    letter-spacing: -.02em;
+    line-height: 1.34;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.06em;
+    gap: 0.08em;
     overflow: visible;
+    padding: 0.1em 0;
 }
 .hero-heading__main {
     display: inline-block;
-    padding-bottom: 0.14em;
-    margin-bottom: -0.08em;
-    background: linear-gradient(180deg,#fff 0%,#e2e8f0 65%,#94a3b8 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    padding: 0.06em 0.08em 0.26em;
+    margin-bottom: -0.14em;
+    line-height: 1.32;
+    overflow: visible;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 72%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 .hero-heading__glow {
     display: inline-block;
-    padding-bottom: 0.16em;
-    margin-bottom: -0.08em;
-    background: linear-gradient(135deg,#60a5fa 0%,#22d3ee 25%,#3b82f6 55%,#eab308 80%,#60a5fa 100%);
+    padding: 0.06em 0.08em 0.28em;
+    margin-bottom: -0.12em;
+    line-height: 1.32;
+    overflow: visible;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    background: linear-gradient(135deg, #60a5fa 0%, #22d3ee 25%, #3b82f6 55%, #facc15 82%, #60a5fa 100%);
     background-size: 200% 200%;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     animation: shimmer 5s ease-in-out infinite;
 }
 @keyframes shimmer { 0%,100%{background-position:0% 50%}50%{background-position:100% 50%} }
@@ -206,19 +219,33 @@ body {
 
 
 /* ============================================================
-   СВЕТЛЫЕ СЕКЦИИ — Прозрачность для видимости Cyber-Rain
+   СВЕТЛЫЕ СЕКЦИИ — Боковые кулисы прозрачны, чтобы Cyber-Rain сиял по краям
    ============================================================ */
 .goals, .teachers, .partners {
     padding: 6rem 0;
-    background: linear-gradient(90deg, rgba(219, 234, 254, 0.28) 0%, rgba(253, 252, 248, 0.86) 18%, rgba(253, 252, 248, 0.94) 82%, rgba(254, 249, 195, 0.28) 100%);
+    background: linear-gradient(
+        90deg,
+        rgba(219, 234, 254, 0.08) 0%,
+        rgba(253, 252, 248, 0.72) 22%,
+        rgba(253, 252, 248, 0.88) 50%,
+        rgba(253, 252, 248, 0.72) 78%,
+        rgba(254, 249, 195, 0.08) 100%
+    );
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 .courses, .news {
     padding: 6rem 0;
-    background: linear-gradient(90deg, rgba(239, 246, 255, 0.35) 0%, rgba(255, 255, 255, 0.88) 18%, rgba(255, 255, 255, 0.94) 82%, rgba(239, 246, 255, 0.35) 100%);
+    background: linear-gradient(
+        90deg,
+        rgba(239, 246, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.75) 22%,
+        rgba(255, 255, 255, 0.90) 50%,
+        rgba(255, 255, 255, 0.75) 78%,
+        rgba(239, 246, 255, 0.08) 100%
+    );
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 .courses { z-index: 10; }
 .partners { padding-bottom: 4.5rem; }
@@ -357,22 +384,22 @@ body {
 .carousel__arr:hover { border-color: var(--blue-600); color: var(--blue-600); background: var(--blue-50); transform: scale(1.07); }
 .carousel__arr svg { width: 18px; height: 18px; }
 
-/* ── Teacher Card: Горизонтальная карточка (2 в ряд на десктопе) ── */
+/* ── Teacher Card: Горизонтальная карточка (2 в ряд на десктопе, по референсу) ── */
 .t-card {
     flex: 0 0 calc((100% - 1.4rem) / 2);
     min-width: 0;
-    border-radius: var(--r-xl);
-    padding: 1.65rem 1.85rem;
-    background: var(--white);
-    border: 1px solid rgba(37, 99, 235, 0.12);
-    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
+    border-radius: 16px;
+    padding: 1.75rem 2rem;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(219, 234, 254, 0.95);
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
     transition: all var(--dur) var(--ease);
 
-    /* Работает идеально как с новым .t-card__info, так и со старой разметкой */
-    display: grid;
-    grid-template-columns: 126px 1fr;
-    column-gap: 1.6rem;
+    display: flex;
     align-items: center;
+    gap: 1.75rem;
     text-align: left;
     position: relative;
     overflow: hidden;
@@ -385,23 +412,21 @@ body {
     top: 0; left: 0; right: 0;
     height: 3px;
     background: linear-gradient(90deg, var(--blue-600), var(--blue-400), var(--gold-400));
-    opacity: 0.75;
+    opacity: 0.8;
     transition: opacity var(--dur) var(--ease);
 }
 
 .t-card:hover {
-    border-color: rgba(37, 99, 235, 0.35);
-    box-shadow: 0 16px 38px rgba(37, 99, 235, 0.12), 0 4px 12px rgba(15, 23, 42, 0.05);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 18px 40px rgba(37, 99, 235, 0.12), 0 4px 12px rgba(15, 23, 42, 0.04);
     transform: translateY(-4px);
 }
 .t-card:hover::before { opacity: 1; }
 
-/* Крупный круглый портрет слева в двойной светло-голубой рамке */
+/* Крупный круглый портрет слева в двойной светло-голубой рамке (как на фото-референсе) */
 .t-card__ava {
-    grid-column: 1;
-    grid-row: 1 / span 4;
-    width: 126px;
-    height: 126px;
+    width: 132px;
+    height: 132px;
     border-radius: 50%;
     margin: 0;
     background: linear-gradient(135deg, var(--navy), var(--blue-600));
@@ -410,8 +435,8 @@ body {
     justify-content: center;
     border: 4px solid var(--white);
     box-shadow:
-        0 0 0 3px #dbeafe,
-        0 10px 24px rgba(15, 23, 42, 0.14);
+        0 0 0 4px #dbeafe,
+        0 10px 24px rgba(15, 23, 42, 0.12);
     overflow: hidden;
     flex-shrink: 0;
     transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
@@ -1160,14 +1185,15 @@ body.ai-tour-active section.ai-sec-active {
 @media (max-width: 480px) {
     .container { padding: 0 1rem; }
     .hero { min-height: 70vh; }
+    /* Внутри @media (max-width: 480px) в конце static/about.css: */
     .t-card {
-        grid-template-columns: 1fr;
+        flex-direction: column;
         text-align: center;
-        justify-items: center;
-        row-gap: 0.85rem;
+        justify-content: center;
+        gap: 1rem;
     }
-    .t-card__ava { grid-column: 1; grid-row: auto; width: 104px; height: 104px; }
-    .t-card__info, .t-card h4, .t-card > p, .t-card > a { grid-column: 1; align-items: center; text-align: center; }
+    .t-card__ava { width: 108px; height: 108px; }
+    .t-card__info { align-items: center; text-align: center; }
     .n-card { flex: 0 0 85%; }
     .carousel__arr { width: 36px; height: 36px; }
     .goal-panel { padding: 1.4rem; }
