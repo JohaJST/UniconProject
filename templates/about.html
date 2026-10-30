@@ -167,22 +167,35 @@
             <div class="carousel" data-carousel="teachers" data-aos="fade-up" data-aos-delay="200">
                 <button class="carousel__arr carousel__arr--prev" aria-label="{% trans 'Oldingi' %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
                 <div class="carousel__vp"><div class="carousel__track" id="teachersTrack">
-                    {% for teacher in teachers %}
+                    {% for t in teachers %}
                     <div class="t-card glass-card">
                         <div class="t-card__ava">
-                            {% if teacher.photo %}
-                            <img src="{{ teacher.photo.url }}" alt="{{ teacher.fio }}"
-                                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                            {% if t.photo %}
+                                <img src="{{ t.photo.url }}" alt="{{ t.fio }}" loading="lazy">
                             {% else %}
-                            <span>{{ teacher.fio }}</span>
+                                <span>{{ t.fio|slice:":1" }}</span>
                             {% endif %}
                         </div>
-                        <h4>{{ teacher.fio }}</h4>
-                        <p>{{ teacher.position }}</p>
-                        {% if teacher.phone %}<a href="tel:{{ teacher.phone }}">{{ teacher.phone }}</a>{% endif %}
+                        <div class="t-card__info">
+                            <h4 class="t-card__name">{{ t.fio }}</h4>
+                            <p class="t-card__pos">
+                                <svg class="t-card__ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span>{{ t.position }}</span>
+                            </p>
+                            {% if t.phone %}
+                            <a href="tel:{{ t.phone }}" class="t-card__phone">
+                                <svg class="t-card__ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.61 21 3 13.39 3 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.25 1.01l-2.2 2.2z"/>
+                                </svg>
+                                <span>{{ t.phone }}</span>
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
                     {% empty %}
-                    <p>{% trans "O'qituvchilar hali qo'shilmagan" %}</p>
+                        <p>{% trans "O'qituvchilar hali qo'shilmagan" %}</p>
                     {% endfor %}
                 </div></div>
                 <button class="carousel__arr carousel__arr--next" aria-label="{% trans 'Keyingi' %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>

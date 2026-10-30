@@ -22,19 +22,195 @@
     }
 
     function boot() {
-        initCyberCanvas();
-        init3DCards();
-        initBidirectionalObserver();
-        initInfiniteCarousels();
-        initHeroParallax();
-        initSmoothScroll();
-        initAIPresenter();
-        // Digital rain на светлых секциях: goals → courses → teachers → news → partners
-        // (hero и footer тёмные — не трогаем)
-        if (window.initDigitalRainBackground) {
-            window.initDigitalRainBackground({ theme: 'light', edgeMin: 0.4 });
+            initCyberCanvas();
+            init3DCards();
+            initBidirectionalObserver();
+            initInfiniteCarousels();
+            initHeroParallax();
+            initSmoothScroll();
+            initAIPresenter();
+            initEnhancedAboutRain();
         }
-    }
+    
+        // ================================================================
+        // 1.1 ENHANCED CYBER-AURORA DIGITAL RAIN (Контрастный фон для светлых секций)
+        // ================================================================
+        function initEnhancedAboutRain() {
+            // Удаляем старый бледный canvas из rain.js, если он был создан
+            var oldCanvases = document.querySelectorAll("canvas.digital-rain-canvas, #digital-rain-canvas");
+            for (var c = 0; c < oldCanvases.length; c++) {
+                oldCanvases[c].parentNode.removeChild(oldCanvases[c]);
+            }
+    
+            var canvas = document.createElement("canvas");
+            canvas.id = "cyber-aurora-rain";
+            canvas.style.cssText = [
+                "position:fixed",
+                "inset:0",
+                "width:100%",
+                "height:100%",
+                "pointer-events:none",
+                "z-index:1",
+                "opacity:1"
+            ].join(";");
+            document.body.appendChild(canvas);
+    
+            var ctx = canvas.getContext("2d");
+            var W = 0, H = 0;
+            var glyphs = "01010123456789ABCDEF∑ΔπλΩ⊕⊗§0x";
+            var streams = [];
+    
+            // Палитра: Королевский сапфир, Изумрудный циан, Золотой янтарь, Глубокий индиго
+            var palette = [
+                { head: "#1d4ed8", trail: "37, 99, 235" },
+                { head: "#0891b2", trail: "6, 182, 212" },
+                { head: "#d97706", trail: "234, 179, 8" },
+                { head: "#1e3a8a", trail: "30, 58, 138" }
+            ];
+    
+            function edgeWeight(xNorm) {
+                // Центру (где карточки текста) даём мягкое приглушение, а боковым кулисам — полную мощь
+                var distFromCenter = Math.abs(xNorm - 0.5) * 2; // 0 в центре, 1 у краёв
+                if (distFromCenter < 0.42) {
+                    return 0.14 + Math.pow(distFromCenter / 0.42, 2) * 0.25;
+                }
+                return 0.45 + Math.pow((distFromCenter - 0.42) / 0.58, 1.2) * 0.55;
+            }
+    
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+                buildStreams();
+            }
+    
+            function buildStreams() {
+                streams = [];
+                var colWidth = W < 768 ? 26 : 22;
+                var cols = Math.floor(W / colWidth);
+    
+                for (var i = 0; i < cols; i++) {
+                    var x = i * colWidth + colWidth * 0.5;
+                    var xNorm = x / (W || 1);
+                    var weight = edgeWeight(xNorm);
+    
+                    // В самом центре пропускаем половину колонок, чтобы не шуметь под текстом
+                    if (weight < 0.22 && i % 2 === 0) continue;
+    
+                    var isForeground = Math.random() > 0.35;
+                    var fontSize = isForeground ? (15 + Math.floor(Math.random() * 4)) : (11 + Math.floor(Math.random() * 3));
+                    var colorObj = palette[i % palette.length];
+                    var len = 7 + Math.floor(Math.random() * 10);
+                    var chars = [];
+                    for (var k = 0; k < len; k++) {
+                        chars.push(glyphs.charAt(Math.floor(Math.random() * glyphs.length)));
+                    }
+    
+                    streams.push({
+                        x: x,
+                        y: Math.random() * H,
+                        speed: (0.9 + Math.random() * 1.4) * (isForeground ? 1.15 : 0.75),
+                        fontSize: fontSize,
+                        weight: weight,
+                        color: colorObj,
+                        chars: chars,
+                        len: len,
+                        tick: Math.floor(Math.random() * 20)
+                    });
+                }
+            }
+    
+            function render() {
+                ctx.clearRect(0, 0, W, H);
+    
+                // Не рисуем поверх тёмного Hero, пока пользователь на самом верху,
+                // плавно проявляем по мере скролла к светлым секциям
+                var heroEl = document.getElementById("hero");
+                var heroBottom = heroEl ? heroEl.getBoundingClientRect().bottom : 0;
+                var clipTop = Math.max(0, heroBottom);
+    
+                if (clipTop >= H) {
+                    requestAnimationFrame(render);
+                    return;
+                }
+    
+                ctx.save();
+                if (clipTop > 0) {
+                    ctx.beginPath();
+                    ctx.rect(0, clipTop, W, H - clipTop);
+                    ctx.clip();
+                }
+    
+                var heads = [];
+    
+                for (var i = 0; i < streams.length; i++) {
+                    var s = streams[i];
+                    s.y += s.speed;
+                    s.tick++;
+    
+                    if (s.tick % 14 === 0) {
+                        s.chars[0] = glyphs.charAt(Math.floor(Math.random() * glyphs.length));
+                    }
+    
+                    if (s.y - s.len * s.fontSize > H) {
+                        s.y = -s.fontSize * 2;
+                    }
+    
+                    ctx.font = "700 " + s.fontSize + "px 'JetBrains Mono', 'Consolas', monospace";
+                    ctx.textAlign = "center";
+    
+                    for (var j = 0; j < s.len; j++) {
+                        var cy = s.y - j * (s.fontSize * 1.15);
+                        if (cy < clipTop - 20 || cy > H + 20) continue;
+    
+                        if (j === 0) {
+                            // Яркий головной символ с неоновым свечением
+                            ctx.fillStyle = s.color.head;
+                            ctx.globalAlpha = Math.min(0.92, s.weight * 0.95);
+                            ctx.shadowColor = s.color.head;
+                            ctx.shadowBlur = 8;
+                            ctx.fillText(s.chars[j], s.x, cy);
+                            ctx.shadowBlur = 0;
+    
+                            if (s.weight > 0.45 && cy > clipTop) {
+                                heads.push({ x: s.x, y: cy, color: s.color.trail });
+                            }
+                        } else {
+                            // Градиентный шлейф за головным символом
+                            var fade = (1 - j / s.len) * 0.52 * s.weight;
+                            ctx.globalAlpha = Math.max(0.03, fade);
+                            ctx.fillStyle = "rgb(" + s.color.trail + ")";
+                            ctx.fillText(s.chars[j], s.x, cy);
+                        }
+                    }
+                }
+    
+                // Тонкие нейро-линии между соседними головными символами на боковых кулисах
+                ctx.lineWidth = 0.7;
+                for (var a = 0; a < heads.length; a++) {
+                    for (var b = a + 1; b < heads.length; b++) {
+                        var dx = heads[a].x - heads[b].x;
+                        var dy = heads[a].y - heads[b].y;
+                        if (Math.abs(dx) > 95 || Math.abs(dy) > 95) continue;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 90) {
+                            ctx.globalAlpha = (1 - dist / 90) * 0.18;
+                            ctx.strokeStyle = "rgb(" + heads[a].color + ")";
+                            ctx.beginPath();
+                            ctx.moveTo(heads[a].x, heads[a].y);
+                            ctx.lineTo(heads[b].x, heads[b].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+    
+                ctx.restore();
+                requestAnimationFrame(render);
+            }
+    
+            resize();
+            window.addEventListener("resize", resize);
+            requestAnimationFrame(render);
+        }
 
     // ================================================================
     // 1. CYBER CANVAS — перспективная сетка + glowing nodes (hero bg)
@@ -226,22 +402,25 @@
         var totalOrig = origCards.length;
         if (totalOrig === 0) return;
 
-        // Определяем количество видимых карточек
-        function getVisible() {
-            if (!origCards[0]) return 4;
-            var style = window.getComputedStyle(origCards[0]);
-            var fb = style.flexBasis;
-            var m = fb.match(/\/\s*(\d+)/);
-            if (m) return parseInt(m[1], 10);
-            var vw = vp ? vp.offsetWidth : wrapper.offsetWidth;
-            var cw = origCards[0].offsetWidth;
-            if (cw > 0) return Math.max(1, Math.floor(vw / cw));
-            var ww = window.innerWidth;
-            if (ww <= 480) return 1;
-            if (ww <= 768) return 1;
-            if (ww <= 1024) return 2;
-            return 4;
-        }
+        // Определяем количество видимых карточек (с учётом 2 широких карточек у teachers)
+                function getVisible() {
+                    var isTeachers = wrapper.getAttribute("data-carousel") === "teachers";
+                    var ww = window.innerWidth;
+                    if (isTeachers) {
+                        return ww <= 1024 ? 1 : 2;
+                    }
+                    if (!origCards[0]) return 4;
+                    var style = window.getComputedStyle(origCards[0]);
+                    var fb = style.flexBasis;
+                    var m = fb.match(/\/\s*(\d+)/);
+                    if (m) return parseInt(m[1], 10);
+                    var vw = vp ? vp.offsetWidth : wrapper.offsetWidth;
+                    var cw = origCards[0].offsetWidth;
+                    if (cw > 0) return Math.max(1, Math.round(vw / cw));
+                    if (ww <= 768) return 1;
+                    if (ww <= 1024) return 2;
+                    return 4;
+                }
 
         var vis = getVisible();
         if (vis >= totalOrig) {
