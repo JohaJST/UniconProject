@@ -405,3 +405,12 @@ msgstr "Jami"
 
 msgid "backToHomeBtn"
 msgstr "Bosh sahifaga"
+
+msgid "Выберите предмет"
+msgstr "Fanni tanlang"
+
+msgid "Сначала выберите предмет"
+msgstr "Avval fanni tanlang"
+
+msgid "Предмет"
+msgstr "Fan"

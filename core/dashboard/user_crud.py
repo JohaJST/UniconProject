@@ -13,7 +13,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect, render
 
-from core.models import Potok, Result, User
+from core.models import Potok, Result, Subject, User
+from core.models.auth import Role
 
 
 @login_required(login_url="login")
@@ -54,9 +55,47 @@ def edit_user(request, pk):
     с error и уже введёнными данными (user_data=request.POST).
     """
     target_user = get_object_or_404(User, pk=pk)
+    potoks = Potok.objects.all()
+    subjects = Subject.objects.all().order_by("name_uz")
+
+    def _error(message, data):
+        return render(
+            request,
+            "pages/dashboard/user_edit.html",
+            {
+                "target_user": target_user,
+                "potoks": potoks,
+                "subjects": subjects,
+                "error": message,
+                "user_data": data,
+            },
+            status=400,
+        )
 
     if request.method == "POST":
         data = request.POST
+
+        # ── Роль ────────────────────────────────────────────────────────
+        raw_role = (data.get("role") or "").strip()
+        if not raw_role.isdigit():
+            return _error("Выберите роль", data)
+        new_role = int(raw_role)
+
+        # ── Предмет: если поле не пришло вообще — текущее значение не трогаем ──
+        new_subject_id = target_user.subject_id
+        if "subject" in data:
+            raw_subject = (data.get("subject") or "").strip()
+            if not raw_subject:
+                new_subject_id = None
+            elif raw_subject.isdigit() and Subject.objects.filter(id=int(raw_subject)).exists():
+                new_subject_id = int(raw_subject)
+            else:
+                return _error("Выберите корректный предмет", data)
+
+        # Ученик без предмета не виден на странице логина.
+        if new_role == Role.STUDENT and new_subject_id is None:
+            return _error("Для ученика обязательно выберите предмет", data)
+
         try:
             target_user.name = data["first_name"]
             target_user.last_name = data["last_name"]
@@ -65,13 +104,12 @@ def edit_user(request, pk):
             target_user.position = data.get("position") or None
             target_user.company_name = data.get("company_name") or None
 
-            potok_id = data.get("potok")
-            target_user.potok_id = int(potok_id) if potok_id else None
+            potok_id = (data.get("potok") or "").strip()
+            target_user.potok_id = int(potok_id) if potok_id.isdigit() else None
 
-            subject_id = data.get("subject")
-            target_user.subject_id = int(subject_id) if subject_id else None
+            target_user.subject_id = new_subject_id
 
-            target_user.role = int(data["role"])
+            target_user.role = new_role
             target_user.lang = data.get("lang")
 
             password = data.get("password")
@@ -80,20 +118,12 @@ def edit_user(request, pk):
 
             target_user.save()
         except Exception:
-            return render(
-                request,
-                "pages/dashboard/user_edit.html",
-                {
-                    "target_user": target_user,
-                    "potoks": Potok.objects.all(),
-                    "error": "Проверьте данные",
-                    "user_data": data,
-                },
-            )
+            return _error("Проверьте данные", data)
 
         return redirect("action", status="view", path="user", pk=target_user.id)
 
     return render(request, "pages/dashboard/user_edit.html", {
         "target_user": target_user,
-        "potoks": Potok.objects.all(),
+        "potoks": potoks,
+        "subjects": subjects,
     })

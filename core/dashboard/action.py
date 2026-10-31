@@ -30,6 +30,7 @@ from core.models import (
     User,
     Variant,
 )
+from core.models.auth import Role
 from core.models.about import Courses, News, NewsImage, Partners, Teachers
 from core.dashboard.selfuser_crud import view_selfuser
 from core.models.self import SelfCtg, SelfQuestion, SelfResult, SelfUser
@@ -563,31 +564,71 @@ def action(request, status, path, pk=None):
 def form(req):
     # Проверка доступа к дашборду — в DashboardSecurityMiddleware.
     potoks = Potok.objects.all()
+    subjects = Subject.objects.all().order_by("name_uz")
+    base_ctx = {"potoks": potoks, "subjects": subjects}
+
     if req.POST:
         data = req.POST
+
+        # ── Валидация ───────────────────────────────────────────────────
+        raw_role = (data.get("role") or "").strip()
+        role = int(raw_role) if raw_role.isdigit() else None
+        if role is None:
+            return render(req, "pages/dashboard/form.html", {
+                **base_ctx, "error": "Выберите роль", "user_data": data,
+            }, status=400)
+
+        # Предмет: мусор (не число / несуществующий id) не должен давать 500.
+        raw_subject = (data.get("subject") or "").strip()
+        subject_id = None
+        if raw_subject:
+            if not raw_subject.isdigit() or not Subject.objects.filter(id=int(raw_subject)).exists():
+                return render(req, "pages/dashboard/form.html", {
+                    **base_ctx, "error": "Выберите корректный предмет", "user_data": data,
+                }, status=400)
+            subject_id = int(raw_subject)
+
+        # Для ученика предмет обязателен — иначе он не виден на странице логина.
+        if role == Role.STUDENT and subject_id is None:
+            return render(req, "pages/dashboard/form.html", {
+                **base_ctx, "error": "Для ученика обязательно выберите предмет", "user_data": data,
+            }, status=400)
+
+        first_name = (data.get("first_name") or "").strip()
+        last_name = (data.get("last_name") or "").strip()
+        second_name = (data.get("second_name") or "").strip()
+
+        # username строится из ФИО (User.save) — проверяем тёзок заранее.
+        future_username = f"{last_name} {first_name} {second_name}"
+        if User.objects.filter(username=future_username).exists():
+            return render(req, "pages/dashboard/form.html", {
+                **base_ctx,
+                "error": "Пользователь с таким ФИО уже существует",
+                "user_data": data,
+            }, status=400)
+
         try:
             User.objects.create_user(
                 username=None,
                 password=data.get("password") or "1234",
-                name=(data.get("first_name") or "").strip(),
-                last_name=(data.get("last_name") or "").strip(),
-                second_name=(data.get("second_name") or "").strip(),
-                potok_id=int(data["potok"]) if data.get("potok") else None,
+                name=first_name,
+                last_name=last_name,
+                second_name=second_name,
+                potok_id=int(data["potok"]) if (data.get("potok") or "").isdigit() else None,
+                subject_id=subject_id,
                 position=(data.get("position") or "").strip() or None,
                 company_name=(data.get("company_name") or "").strip() or None,
                 phone=(data.get("phone") or "").strip() or None,
-                role=int(data["role"]),
+                role=role,
                 lang=data.get("lang") or "uz",
             )
         except Exception:
-            return render(
-                req,
-                "pages/dashboard/form.html",
-                {"potoks": potoks, "error": "Проверьте данные", "user_data": data},
-            )
-        return render(
-            req,
-            "pages/dashboard/form.html",
-            {"potoks": potoks, "success": "Пользователь добавлен"},
-        )
-    return render(req, "pages/dashboard/form.html", {"potoks": potoks})
+            return render(req, "pages/dashboard/form.html", {
+                **base_ctx, "error": "Проверьте данные", "user_data": data,
+            }, status=400)
+
+        return render(req, "pages/dashboard/form.html", {
+            **base_ctx, "success": "Пользователь добавлен",
+        })
+
+    return render(req, "pages/dashboard/form.html", base_ctx)

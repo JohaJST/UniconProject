@@ -406,3 +406,12 @@ msgstr "Total"
 
 msgid "backToHomeBtn"
 msgstr "Home"
+
+msgid "Выберите предмет"
+msgstr "Select a subject"
+
+msgid "Сначала выберите предмет"
+msgstr "First select a subject"
+
+msgid "Предмет"
+msgstr "Subject"

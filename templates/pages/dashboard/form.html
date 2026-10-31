@@ -196,6 +196,28 @@
                     </select>
                 </div>
 
+                <!-- Предмет (subject select) — по нему ученик группируется на странице логина -->
+                <div>
+                    <label
+                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                        for="id_subject"
+                    >
+                        Предмет <span id="subjectStar" class="text-rose-400">*</span>
+                    </label>
+                    <select
+                        id="id_subject"
+                        name="subject"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    >
+                        <option value="">-- Выберите предмет --</option>
+                        {% for s in subjects %}
+                            <option value="{{ s.id }}"
+                                {% if user_data.subject|slugify == s.id|slugify %}selected{% endif %}
+                            >{{ s.name_uz|default:s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
             <!-- Роль (role) — full width -->
             <div>
                 <label
@@ -265,7 +287,22 @@
                     Отмена
                 </a>
             </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
-{% endblock %}
+    
+    <script>
+        (function () {
+            var roleSel = document.getElementById('id_role');
+            var subjSel = document.getElementById('id_subject');
+            var star = document.getElementById('subjectStar');
+            function sync() {
+                var isStudent = roleSel.value === '4';
+                subjSel.required = isStudent;
+                star.style.display = isStudent ? '' : 'none';
+            }
+            roleSel.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
+    {% endblock %}

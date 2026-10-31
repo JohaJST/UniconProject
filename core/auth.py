@@ -22,6 +22,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import translate_url
 
 from core.models import Potok, User, Subject
+from core.models.auth import Role
 from core.auth_jwt.exceptions import TokenExpired, TokenInvalid
 from core.auth_jwt.services import AuthRedisService
 from core.auth_jwt.tokens import decode_token, generate_tokens
@@ -67,8 +68,15 @@ def sign_in(requests):
         return redirect("about")
 
     ctx = {
-        "u": User.objects.filter(is_result=False),
-        "c": Subject.objects.all(),
+        # Только активные ученики с назначенным предметом — иначе они
+        # не попадут ни в одну группу на странице логина.
+        "u": User.objects.filter(
+            is_result=False,
+            is_active=True,
+            role=Role.STUDENT,
+            subject__isnull=False,
+        ).order_by("last_name", "name"),
+        "c": Subject.objects.all().order_by("name_uz"),
     }
 
     if requests.POST:
