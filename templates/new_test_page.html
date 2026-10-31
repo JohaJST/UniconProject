@@ -1,359 +1,523 @@
 <!doctype html>
-    <html lang="">
+<html lang="">
 
-    {% load static %}
-    {% load i18n %}
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{{ APP_NAME }} // {{ test_name }}</title>
+{% load static %}
+{% load i18n %}
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ APP_NAME }} // {{ test_name }}</title>
 
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
-        <style>
-            .question-card {
-                transition: all 0.3s ease;
-            }
-            .question-card:focus-within {
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-            }
+    <style>
+        /* ============================================================
+           QUANTUM VAULT — DARK FROSTED GLASS HUD (Main Test Page)
+           ============================================================ */
+        :root {
+            --lock-alpha: 0.78;
+            --qv-bg-deep: #050914;
+            --qv-bg-navy: #0f172a;
+            --qv-glass: rgba(15, 23, 42, 0.78);
+            --qv-border: rgba(96, 165, 250, 0.22);
+            --qv-cyan: #22d3ee;
+            --qv-blue: #3b82f6;
+            --qv-gold: #facc15;
+            --qv-ease: cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-            /* ═════════ Экран «Начать тест» ═════════ */
-            :root {
-                /* Непрозрачность серой вуали: 0..1 (больше = тест хуже виден) */
-                --lock-alpha: 0.78;
-            }
+        body.qv-body {
+            background:
+                radial-gradient(circle at 50% 35%, rgba(30, 58, 138, 0.32) 0%, rgba(15, 23, 42, 0.92) 52%, #050914 100%),
+                #050914 !important;
+            color: #f1f5f9 !important;
+            min-height: 100vh;
+        }
 
-            body.test-locked { overflow: hidden; }
+        body.test-locked { overflow: hidden; }
 
-            .start-gate {
-                position: fixed;
-                inset: 0;
-                z-index: 45;               /* ниже таймера (z-50), выше теста */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(107, 114, 128, var(--lock-alpha));
-                -webkit-backdrop-filter: grayscale(1) blur(6px);
-                backdrop-filter: grayscale(1) blur(6px);
-                transition: opacity .7s ease, visibility .7s ease;
-            }
-            .start-gate.is-hidden {
-                opacity: 0;
-                visibility: hidden;
-                pointer-events: none;
-            }
+        /* ── Верхняя панель (Timer Bar) в стиле матового тёмного кибер-стекла ── */
+        .qv-topbar {
+            background: rgba(10, 16, 31, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(96, 165, 250, 0.22);
+            box-shadow: 0 10px 32px rgba(2, 6, 23, 0.55);
+        }
 
-            /* ── Кнопка-капля (water drop) ── */
-            .water-btn {
-                --mx: 50%; --my: 40%;   /* позиция курсора внутри кнопки (JS) */
-                --tx: 0px; --ty: 0px;   /* «магнит»: смещение к курсору (JS) */
-                position: relative;
-                isolation: isolate;
-                overflow: hidden;
-                cursor: pointer;
-                min-width: 300px;
-                min-height: 84px;
-                padding: 1.3rem 3.6rem 1.6rem;
-                border: 1px solid rgba(255,255,255,.38);
-                border-radius: 44px / 42px;
-                color: #f1f5f9;
-                font-size: 1.6rem;
-                font-weight: 500;
-                letter-spacing: .02em;
-                background:
-                    radial-gradient(120% 140% at 22% 12%, rgba(255,255,255,.42) 0%, rgba(255,255,255,0) 46%),
-                    radial-gradient(90% 120% at 82% 105%, rgba(186,200,215,.38) 0%, rgba(186,200,215,0) 60%),
-                    linear-gradient(165deg, rgba(210,218,228,.30), rgba(110,122,138,.34));
-                -webkit-backdrop-filter: blur(10px) saturate(140%);
-                backdrop-filter: blur(10px) saturate(140%);
-                box-shadow:
-                    inset 0 2px 3px rgba(255,255,255,.75),
-                    inset 0 -12px 20px rgba(20,30,45,.35),
-                    inset 0 0 0 5px rgba(255,255,255,.06),
-                    0 20px 44px rgba(0,0,0,.40),
-                    0 0 30px rgba(170,200,225,.12);
-                translate: var(--tx) var(--ty);
-                transition:
-                    translate .25s ease-out,
-                    transform .18s cubic-bezier(.3,1.5,.5,1),
-                    box-shadow .4s ease,
-                    filter .4s ease;
-                animation: waterBreath 5.5s ease-in-out infinite,
-                           waterIdleShape 9s ease-in-out infinite;
-            }
-            
-            /* Покой: «дыхание» + едва заметное колебание формы */
-            @keyframes waterBreath { 0%,100% { scale: 1; } 50% { scale: 1.02; } }
-            @keyframes waterIdleShape {
-                0%,100% { border-radius: 44px / 42px; }
-                50%     { border-radius: 46px 42px 45px 43px / 42px 45px 41px 44px; }
-            }
-            
-            /* Hover: капля «дрожит» (blob), блики контрастнее */
-            .water-btn:hover {
-                filter: brightness(1.12) contrast(1.06);
-                box-shadow:
-                    inset 0 2px 4px rgba(255,255,255,.95),
-                    inset 0 -12px 22px rgba(20,30,45,.38),
-                    inset 0 0 0 5px rgba(255,255,255,.10),
-                    0 26px 54px rgba(0,0,0,.45),
-                    0 0 44px rgba(170,210,235,.28);
-                animation: waterBreath 5.5s ease-in-out infinite,
-                           waterBlob 2.6s ease-in-out infinite;
-            }
-            @keyframes waterBlob {
-                0%,100% { border-radius: 46px 38px 50px 40px / 40px 50px 38px 46px; }
-                33%     { border-radius: 40px 50px 38px 48px / 48px 38px 50px 40px; }
-                66%     { border-radius: 50px 40px 46px 38px / 38px 46px 40px 50px; }
-            }
-            
-            /* Нажатие: упругое сжатие */
-            .water-btn:active { transform: scale(.93, .88); }
-            
-            /* После клика: желейный возврат формы */
-            .water-btn.is-jelly {
-                pointer-events: none;
-                animation: waterBreath 5.5s ease-in-out infinite,
-                           waterBlob 2.6s ease-in-out infinite,
-                           waterJelly .9s cubic-bezier(.36,.07,.19,.97) forwards;
-            }
-            @keyframes waterJelly {
-                0%   { transform: scale(.93, .88); }
-                25%  { transform: scale(1.07, .94); }
-                45%  { transform: scale(.97, 1.06); }
-                65%  { transform: scale(1.02, .99); }
-                82%  { transform: scale(.995, 1.005); }
-                100% { transform: scale(1); }
-            }
-            
-            .water-btn:focus-visible { outline: 2px solid rgba(255,255,255,.9); outline-offset: 5px; }
-            
-            /* Слои внутри капли */
-            .water-btn__lens {            /* верхний блик-линза */
-                position: absolute; top: 7%; left: 6%; width: 62%; height: 36%;
-                border-radius: 999px;
-                background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0));
-                filter: blur(1px);
-                pointer-events: none; z-index: 1;
-            }
-            .water-btn::before {          /* свет, «притянутый» курсором */
-                content: ""; position: absolute; inset: 0; border-radius: inherit;
-                background: radial-gradient(circle 110px at var(--mx) var(--my),
-                            rgba(255,255,255,.38), rgba(255,255,255,0) 70%);
-                opacity: .35; transition: opacity .4s ease;
-                pointer-events: none; z-index: 1;
-            }
-            .water-btn:hover::before { opacity: 1; }
-            
-            .water-btn::after {           /* микропузырьки */
-                content: ""; position: absolute; inset: 0; border-radius: inherit;
-                background:
-                    radial-gradient(circle 3px at 82% 38%, rgba(255,255,255,.9) 0 55%, transparent 60%),
-                    radial-gradient(circle 2px at 72% 66%, rgba(255,255,255,.75) 0 55%, transparent 60%),
-                    radial-gradient(circle 2px at 18% 70%, rgba(255,255,255,.6) 0 55%, transparent 60%),
-                    radial-gradient(circle 1.5px at 40% 82%, rgba(255,255,255,.6) 0 55%, transparent 60%);
-                pointer-events: none; z-index: 2;
-            }
-            
-            .water-btn__sheen {           /* редкая бегущая рябь/блик */
-                position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
-                background: linear-gradient(100deg, transparent, rgba(255,255,255,.32), transparent);
-                transform: skewX(-20deg);
-                animation: waterSheen 7s ease-in-out infinite;
-                pointer-events: none; z-index: 1;
-            }
-            @keyframes waterSheen { 0% { left: -60%; } 38%,100% { left: 130%; } }
-            
-            .water-btn__rings {           /* концентрические круги вокруг курсора (hover) */
-                position: absolute; inset: 0; border-radius: inherit;
-                background: repeating-radial-gradient(circle at var(--mx) var(--my),
-                            rgba(255,255,255,0) 0 14px, rgba(255,255,255,.22) 16px, rgba(255,255,255,0) 20px);
-                -webkit-mask-image: radial-gradient(circle 120px at var(--mx) var(--my), #000, transparent 100%);
-                        mask-image: radial-gradient(circle 120px at var(--mx) var(--my), #000, transparent 100%);
-                opacity: 0; transition: opacity .4s ease;
-                pointer-events: none; z-index: 1;
-            }
-            .water-btn:hover .water-btn__rings { opacity: 1; }
-            
-            /* Текст: рефракция + отражение под «водой» */
-            .water-btn__label {
-                position: relative; z-index: 3; display: inline-block;
-                filter: url(#water-refract-soft);
-                text-shadow: 0 1px 0 rgba(255,255,255,.35), 0 2px 8px rgba(0,0,0,.35);
-                transition: transform .45s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
-            }
-            .water-btn__label::after {
-                content: attr(data-text);
-                position: absolute; left: 0; top: 100%; margin-top: -.15em;
-                white-space: nowrap;
-                transform: scaleY(-1) skewX(-12deg); transform-origin: 0 0;
-                color: rgba(15,23,42,.30); text-shadow: none;
-                -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 70%);
-                        mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 70%);
-                filter: url(#water-refract);
-                pointer-events: none;
-                transition: color .4s ease;
-            }
-            .water-btn:hover .water-btn__label { transform: translateY(-2px); }
-            .water-btn:hover .water-btn__label::after { color: rgba(15,23,42,.42); }
-            .water-btn:active .water-btn__label,
-            .water-btn.is-jelly .water-btn__label { transform: translateY(3px) scale(.97); opacity: .85; }
-            
-            /* Рябь от клика */
-            .water-ripple {
-                position: absolute; z-index: 2;
-                width: 20px; height: 20px; margin: -10px 0 0 -10px;
-                border-radius: 50%;
-                border: 2px solid rgba(255,255,255,.75);
-                background: radial-gradient(circle, rgba(255,255,255,.35), rgba(255,255,255,0) 70%);
-                transform: scale(0); opacity: .9; pointer-events: none;
-                animation: waterRipple .9s cubic-bezier(.2,.7,.3,1) forwards;
-            }
-            @keyframes waterRipple { to { transform: scale(22); opacity: 0; } }
-            
-            @media (prefers-reduced-motion: reduce) {
-                .water-btn, .water-btn:hover, .water-btn.is-jelly { animation: none; }
-                .water-btn__sheen { animation: none; display: none; }
-                .water-ripple { animation-duration: .01s; }
-            }
+        .qv-brand {
+            background: linear-gradient(135deg, #60a5fa 0%, #22d3ee 55%, #facc15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-            /* ═════════ Бинарный водяной знак на фоне (за контейнером) ═════════ */
-            
+        /* ── Секундомер (Cyber Chronometer) ── */
+        .qv-stopwatch {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(34, 211, 238, 0.32);
+            color: #e0f2fe;
+            box-shadow:
+                0 0 18px rgba(6, 182, 212, 0.16),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+        .qv-stopwatch__dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22d3ee;
+            box-shadow: 0 0 8px #22d3ee;
+            animation: qvPulseDot 2s ease-in-out infinite;
+        }
+        @keyframes qvPulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.85); }
+        }
 
-                </style>
-                </head>
-    <body class="qv-body text-slate-100 test-locked">
+        /* ── Переключатель языков и кнопка профиля в шапке ── */
+        .qv-lang-bar {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .qv-profile-pill {
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(96, 165, 250, 0.25);
+            color: #e2e8f0;
+            transition: all 0.25s var(--qv-ease);
+        }
+        .qv-profile-pill:hover {
+            background: rgba(37, 99, 235, 0.25);
+            border-color: rgba(96, 165, 250, 0.55);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* ── Новая кнопка выхода .test-exit-btn (Открытая дверь + Exit) ── */
+        .test-exit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 1.15rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: #fecaca;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            transition:
+                background 0.3s var(--qv-ease),
+                border-color 0.3s var(--qv-ease),
+                box-shadow 0.3s var(--qv-ease),
+                color 0.3s var(--qv-ease),
+                transform 0.3s var(--qv-ease);
+        }
+        .test-exit-btn__ico {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            color: #f87171;
+            transition: transform 0.3s var(--qv-ease), color 0.3s var(--qv-ease);
+        }
+        .test-exit-btn__arrow {
+            transition: transform 0.3s var(--qv-ease);
+        }
+        .test-exit-btn:hover,
+        .test-exit-btn:focus-visible {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(185, 28, 28, 0.14));
+            border-color: rgba(248, 113, 113, 0.75);
+            color: #ffffff;
+            box-shadow:
+                0 0 20px rgba(239, 68, 68, 0.35),
+                inset 0 0 0 1px rgba(248, 113, 113, 0.2);
+            transform: translateY(-1px);
+        }
+        .test-exit-btn:hover .test-exit-btn__ico {
+            color: #fca5a5;
+            transform: translateX(2px);
+        }
+        .test-exit-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* ── Главный контейнер теста (Dark Frosted Glass HUD) ── */
+        .qv-vault-card {
+            background: var(--qv-glass);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--qv-border);
+            box-shadow:
+                0 25px 65px rgba(2, 6, 23, 0.72),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 0 40px rgba(37, 99, 235, 0.14);
+        }
+
+        /* ── Карточка отдельного вопроса ── */
+        .question-card.qv-question-card {
+            background: rgba(15, 23, 42, 0.56);
+            border: 1px solid rgba(96, 165, 250, 0.16);
+            border-left: 4px solid rgba(59, 130, 246, 0.55);
+            transition: all 0.3s var(--qv-ease);
+        }
+        .question-card.qv-question-card:hover {
+            background: rgba(15, 23, 42, 0.72);
+            border-color: rgba(96, 165, 250, 0.32);
+            border-left-color: #22d3ee;
+        }
+        .question-card.qv-question-card:focus-within,
+        .question-card.qv-question-card:has(input:checked) {
+            background: rgba(15, 23, 42, 0.82);
+            border-color: rgba(34, 211, 238, 0.4);
+            border-left-color: #22d3ee;
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.12);
+        }
+
+        .qv-q-badge {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: #ffffff;
+            border: 1px solid rgba(96, 165, 250, 0.4);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+
+        /* ── Карточки вариантов ответа ── */
+        .qv-option {
+            background: rgba(30, 41, 59, 0.52);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            color: #f1f5f9;
+        }
+        .qv-option:hover {
+            background: rgba(30, 58, 138, 0.38);
+            border-color: rgba(56, 189, 248, 0.48);
+            transform: translateX(3px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.12);
+        }
+        .qv-option:has(input:checked) {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.32), rgba(6, 182, 212, 0.20));
+            border-color: #22d3ee;
+            box-shadow:
+                0 0 0 1px rgba(34, 211, 238, 0.35),
+                0 8px 24px rgba(6, 182, 212, 0.22);
+        }
+
+        /* ── Кнопка завершения теста ── */
+        .qv-submit-btn {
+            background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
+            border: 1px solid rgba(34, 211, 238, 0.45);
+            box-shadow: 0 12px 32px rgba(6, 182, 212, 0.32);
+            transition: all 0.3s var(--qv-ease);
+        }
+        .qv-submit-btn:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            border-color: rgba(250, 204, 21, 0.65);
+            box-shadow: 0 16px 40px rgba(34, 211, 238, 0.45);
+            transform: translateY(-2px);
+        }
+
+        /* ═════════ Экран «Начать тест» ═════════ */
+        .start-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 45;               /* ниже таймера (z-50), выше теста */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(7, 11, 22, var(--lock-alpha));
+            -webkit-backdrop-filter: grayscale(0.4) blur(10px);
+            backdrop-filter: grayscale(0.4) blur(10px);
+            transition: opacity .7s ease, visibility .7s ease;
+        }
+        .start-gate.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* ── Кнопка-капля (water drop) ── */
+        .water-btn {
+            --mx: 50%; --my: 40%;
+            --tx: 0px; --ty: 0px;
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            cursor: pointer;
+            min-width: 300px;
+            min-height: 84px;
+            padding: 1.3rem 3.6rem 1.6rem;
+            border: 1px solid rgba(147, 197, 253, .45);
+            border-radius: 44px / 42px;
+            color: #f8fafc;
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+            background:
+                radial-gradient(120% 140% at 22% 12%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 46%),
+                radial-gradient(90% 120% at 82% 105%, rgba(34,211,238,.35) 0%, rgba(34,211,238,0) 60%),
+                linear-gradient(165deg, rgba(59,130,246,.38), rgba(15,23,42,.62));
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+            backdrop-filter: blur(12px) saturate(150%);
+            box-shadow:
+                inset 0 2px 3px rgba(255,255,255,.75),
+                inset 0 -12px 20px rgba(15,23,42,.5),
+                inset 0 0 0 5px rgba(56,189,248,.08),
+                0 20px 44px rgba(0,0,0,.55),
+                0 0 36px rgba(34,211,238,.24);
+            translate: var(--tx) var(--ty);
+            transition:
+                translate .25s ease-out,
+                transform .18s cubic-bezier(.3,1.5,.5,1),
+                box-shadow .4s ease,
+                filter .4s ease;
+            animation: waterBreath 5.5s ease-in-out infinite,
+                       waterIdleShape 9s ease-in-out infinite;
+        }
+        
+        @keyframes waterBreath { 0%,100% { scale: 1; } 50% { scale: 1.02; } }
+        @keyframes waterIdleShape {
+            0%,100% { border-radius: 44px / 42px; }
+            50%     { border-radius: 46px 42px 45px 43px / 42px 45px 41px 44px; }
+        }
+        
+        .water-btn:hover {
+            filter: brightness(1.12) contrast(1.06);
+            box-shadow:
+                inset 0 2px 4px rgba(255,255,255,.95),
+                inset 0 -12px 22px rgba(15,23,42,.45),
+                inset 0 0 0 5px rgba(56,189,248,.14),
+                0 26px 54px rgba(0,0,0,.6),
+                0 0 48px rgba(34,211,238,.38);
+            animation: waterBreath 5.5s ease-in-out infinite,
+                       waterBlob 2.6s ease-in-out infinite;
+        }
+        @keyframes waterBlob {
+            0%,100% { border-radius: 46px 38px 50px 40px / 40px 50px 38px 46px; }
+            33%     { border-radius: 40px 50px 38px 48px / 48px 38px 50px 40px; }
+            66%     { border-radius: 50px 40px 46px 38px / 38px 46px 40px 50px; }
+        }
+        
+        .water-btn:active { transform: scale(.93, .88); }
+        
+        .water-btn.is-jelly {
+            pointer-events: none;
+            animation: waterBreath 5.5s ease-in-out infinite,
+                       waterBlob 2.6s ease-in-out infinite,
+                       waterJelly .9s cubic-bezier(.36,.07,.19,.97) forwards;
+        }
+        @keyframes waterJelly {
+            0%   { transform: scale(.93, .88); }
+            25%  { transform: scale(1.07, .94); }
+            45%  { transform: scale(.97, 1.06); }
+            65%  { transform: scale(1.02, .99); }
+            82%  { transform: scale(.995, 1.005); }
+            100% { transform: scale(1); }
+        }
+        
+        .water-btn:focus-visible { outline: 2px solid rgba(34,211,238,.9); outline-offset: 5px; }
+        
+        .water-btn__lens {
+            position: absolute; top: 7%; left: 6%; width: 62%; height: 36%;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0));
+            filter: blur(1px);
+            pointer-events: none; z-index: 1;
+        }
+        .water-btn::before {
+            content: ""; position: absolute; inset: 0; border-radius: inherit;
+            background: radial-gradient(circle 110px at var(--mx) var(--my),
+                        rgba(255,255,255,.38), rgba(255,255,255,0) 70%);
+            opacity: .35; transition: opacity .4s ease;
+            pointer-events: none; z-index: 1;
+        }
+        .water-btn:hover::before { opacity: 1; }
+        
+        .water-btn::after {
+            content: ""; position: absolute; inset: 0; border-radius: inherit;
+            background:
+                radial-gradient(circle 3px at 82% 38%, rgba(255,255,255,.9) 0 55%, transparent 60%),
+                radial-gradient(circle 2px at 72% 66%, rgba(255,255,255,.75) 0 55%, transparent 60%),
+                radial-gradient(circle 2px at 18% 70%, rgba(255,255,255,.6) 0 55%, transparent 60%),
+                radial-gradient(circle 1.5px at 40% 82%, rgba(255,255,255,.6) 0 55%, transparent 60%);
+            pointer-events: none; z-index: 2;
+        }
+        
+        .water-btn__sheen {
+            position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.32), transparent);
+            transform: skewX(-20deg);
+            animation: waterSheen 7s ease-in-out infinite;
+            pointer-events: none; z-index: 1;
+        }
+        @keyframes waterSheen { 0% { left: -60%; } 38%,100% { left: 130%; } }
+        
+        .water-btn__rings {
+            position: absolute; inset: 0; border-radius: inherit;
+            background: repeating-radial-gradient(circle at var(--mx) var(--my),
+                        rgba(255,255,255,0) 0 14px, rgba(255,255,255,.22) 16px, rgba(255,255,255,0) 20px);
+            -webkit-mask-image: radial-gradient(circle 120px at var(--mx) var(--my), #000, transparent 100%);
+                    mask-image: radial-gradient(circle 120px at var(--mx) var(--my), #000, transparent 100%);
+            opacity: 0; transition: opacity .4s ease;
+            pointer-events: none; z-index: 1;
+        }
+        .water-btn:hover .water-btn__rings { opacity: 1; }
+        
+        .water-btn__label {
+            position: relative; z-index: 3; display: inline-block;
+            filter: url(#water-refract-soft);
+            text-shadow: 0 1px 0 rgba(255,255,255,.35), 0 2px 8px rgba(0,0,0,.35);
+            transition: transform .45s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+        }
+        .water-btn__label::after {
+            content: attr(data-text);
+            position: absolute; left: 0; top: 100%; margin-top: -.15em;
+            white-space: nowrap;
+            transform: scaleY(-1) skewX(-12deg); transform-origin: 0 0;
+            color: rgba(224,242,254,.28); text-shadow: none;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 70%);
+                    mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 70%);
+            filter: url(#water-refract);
+            pointer-events: none;
+            transition: color .4s ease;
+        }
+        .water-btn:hover .water-btn__label { transform: translateY(-2px); }
+        .water-btn:hover .water-btn__label::after { color: rgba(224,242,254,.42); }
+        .water-btn:active .water-btn__label,
+        .water-btn.is-jelly .water-btn__label { transform: translateY(3px) scale(.97); opacity: .85; }
+        
+        .water-ripple {
+            position: absolute; z-index: 2;
+            width: 20px; height: 20px; margin: -10px 0 0 -10px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,.75);
+            background: radial-gradient(circle, rgba(255,255,255,.35), rgba(255,255,255,0) 70%);
+            transform: scale(0); opacity: .9; pointer-events: none;
+            animation: waterRipple .9s cubic-bezier(.2,.7,.3,1) forwards;
+        }
+        @keyframes waterRipple { to { transform: scale(22); opacity: 0; } }
+        
+        @media (prefers-reduced-motion: reduce) {
+            .water-btn, .water-btn:hover, .water-btn.is-jelly { animation: none; }
+            .water-btn__sheen { animation: none; display: none; }
+            .water-ripple { animation-duration: .01s; }
+        }
+    </style>
+</head>
+<body class="qv-body text-slate-100 test-locked">
 
 <script>
-/* Локализованные строки для JS (confirm/alert) — через {# trans #}|escapejs,
-       чтобы переводы не ломали синтаксис скрипта при любых кавычках. */
     const exitConfirmMessage = "{% trans 'exitConfirmMessage'|escapejs %}";
     const confirmSubmitAnswersText = "{% trans 'confirmSubmitAnswers'|escapejs %}";
     const submitErrorFallbackText = "{% trans 'submitErrorFallback'|escapejs %}";
     const connectionErrorPrefixText = "{% trans 'connectionErrorPrefix'|escapejs %}";
-    </script>
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-black italic tracking-tighter text-blue-600">{{ APP_NAME }}</a>
+</script>
 
-            <div class="flex items-center gap-4">
-                <nav class="flex gap-3 text-xs font-bold mr-2 uppercase">
-                    <a href="?lang=ru" class="text-slate-400 hover:text-slate-700">RU</a>
-                    <a href="?lang=uz" class="text-slate-400 hover:text-slate-700">UZ</a>
-                    <a href="?lang=en" class="text-slate-400 hover:text-slate-700">EN</a>
-                </nav>
-                    <a href="{% url 'user_profile'%}" class="bg-slate-100 px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-200 transition text-slate-700">
-                        {{ request.user.last_name }} {{ request.user.name }}
-                    </a>
-            </div>
+<!-- Timer Bar (Quantum HUD Topbar) -->
+<div class="qv-topbar fixed top-0 left-0 right-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-3.5 flex flex-wrap justify-between items-center gap-3">
+        <div class="font-black text-lg md:text-xl tracking-tighter uppercase italic">
+            <a href="/" onclick="return confirm(exitConfirmMessage);" class="qv-brand text-2xl font-black italic tracking-tighter">
+                {{ APP_NAME }}
+            </a>
         </div>
-    </header>
 
-
-
-
-<!-- Timer Bar -->
-<div class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-    <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-        <div class="font-black text-lg md:text-xl tracking-tighter uppercase italic text-slate-800">
-            
-            <a href="/" class="text-2xl font-black italic tracking-tighter text-blue-600">{{ APP_NAME }}</a>
-        </div>
         <!-- Секундомер -->
-        <div id="stopwatch" class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-slate-700 font-bold font-mono text-sm tabular-nums">
+        <div id="stopwatch" class="qv-stopwatch flex items-center gap-2.5 px-4 py-2 rounded-full font-bold font-mono text-sm tabular-nums">
+            <span class="qv-stopwatch__dot" aria-hidden="true"></span>
             <span id="stopwatch-display">00:00</span>
         </div>
-        <div class="flex items-center gap-4">
+
+        <div class="flex items-center gap-3 md:gap-4">
             <form action="{% url 'change_language' %}" method="post"
-                  class="flex items-center gap-1 bg-slate-100 rounded-full p-1">
+                  class="qv-lang-bar flex items-center gap-1 rounded-full p-1">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.path }}">
                 <button type="submit" name="lang" value="uz"
                     class="px-3 py-1.5 rounded-full text-xs font-bold uppercase transition-colors
-                           {% if request.user.lang == 'uz' %}bg-blue-600 text-white shadow{% else %}text-slate-500 hover:text-slate-800{% endif %}">UZ</button>
+                           {% if request.user.lang == 'uz' %}bg-blue-600 text-white shadow{% else %}text-slate-400 hover:text-white{% endif %}">UZ</button>
                 <button type="submit" name="lang" value="ru"
                     class="px-3 py-1.5 rounded-full text-xs font-bold uppercase transition-colors
-                           {% if request.user.lang == 'ru' %}bg-blue-600 text-white shadow{% else %}text-slate-500 hover:text-slate-800{% endif %}">RU</button>
+                           {% if request.user.lang == 'ru' %}bg-blue-600 text-white shadow{% else %}text-slate-400 hover:text-white{% endif %}">RU</button>
                 <button type="submit" name="lang" value="en"
                     class="px-3 py-1.5 rounded-full text-xs font-bold uppercase transition-colors
-                           {% if request.user.lang == 'en' %}bg-blue-600 text-white shadow{% else %}text-slate-500 hover:text-slate-800{% endif %}">EN</button>
+                           {% if request.user.lang == 'en' %}bg-blue-600 text-white shadow{% else %}text-slate-400 hover:text-white{% endif %}">EN</button>
             </form>
-            <a href="{% url 'user_profile'%}" onclick="return confirm(exitConfirmMessage);" 
-                class="bg-slate-100 px-6 py-3 rounded-full font-bold hover:bg-slate-200 transition text-slate-700">
-                                    {{ request.user.last_name }} {{ request.user.name }}
-                                </a>
-                                <a href="/" onclick="return confirm(exitConfirmMessage);"
-                                               class="test-exit-btn" title="Exit">
-                                                <svg class="test-exit-btn__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                    <path d="M13 4h3a2 2 0 0 1 2 2v3" />
-                                                    <path d="M18 15v3a2 2 0 0 1-2 2h-3" />
-                                                    <path d="M4 4.5v15a1 1 0 0 0 .76.97l6 1.5A1 1 0 0 0 12 21V3a1 1 0 0 0-1.24-.97l-6 1.5A1 1 0 0 0 4 4.5z" />
-                                                    <circle cx="9.5" cy="12" r="0.8" fill="currentColor" />
-                                                    <path class="test-exit-btn__arrow" d="M15 12h7m0 0l-2.5-2.5M22 12l-2.5 2.5" />
-                                                </svg>
-                                                <span>Exit</span>
-                                            </a>
-                                        </div>
 
+            <a href="{% url 'user_profile'%}" onclick="return confirm(exitConfirmMessage);"
+               class="qv-profile-pill hidden sm:inline-flex items-center px-5 py-2.5 rounded-full text-sm font-bold">
+                {{ request.user.last_name }} {{ request.user.name }}
+            </a>
+
+            <!-- Новая кнопка выхода с иконкой открытой двери и надписью Exit -->
+            <a href="/" onclick="return confirm(exitConfirmMessage);"
+               class="test-exit-btn" title="Exit" aria-label="Exit">
+                <svg class="test-exit-btn__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M13 4h3a2 2 0 0 1 2 2v3" />
+                    <path d="M18 15v3a2 2 0 0 1-2 2h-3" />
+                    <path d="M4 4.5v15a1 1 0 0 0 .76.97l6 1.5A1 1 0 0 0 12 21V3a1 1 0 0 0-1.24-.97l-6 1.5A1 1 0 0 0 4 4.5z" />
+                    <circle cx="9.5" cy="12" r="0.8" fill="currentColor" />
+                    <path class="test-exit-btn__arrow" d="M15 12h7m0 0l-2.5-2.5M22 12l-2.5 2.5" />
+                </svg>
+                <span>Exit</span>
+            </a>
         </div>
     </div>
-    
+</div>
 
-
-
-    <div class="relative z-10 max-w-6xl mx-auto px-6 mt-24 pb-20 min-h-screen">
-        <div class="qv-vault-card rounded-[2rem] p-8 md:p-14">
-            <div class="mb-8 pb-6 border-b border-blue-400/20">
-                <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">{{ test_name }}</h1>
-                <p class="text-slate-300/90 leading-relaxed">{{ test_desc }}</p>
-                <div class="flex flex-wrap items-center gap-3 mt-4 text-sm">
-                    <span class="px-3.5 py-1.5 bg-blue-500/15 border border-blue-400/30 rounded-xl text-cyan-300 font-bold tracking-wide">
-                        {{ subject_name }}
-                    </span>
-                </div>
+<!-- Основной контейнер теста (Dark Frosted Glass HUD) -->
+<div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mt-24 pb-20 min-h-screen">
+    <div class="qv-vault-card rounded-[2rem] p-6 sm:p-10 md:p-14">
+        <div class="mb-8 pb-6 border-b border-blue-400/20">
+            <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">{{ test_name }}</h1>
+            <p class="text-slate-300/90 leading-relaxed">{{ test_desc }}</p>
+            <div class="flex flex-wrap gap-3 mt-4 text-sm">
+                <span class="px-3.5 py-1.5 bg-blue-500/15 border border-blue-400/30 rounded-xl text-cyan-300 font-bold tracking-wide">
+                    {{ subject_name }}
+                </span>
             </div>
-            
-            <div id="questions-container" class="space-y-8">
-                {% for question in questions %}
-                    <div class="question-card qv-question-card pl-6 pr-5 py-5 rounded-2xl">
-                        <div class="flex items-start gap-4 mb-4">
-                            <span class="qv-q-badge text-sm font-black w-9 h-9 rounded-xl flex items-center justify-center mt-0.5 shrink-0">
-                                {{ forloop.counter }}
-                            </span>
-                            <h3 class="text-lg font-bold text-slate-100 leading-snug">{{ question.text }}</h3>
-                        </div>
+        </div>
+        
+        <div id="questions-container" class="space-y-8">
+            {% for question in questions %}
+                <div class="question-card qv-question-card pl-5 sm:pl-6 pr-4 sm:pr-6 py-5 rounded-2xl">
+                    <div class="flex items-start gap-4 mb-4">
+                        <span class="qv-q-badge text-sm font-black w-9 h-9 rounded-xl flex items-center justify-center mt-0.5 shrink-0">
+                            {{ forloop.counter }}
+                        </span>
+                        <h3 class="text-lg font-bold text-slate-100 leading-snug">{{ question.text }}</h3>
+                    </div>
         
                     {% if question.img %}
-                        <div class="ml-12 mb-4">
-                            <img src="{{ question.img }}" alt="{% trans 'questionImageAlt' %}" class="max-w-md rounded-lg shadow-sm">
+                        <div class="ml-0 sm:ml-12 mb-4">
+                            <img src="{{ question.img }}" alt="{% trans 'questionImageAlt' %}" class="max-w-md w-full rounded-xl shadow-lg border border-blue-400/20">
                         </div>
                     {% endif %}
         
-                    <div class="ml-0 md:ml-12">
-                                            <div class="grid gap-3">
-                                                {% for answer in question.answers %}
-                                                    <label class="qv-option flex items-center p-4 rounded-2xl cursor-pointer transition">
-                                                        <input type="radio" 
-                                                               name="question_{{ question.id }}" 
-                                                               value="{{ answer.id }}"
-                                                               class="w-5 h-5 text-cyan-400 accent-cyan-400 shrink-0">
-                                                        <span class="ml-4 font-semibold text-slate-100">{{ answer.text }}</span>
-                                                    </label>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% empty %}
-                                    <p class="text-slate-400 italic pl-12">{% trans 'noQuestionsInTest' %}</p>
-                                {% endfor %}
-                            </div>
+                    <div class="ml-0 sm:ml-12">
+                        <div class="grid gap-3">
+                            {% for answer in question.answers %}
+                                <label class="qv-option flex items-center p-4 rounded-2xl cursor-pointer transition">
+                                    <input type="radio" 
+                                           name="question_{{ question.id }}" 
+                                           value="{{ answer.id }}"
+                                           class="w-5 h-5 text-cyan-400 accent-cyan-400 shrink-0">
+                                    <span class="ml-4 font-semibold text-slate-100">{{ answer.text }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-slate-400 italic pl-6">{% trans 'noQuestionsInTest' %}</p>
+            {% endfor %}
+        </div>
 
-        <div class="mt-12 pt-8 border-t border-slate-100 flex flex-col items-center">
+        <div class="mt-12 pt-8 border-t border-blue-400/20 flex flex-col items-center">
             <button onclick="submitExam()"
-                    class="bg-blue-600 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-blue-700 transition shadow-xl shadow-blue-200 w-full md:w-auto">
+                    class="qv-submit-btn text-white px-12 py-5 rounded-2xl font-black text-xl w-full md:w-auto cursor-pointer">
                 {% trans 'finishTestBtn' %}
             </button>
         </div>
@@ -378,7 +542,7 @@
     </filter>
 </svg>
 
-<!-- Start gate: серая вуаль + кнопка «Начать тест» -->
+<!-- Start gate: вуаль + кнопка «Начать тест» -->
 <div id="start-gate" class="start-gate">
     <button type="button" id="start-test-btn" class="water-btn">
         <span class="water-btn__lens"></span>
@@ -389,224 +553,190 @@
 </div>
 
 <!-- Loading overlay -->
-<div id="loading-overlay" class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm hidden items-center justify-center">
-    <div class="bg-white rounded-3xl p-8 text-center shadow-2xl">
-        <svg class="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+<div id="loading-overlay" class="fixed inset-0 z-[100] bg-slate-950/75 backdrop-blur-md hidden items-center justify-center">
+    <div class="qv-vault-card rounded-3xl p-8 text-center shadow-2xl border border-cyan-400/30">
+        <svg class="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
         </svg>
-        <p class="text-lg font-bold text-slate-900">{% trans 'submittingResultsText' %}</p>
+        <p class="text-lg font-bold text-white">{% trans 'submittingResultsText' %}</p>
     </div>
 </div>
-    <!-- {#block "script"#}{#end#} -->
 
-    <script>
-        // const timeLimit = 120;
-        // let timeLeft = timeLimit;
-        // let timerInterval;
- 
-        // function startTimer() {
-        //     timerInterval = setInterval(() => {
-        //         timeLeft--;
-        //         const mins = Math.floor(timeLeft / 60);
-        //         const secs = timeLeft % 60;
-        //         document.getElementById('timer').innerText =
-        //             `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+<script>
+    const MAX_TEST_SECONDS = 32000;
 
-        //         if (timeLeft <= 0) {
-        //             clearInterval(timerInterval);
-        //             submitExam();
-        //         }
-        //     }, 1000);
-        // }
+    let elapsedSeconds = 0;
+    let stopwatchInterval = null;
+    let examSubmitted = false;
+    let testStarted = false;
 
-        // startTimer();
-        const MAX_TEST_SECONDS = 32000;
+    function formatElapsed(totalSeconds) {
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        const pad = (n) => String(n).padStart(2, '0');
+        return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+    }
 
-        let elapsedSeconds = 0;
-        let stopwatchInterval = null;
-        let examSubmitted = false;
-        let testStarted = false;   // тест не начат, пока не нажата кнопка
+    function updateStopwatchDisplay() {
+        const el = document.getElementById('stopwatch-display');
+        if (el) el.textContent = formatElapsed(elapsedSeconds);
+    }
 
-        function formatElapsed(totalSeconds) {
-            const h = Math.floor(totalSeconds / 3600);
-            const m = Math.floor((totalSeconds % 3600) / 60);
-            const s = totalSeconds % 60;
-            const pad = (n) => String(n).padStart(2, '0');
-            return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+    function startStopwatch() {
+        stopwatchInterval = setInterval(() => {
+            elapsedSeconds++;
+            updateStopwatchDisplay();
+    
+            if (elapsedSeconds >= MAX_TEST_SECONDS) {
+                clearInterval(stopwatchInterval);
+                submitExam(true);
+            }
+        }, 1000);
+    }
+    
+    (function initStartGate() {
+        const gate = document.getElementById('start-gate');
+        const btn  = document.getElementById('start-test-btn');
+        if (!gate || !btn) { testStarted = true; startStopwatch(); return; }
+    
+        function resetPointer() {
+            btn.style.setProperty('--mx', '50%');
+            btn.style.setProperty('--my', '40%');
+            btn.style.setProperty('--tx', '0px');
+            btn.style.setProperty('--ty', '0px');
         }
-
-        function updateStopwatchDisplay() {
-            const el = document.getElementById('stopwatch-display');
-            if (el) el.textContent = formatElapsed(elapsedSeconds);
+    
+        btn.addEventListener('pointermove', function (e) {
+            if (testStarted) return;
+            const r  = btn.getBoundingClientRect();
+            const px = (e.clientX - r.left) / r.width;
+            const py = (e.clientY - r.top)  / r.height;
+            btn.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+            btn.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+            btn.style.setProperty('--tx', ((px - 0.5) * 2 * 6).toFixed(1) + 'px');
+            btn.style.setProperty('--ty', ((py - 0.5) * 2 * 4).toFixed(1) + 'px');
+        });
+        btn.addEventListener('pointerleave', resetPointer);
+    
+        function spawnRipple(x, y, delay) {
+            const ripple = document.createElement('span');
+            ripple.className = 'water-ripple';
+            ripple.style.left = x + 'px';
+            ripple.style.top  = y + 'px';
+            if (delay) ripple.style.animationDelay = delay + 'ms';
+            btn.appendChild(ripple);
+            setTimeout(function () { ripple.remove(); }, 1200 + (delay || 0));
         }
+    
+        btn.addEventListener('click', function (e) {
+            if (testStarted) return;
+            testStarted = true;
+    
+            const rect = btn.getBoundingClientRect();
+            const kbd  = (e.detail === 0);
+            const x = kbd ? rect.width / 2  : e.clientX - rect.left;
+            const y = kbd ? rect.height / 2 : e.clientY - rect.top;
+            spawnRipple(x, y, 0);
+            spawnRipple(x, y, 140);
+    
+            resetPointer();
+            btn.classList.add('is-jelly');
+    
+            elapsedSeconds = 0;
+            updateStopwatchDisplay();
+            startStopwatch();
+            document.body.classList.remove('test-locked');
+    
+            setTimeout(function () { gate.classList.add('is-hidden'); }, 750);
+            setTimeout(function () { gate.remove(); }, 1500);
+        });
+    })();
 
-        function startStopwatch() {
-            stopwatchInterval = setInterval(() => {
-                elapsedSeconds++;
-                updateStopwatchDisplay();
-        
-                if (elapsedSeconds >= MAX_TEST_SECONDS) {
-                    clearInterval(stopwatchInterval);
-                    // Лимит достигнут — отправляем текущие ответы без подтверждения.
-                    submitExam(true);
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
-            }, 1000);
+            }
         }
-        
-        // Таймер НЕ запускается автоматически — он на паузе (00:00) до клика по кнопке.
-        (function initStartGate() {
-            const gate = document.getElementById('start-gate');
-            const btn  = document.getElementById('start-test-btn');
-            if (!gate || !btn) { testStarted = true; startStopwatch(); return; }
-        
-            function resetPointer() {
-                btn.style.setProperty('--mx', '50%');
-                btn.style.setProperty('--my', '40%');
-                btn.style.setProperty('--tx', '0px');
-                btn.style.setProperty('--ty', '0px');
-            }
-        
-            // «Магнит»: блики и сама капля слегка тянутся к курсору
-            btn.addEventListener('pointermove', function (e) {
-                if (testStarted) return;
-                const r  = btn.getBoundingClientRect();
-                const px = (e.clientX - r.left) / r.width;
-                const py = (e.clientY - r.top)  / r.height;
-                btn.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
-                btn.style.setProperty('--my', (py * 100).toFixed(1) + '%');
-                btn.style.setProperty('--tx', ((px - 0.5) * 2 * 6).toFixed(1) + 'px');
-                btn.style.setProperty('--ty', ((py - 0.5) * 2 * 4).toFixed(1) + 'px');
-            });
-            btn.addEventListener('pointerleave', resetPointer);
-        
-            function spawnRipple(x, y, delay) {
-                const ripple = document.createElement('span');
-                ripple.className = 'water-ripple';
-                ripple.style.left = x + 'px';
-                ripple.style.top  = y + 'px';
-                if (delay) ripple.style.animationDelay = delay + 'ms';
-                btn.appendChild(ripple);
-                setTimeout(function () { ripple.remove(); }, 1200 + (delay || 0));
-            }
-        
-            btn.addEventListener('click', function (e) {
-                if (testStarted) return;
-                testStarted = true;
-        
-                // Рябь из точки клика (при клике с клавиатуры — из центра)
-                const rect = btn.getBoundingClientRect();
-                const kbd  = (e.detail === 0);
-                const x = kbd ? rect.width / 2  : e.clientX - rect.left;
-                const y = kbd ? rect.height / 2 : e.clientY - rect.top;
-                spawnRipple(x, y, 0);
-                spawnRipple(x, y, 140);
-        
-                // Желейный возврат формы
-                resetPointer();
-                btn.classList.add('is-jelly');
-        
-                // Тест и таймер стартуют сразу, вуаль уходит после «покачивания» капли
-                elapsedSeconds = 0;
-                updateStopwatchDisplay();
-                startStopwatch();
-                document.body.classList.remove('test-locked');
-        
-                setTimeout(function () { gate.classList.add('is-hidden'); }, 750);
-                setTimeout(function () { gate.remove(); }, 1500);
-            });
-        })();
-          // Функция получения CSRF-токена из cookie (стандарт для Django)
-          function getCookie(name) {
-              let cookieValue = null;
-              if (document.cookie && document.cookie !== '') {
-                  const cookies = document.cookie.split(';');
-                  for (let i = 0; i < cookies.length; i++) {
-                      const cookie = cookies[i].trim();
-                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                          break;
-                      }
-                  }
-              }
-              return cookieValue;
-          }
-      
-          function collectAnswers() {
-              const answers = [];
-              // Ищем все радио-кнопки, которые были выбраны пользователем
-              document.querySelectorAll('input[type="radio"][name^="question_"]:checked').forEach(el => {
-                  // Вытаскиваем ID вопроса из имени (например, "question_15" -> 15)
-                  const questionId = parseInt(el.name.replace('question_', ''));
-                  const answerId = parseInt(el.value);
-                  answers.push({ question_id: questionId, answer_id: answerId });
-              });
-              return answers;
-          }
-          
-          /**
-           * @param {boolean} auto — true, если вызов автоматический (по достижении
-           *                         лимита времени): без confirm() и без возможности отмены.
-           */
-           
-          async function submitExam(auto = false) {
-              if (!testStarted) return;   // до нажатия «Начать тест» отправка невозможна
-              if (examSubmitted) return;
-              if (!auto && !confirm(confirmSubmitAnswersText)) return;
-          
-              examSubmitted = true;
-              clearInterval(stopwatchInterval);
-          
-              document.getElementById('loading-overlay').classList.remove('hidden');
-              document.getElementById('loading-overlay').classList.add('flex');
-          
-              const answers = collectAnswers();
-          
-              const payload = {
-                  answers: answers,
-                  time: elapsedSeconds
-              };
-          
-              try {
-                  const res = await fetch("{% url 'test' test_id=test_id %}", {
-                      method: 'POST',
-                      headers: {
-                          'Content-Type': 'application/json',
-                          'X-CSRFToken': getCookie('csrftoken')
-                      },
-                      body: JSON.stringify(payload)
-                  });
-          
-                  const data = await res.json();
-          
-                  if (!res.ok) {
-                      alert(data.error || submitErrorFallbackText);
-                      document.getElementById('loading-overlay').classList.add('hidden');
-                      document.getElementById('loading-overlay').classList.remove('flex');
-                      examSubmitted = false; // даём повторить попытку при ошибке сети/сервера
-                      return;
-                  }
-          
-                  window.location.href = data.redirect_url;
-          
-              } catch (e) {
-                  alert(connectionErrorPrefixText + e.message);
-                  document.getElementById('loading-overlay').classList.add('hidden');
-                  document.getElementById('loading-overlay').classList.remove('flex');
-                  examSubmitted = false;
-              }
-          }
-    </script>
+        return cookieValue;
+    }
 
-    <script src="{% static 'rain.js' %}"></script>
-        <script>
-            window.initDigitalRainBackground({
-                theme: 'quantum',
-                edgeMin: 0.15,
-                zIndex: 0,
-                intensity: 1.15
-            });
-        </script>
+    function collectAnswers() {
+        const answers = [];
+        document.querySelectorAll('input[type="radio"][name^="question_"]:checked').forEach(el => {
+            const questionId = parseInt(el.name.replace('question_', ''));
+            const answerId = parseInt(el.value);
+            answers.push({ question_id: questionId, answer_id: answerId });
+        });
+        return answers;
+    }
 
-    </body>
+    async function submitExam(auto = false) {
+        if (!testStarted) return;
+        if (examSubmitted) return;
+        if (!auto && !confirm(confirmSubmitAnswersText)) return;
+    
+        examSubmitted = true;
+        clearInterval(stopwatchInterval);
+    
+        document.getElementById('loading-overlay').classList.remove('hidden');
+        document.getElementById('loading-overlay').classList.add('flex');
+    
+        const answers = collectAnswers();
+    
+        const payload = {
+            answers: answers,
+            time: elapsedSeconds
+        };
+    
+        try {
+            const res = await fetch("{% url 'test' test_id=test_id %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+    
+            const data = await res.json();
+    
+            if (!res.ok) {
+                alert(data.error || submitErrorFallbackText);
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('loading-overlay').classList.remove('flex');
+                examSubmitted = false;
+                return;
+            }
+    
+            window.location.href = data.redirect_url;
+    
+        } catch (e) {
+            alert(connectionErrorPrefixText + e.message);
+            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('flex');
+            examSubmitted = false;
+        }
+    }
+</script>
+
+<script src="{% static 'rain.js' %}"></script>
+<script>
+    window.initDigitalRainBackground({
+        theme: 'quantum',
+        edgeMin: 0.15,
+        zIndex: 0,
+        intensity: 1.15
+    });
+</script>
+
+</body>
 </html>
