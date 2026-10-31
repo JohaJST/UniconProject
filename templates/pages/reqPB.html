@@ -274,18 +274,30 @@
       </div>
 
       <div class="field" id="fCompany">
-        <label for="company_name">{% trans 'companyLabel' %}</label>
-        <div class="control">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>
-          <input id="company_name" name="company_name" type="text" maxlength="100" required
-                 autocomplete="organization" value="{{ request.POST.company_name }}"
-                 placeholder="{% trans 'companyPlaceholder' %}">
-          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div class="count"><span data-count="company_name">0</span>/100</div>
-      </div>
-
-      <button type="submit" class="btn" id="submitBtn">
+                <label for="company_name">{% trans 'companyLabel' %}</label>
+                <div class="control">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>
+                <input id="company_name" name="company_name" type="text" maxlength="100" required
+                        autocomplete="organization" value="{{ request.POST.company_name|default:request.user.company_name|default:'' }}"
+                        placeholder="{% trans 'companyPlaceholder' %}">
+                <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="count"><span data-count="company_name">0</span>/100</div>
+            </div>
+        
+            <div class="field" id="fPhone">
+                <label for="phone">{% trans 'phoneLabel' %}</label>
+                <div class="control">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <input id="phone" name="phone" type="tel" maxlength="20" required
+                        autocomplete="tel" value="{{ request.POST.phone|default:request.user.phone|default:'' }}"
+                        placeholder="+998 90 123 45 67">
+                <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="count"><span data-count="phone">0</span>/20</div>
+            </div>
+        
+            <button type="submit" class="btn" id="submitBtn">
         <span>{% trans 'next' %}</span>
         <span class="spin" aria-hidden="true"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -307,10 +319,14 @@
         <div class="id-value empty" id="pvPosition">—</div>
       </div>
       <div class="id-row">
-        <div class="id-label">{% trans 'companyLabel' %}</div>
-        <div class="id-value empty" id="pvCompany">—</div>
-      </div>
-      <div class="id-foot"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="id-label">{% trans 'companyLabel' %}</div>
+            <div class="id-value empty" id="pvCompany">—</div>
+        </div>
+        <div class="id-row">
+            <div class="id-label">{% trans 'phoneLabel' %}</div>
+            <div class="id-value empty" id="pvPhone">—</div>
+        </div>
+        <div class="id-foot"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </aside>
 </main>
@@ -363,10 +379,11 @@
 
   bind('position', 'fPosition', 'pvPosition');
   bind('company_name', 'fCompany', 'pvCompany');
+  bind('phone', 'fPhone', 'pvPhone');
 
   // Клиентская проверка нужна только для UX; настоящая валидация остаётся за сервером
   $('reqForm').addEventListener('submit', function (e) {
-    var bad = ['position', 'company_name'].filter(function (id) { return !$(id).value.trim(); });
+    var bad = ['position', 'company_name', 'phone'].filter(function (id) { return !$(id).value.trim(); });
     if (bad.length) { e.preventDefault(); $(bad[0]).focus(); return; }
     $('submitBtn').classList.add('loading');
   });

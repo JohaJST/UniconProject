@@ -5,6 +5,20 @@ from django.shortcuts import redirect, render
 from core.models import Result, Test
 
 
+def _is_missing_field(value) -> bool:
+    return not (value and str(value).strip())
+
+
+def _needs_required_profile_data(user) -> bool:
+    if getattr(user, "is_admin", False):
+        return False
+    return (
+        _is_missing_field(user.position)
+        or _is_missing_field(user.company_name)
+        or _is_missing_field(user.phone)
+    )
+
+
 @login_required(login_url="login")
 def index(request, pk=None):
     """
@@ -14,7 +28,7 @@ def index(request, pk=None):
     но в данной версии он не используется — все тесты отображаются
     на одной странице.
     """
-    if not request.user.position or not request.user.company_name:
+    if _needs_required_profile_data(request.user):
         return redirect("required")
 
     # Тесты для потока пользователя + subject через JOIN (select_related).
@@ -38,7 +52,7 @@ def index(request, pk=None):
 
 @login_required(login_url="login")
 def user_profile(request):
-    if not request.user.position or not request.user.company_name:
+    if _needs_required_profile_data(request.user):
         return redirect("required")
 
     """Профиль пользователя с историей результатов и средним баллом."""
@@ -58,15 +72,28 @@ def user_profile(request):
     return render(request, "profile.html", ctx)
 
 
+@login_required(login_url="login")
 def required(request):
-    """Требование заполнить должность и компанию при первом входе."""
+    """Требование дозаполнить должность, организацию и телефон перед допуском к тесту."""
+    u = request.user
+    if not _needs_required_profile_data(u):
+        return redirect("v2_test")
+
     if request.method == "POST":
-        try:
-            u = request.user
-            u.position = request.POST['position']
-            u.company_name = request.POST['company_name']
-            u.save()
-            return redirect("v2_test")
-        except Exception:
-            return render(request, 'pages/reqPB.html', {'error': 'Проверьте данные пожалуйста'})
+        data = request.POST
+        new_position = (data.get("position") or "").strip() or u.position
+        new_company = (data.get("company_name") or "").strip() or u.company_name
+        new_phone = (data.get("phone") or "").strip() or u.phone
+
+        if not (new_position and str(new_position).strip()) \
+           or not (new_company and str(new_company).strip()) \
+           or not (new_phone and str(new_phone).strip()):
+            return render(request, 'pages/reqPB.html', {'error': 'Пожалуйста, заполните все обязательные поля'})
+
+        u.position = str(new_position).strip()
+        u.company_name = str(new_company).strip()
+        u.phone = str(new_phone).strip()
+        u.save()
+        return redirect("v2_test")
+
     return render(request, 'pages/reqPB.html')

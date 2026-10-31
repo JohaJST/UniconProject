@@ -569,14 +569,15 @@ def form(req):
             User.objects.create_user(
                 username=None,
                 password=data.get("password") or "1234",
-                name=data["first_name"],
-                last_name=data["last_name"],
-                second_name=data["second_name"],
+                name=(data.get("first_name") or "").strip(),
+                last_name=(data.get("last_name") or "").strip(),
+                second_name=(data.get("second_name") or "").strip(),
                 potok_id=int(data["potok"]) if data.get("potok") else None,
-                position=data.get("position"),
-                company_name=data.get("company_name"),
+                position=(data.get("position") or "").strip() or None,
+                company_name=(data.get("company_name") or "").strip() or None,
+                phone=(data.get("phone") or "").strip() or None,
                 role=int(data["role"]),
-                lang=data.get("lang")
+                lang=data.get("lang") or "uz",
             )
         except Exception:
             return render(

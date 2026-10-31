@@ -72,7 +72,7 @@ SEARCH_FIELDS: dict[str, dict[str, list[str]]] = {
     },
     "user": {
         "text": [
-            "name", "last_name", "username", "company_name", "position",
+            "name", "last_name", "username", "company_name", "position", "phone",
             "subject__name_uz", "subject__name_ru", "subject__name_en"
         ]
     },

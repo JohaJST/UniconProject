@@ -114,9 +114,15 @@ def sign_in(requests):
         AuthRedisService.rotate_refresh_family(family_id, initial_refresh_hash)
         
         AuthRedisService.clear_login_attempts(user.id)
-        # Админов — сразу на форму пароля дашборда, остальных — на главную.
-        # 
-        response = redirect("lock") if user.is_admin else redirect("v2_test")
+        # Админов — сразу на форму пароля дашборда, пользователей с неполным профилем — на required, остальных — на тест.
+        if user.is_admin:
+            target_url = "lock"
+        elif _needs_profile_completion(user):
+            target_url = "required"
+        else:
+            target_url = "v2_test"
+
+        response = redirect(target_url)
 
         response.set_cookie(
             settings.JWT_ACCESS_COOKIE_NAME,
@@ -277,3 +283,20 @@ def change_account_language(request):
     response = redirect(next_url)
     _set_language_cookie(response, lang)
     return response
+
+
+
+def _is_missing(value) -> bool:
+    """Возвращает True, если поле None, пустое или состоит только из пробелов."""
+    return not (value and str(value).strip())
+
+
+def _needs_profile_completion(user) -> bool:
+    """Проверяет, обязан ли пользователь дозаполнить анкету перед тестом."""
+    if getattr(user, "is_admin", False):
+        return False
+    return (
+        _is_missing(user.position)
+        or _is_missing(user.company_name)
+        or _is_missing(user.phone)
+    )

@@ -92,8 +92,8 @@ def test(request, test_id):
             "redirect_url": redirect_url
         })
 
-    # ── GET: страница теста ────────────────────────────────────────────────
-    if not request.user.position or not request.user.company_name:
+# ── GET: страница теста ────────────────────────────────────────────────
+    if _needs_required_profile_data(request.user):
         return redirect("required")
 
     if Result.objects.filter(test_id=test_id, user=request.user).exists():
@@ -132,7 +132,6 @@ def test(request, test_id):
     ctx = {
         "subject_name": test.subject.name if test.subject else "",
         "test_name": str(test),
-        "test_desc": "",
         "test_id": test.id,
         "questions": questions_list
     }
@@ -140,17 +139,30 @@ def test(request, test_id):
 
 
 @login_required(login_url="login")
-def v2_test(req):
-    # print(1)
-    user = User.objects.filter(id=req.user.id).first()
-    # print(user)
-    test = Test.objects.filter(subject=user.subject, potok=user.potok).first()
-    if not test:
-        return redirect("about")
-    return redirect("test", test_id=test.id)
+def v2_test(request):
+    user = request.user
+    if _needs_required_profile_data(user):
+        return redirect("required")
+
+    return render(request, "pages/quiz/v2_test.html")
 
 
 @login_required(login_url="login")
 def test_result(request, test_id):
     result = Result.objects.filter(test_id=test_id, user=request.user).order_by("-created").first()
     return render(request, "test_result.html", {"result": result})
+
+def _is_missing_field(value) -> bool:
+    """Возвращает True, если поле None, пустое или состоит только из пробелов."""
+    return not (value and str(value).strip())
+
+
+def _needs_required_profile_data(user) -> bool:
+    """Проверяет, заполнены ли у пользователя position, company_name и phone."""
+    if getattr(user, "is_admin", False):
+        return False
+    return (
+        _is_missing_field(user.position)
+        or _is_missing_field(user.company_name)
+        or _is_missing_field(user.phone)
+    )
