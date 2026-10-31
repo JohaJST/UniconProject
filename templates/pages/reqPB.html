@@ -1,152 +1,376 @@
-<!DOCTYPE html>
-<html lang="en">
 {% load static %}
 {% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'ru' }}">
 <head>
-    <meta charset="UTF-8">
-    <title>{% trans 'reqPBPageTitle' %}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% trans 'reqPBPageTitle' %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Палитра совпадает со страницей логина (auth/style.css), чтобы экран выглядел её продолжением */
+    :root {
+      --bg: #0a0f1e;
+      --card: rgba(22, 33, 62, .78);
+      --border: rgba(78, 117, 173, .45);
+      --accent: #4e75ad;
+      --accent-light: #6b93cc;
+      --cyan: #22d3ee;
+      --gold: #facc15;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --input-bg: rgba(255, 255, 255, .06);
+      --err: #fca5a5;
+      --ok: #4ade80;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --ease: cubic-bezier(.4, 0, .2, 1);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* min-height + overflow-y вместо height:100vh/overflow:hidden:
+       на телефоне с открытой клавиатурой кнопка иначе недоступна */
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem 1rem;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 10%, rgba(78,117,173,.28), transparent 70%),
+        radial-gradient(ellipse 50% 45% at 90% 95%, rgba(34,211,238,.12), transparent 70%),
+        var(--bg);
+      position: relative; overflow-x: hidden;
+    }
+    /* Декоративная сетка: чистый CSS, без десятков <span> как на логине */
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(78,117,173,.09) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(78,117,173,.09) 1px, transparent 1px);
+      background-size: 56px 56px;
+      -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 20%, transparent 75%);
+              mask-image: radial-gradient(circle at 50% 40%, #000 20%, transparent 75%);
+      animation: gridDrift 18s linear infinite;
+    }
+    @keyframes gridDrift { to { background-position: 56px 56px, 56px 56px; } }
+
+    .stage {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 920px;
+      display: grid; grid-template-columns: 1.05fr .95fr; gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    .panel {
+      position: relative; overflow: hidden;
+      background: var(--card);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.55);
+      padding: 2.25rem 2.25rem 2rem;
+    }
+    /* Бегущая линия по верхнему краю, как на логине */
+    .panel::before {
+      content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      animation: topScan 4.5s linear infinite;
+    }
+    @keyframes topScan { to { left: 100%; } }
+
+    /* ── Шапка ── */
+    .brand { display: flex; align-items: center; gap: .9rem; margin-bottom: 1.25rem; }
+    .brand img {
+      width: 56px; height: 56px; object-fit: contain; border-radius: 14px;
+      filter: drop-shadow(0 6px 16px rgba(78,117,173,.5));
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: .45rem;
+      font-family: var(--mono); font-size: .65rem; letter-spacing: .12em; color: var(--cyan);
+      background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.28);
+      padding: .22rem .65rem; border-radius: 999px;
+    }
+    .chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); animation: blink 1.4s infinite; }
+    @keyframes blink { 50% { opacity: .2; } }
+
+    /* Мини-степпер: показывает, что осталась одна формальность */
+    .steps { display: flex; align-items: center; gap: .5rem; margin: 1rem 0 1.5rem; }
+    .step { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+      font-size: .7rem; font-weight: 700; color: var(--muted); border: 1px solid rgba(148,163,184,.3); }
+    .step.done { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step.now  { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 0 4px rgba(34,211,238,.14); }
+    .step-line { flex: 1; height: 2px; max-width: 46px; border-radius: 2px; background: rgba(148,163,184,.25); }
+    .step-line.done { background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+
+    h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+    .who { margin-top: .35rem; font-size: .9rem; color: var(--muted); }
+
+    /* Нейтральная подсказка — серая; красный только для реальной ошибки */
+    .hint { margin: 1rem 0 1.4rem; font-size: .85rem; line-height: 1.5; color: var(--muted); }
+    .alert {
+      display: flex; gap: .55rem; align-items: flex-start;
+      margin: 1rem 0 1.4rem; padding: .75rem .95rem; border-radius: 10px;
+      font-size: .85rem; line-height: 1.45; color: var(--err);
+      background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.32);
+      animation: shake .4s;
+    }
+    .alert svg { flex: 0 0 16px; margin-top: 2px; }
+    @keyframes shake { 20%{transform:translateX(-6px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(2px)} }
+
+    /* ── Поля ── */
+    .field { margin-bottom: 1.15rem; }
+    .field label {
+      display: block; margin-bottom: .45rem;
+      font-size: .72rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--muted);
+      transition: color .25s var(--ease);
+    }
+    .field:focus-within label { color: var(--cyan); }
+    .control { position: relative; }
+    .control .ico {
+      position: absolute; left: .95rem; top: 50%; transform: translateY(-50%);
+      width: 18px; height: 18px; color: var(--muted); pointer-events: none;
+      transition: color .25s var(--ease);
+    }
+    .control:focus-within .ico { color: var(--cyan); }
+    .control input {
+      width: 100%; height: 52px; padding: 0 2.9rem 0 2.8rem;
+      font: inherit; font-size: .95rem; color: var(--text);
+      background: var(--input-bg); border: 1px solid rgba(78,117,173,.35);
+      border-radius: 12px; outline: none;
+      transition: border-color .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease);
+    }
+    .control input::placeholder { color: #64748b; }
+    .control input:focus {
+      border-color: var(--cyan); background: rgba(34,211,238,.05);
+      box-shadow: 0 0 0 3px rgba(34,211,238,.16);
+    }
+    /* Зелёная галочка появляется, когда значение достаточно длинное */
+    .control .ok {
+      position: absolute; right: .9rem; top: 50%; width: 18px; height: 18px;
+      transform: translateY(-50%) scale(.4); opacity: 0; color: var(--ok);
+      transition: opacity .25s var(--ease), transform .35s cubic-bezier(.3,1.6,.5,1);
+    }
+    .field.valid .ok { opacity: 1; transform: translateY(-50%) scale(1); }
+    .field.valid input { border-color: rgba(74,222,128,.45); }
+    .count { margin-top: .3rem; text-align: right; font-family: var(--mono); font-size: .65rem; color: #64748b; }
+
+    /* ── Кнопка ── */
+    .btn {
+      width: 100%; margin-top: .6rem; height: 54px;
+      display: flex; align-items: center; justify-content: center; gap: .6rem;
+      font: inherit; font-size: 1rem; font-weight: 600; letter-spacing: .01em; color: #fff;
+      background: linear-gradient(135deg, #2563eb, #0891b2);
+      border: 1px solid rgba(34,211,238,.4); border-radius: 12px; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(8,145,178,.35);
+      transition: transform .25s var(--ease), box-shadow .25s var(--ease), filter .25s var(--ease);
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(34,211,238,.4); filter: brightness(1.08); }
+    .btn:active { transform: translateY(0); }
+    .btn svg { transition: transform .25s var(--ease); }
+    .btn:hover svg { transform: translateX(4px); }
+    .btn.loading { pointer-events: none; opacity: .85; }
+    .btn.loading svg { display: none; }
+    .spin { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff; border-radius: 50%; animation: rot .7s linear infinite; }
+    .btn.loading .spin { display: block; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ── ID-карточка: живой предпросмотр того, что попадёт в отчёт ── */
+    .id-wrap { display: flex; align-items: center; }
+    .id-card {
+      position: relative; width: 100%; overflow: hidden;
+      padding: 1.6rem 1.5rem 1.5rem; border-radius: 20px;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(37,99,235,.4), transparent 55%),
+        radial-gradient(circle at 95% 100%, rgba(250,204,21,.14), transparent 55%),
+        rgba(9, 15, 33, .92);
+      border: 1px solid rgba(34,211,238,.3);
+      box-shadow: 0 25px 60px rgba(0,0,0,.55), 0 0 40px rgba(34,211,238,.08);
+      transform: rotate(0deg);
+      transition: transform .5s var(--ease);
+    }
+    .id-card:hover { transform: rotate(1.5deg) translateY(-3px); }
+    /* Уголки-прицелы в стиле HUD страницы теста */
+    .id-card .cb { position: absolute; width: 14px; height: 14px; border: 2px solid var(--cyan); opacity: .8; }
+    .cb.tl { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+    .cb.tr { top: 10px; right: 10px; border-left: 0; border-bottom: 0; }
+    .cb.bl { bottom: 10px; left: 10px; border-right: 0; border-top: 0; }
+    .cb.br { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+    .id-top { display: flex; align-items: center; justify-content: space-between;
+      font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; color: var(--cyan); margin-bottom: 1.3rem; }
+    .id-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem; }
+    .avatar { width: 60px; height: 60px; border-radius: 50%; flex: 0 0 60px;
+      display: grid; place-items: center; font-size: 1.4rem; font-weight: 700; color: #fff; text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      box-shadow: 0 6px 20px rgba(78,117,173,.5); }
+    .id-name { font-size: 1.1rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+    .id-row { padding: .7rem 0; border-top: 1px dashed rgba(148,163,184,.2); }
+    .id-label { font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .id-value { margin-top: .2rem; min-height: 1.4em; font-size: .98rem; font-weight: 600; overflow-wrap: anywhere; }
+    .id-value.empty { color: #475569; font-weight: 400; }
+    .id-foot { margin-top: 1rem; display: flex; gap: 4px; }
+    .id-foot i { flex: 1; height: 4px; border-radius: 2px; background: rgba(148,163,184,.18); transition: background .4s var(--ease); }
+    .id-foot i.on { background: linear-gradient(90deg, var(--accent-light), var(--cyan)); }
+
+    /* ── Адаптив: на узком экране карточка уходит вниз, всё скроллится ── */
+    @media (max-width: 820px) {
+      .stage { grid-template-columns: 1fr; max-width: 480px; }
+      .id-wrap { order: 2; }
+      .id-card { transform: none; }
+      .panel { padding: 1.75rem 1.35rem 1.5rem; }
+      h1 { font-size: 1.4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body::before, .panel::before, .chip i, .alert { animation: none; }
+      * { transition-duration: .01s !important; }
+    }
+  </style>
 </head>
 <body>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&display=swap');
+<main class="stage">
 
-input {
-  caret-color: red;
-}
+  <!-- ═════ Форма ═════ -->
+  <section class="panel">
+    <div class="brand">
+      <img src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAltReq' %}">
+      <span class="chip"><i></i>ENCRYPTED SESSION · 2/2</span>
+    </div>
 
-body {
-  margin: 0;
-  width: 100vw;
-  height: 100vh;
-  background: #ecf0f3;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  justify-content: center;
-  place-items: center;
-  overflow: hidden;
-  font-family: poppins;
-}
+    <div class="steps" aria-hidden="true">
+      <span class="step done">✓</span><span class="step-line done"></span>
+      <span class="step now">2</span><span class="step-line"></span>
+      <span class="step">3</span>
+    </div>
 
-.container {
-  position: relative;
-  width: 350px;
-  height: 500px;
-  border-radius: 20px;
-  padding: 40px;
-  box-sizing: border-box;
-  background: #ecf0f3;
-  box-shadow: 14px 14px 20px #cbced1, -14px -14px 20px white;
-}
+    <h1>{% trans 'reqPBHeading' %}</h1>
+    {# user.full_name — метод модели User; тот же вызов уже используется в base.html #}
+    <p class="who">{{ request.user.full_name }}</p>
 
-.brand-logo {
-  height: 100px;
-  width: 100px;
-  background: url("https://img.icons8.com/color/100/000000/twitter--v2.png");
-  margin: auto;
-  border-radius: 50%;
-  box-sizing: border-box;
-  box-shadow: 7px 7px 10px #cbced1, -7px -7px 10px white;
-}
-
-.brand-title {
-  margin-top: 10px;
-  font-weight: 900;
-  font-size: 1.8rem;
-  color: #1DA1F2;
-  letter-spacing: 1px;
-}
-
-.inputs {
-  text-align: left;
-  margin-top: 30px;
-}
-
-label, input, button {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  outline: none;
-  box-sizing: border-box;
-}
-
-label {
-  margin-bottom: 4px;
-}
-
-label:nth-of-type(2) {
-  margin-top: 12px;
-}
-
-input::placeholder {
-  color: gray;
-}
-
-input {
-  background: #ecf0f3;
-  padding: 10px;
-  padding-left: 20px;
-  height: 50px;
-  font-size: 14px;
-  border-radius: 50px;
-  box-shadow: inset 6px 6px 6px #cbced1, inset -6px -6px 6px white;
-}
-
-button {
-  color: white;
-  margin-top: 20px;
-  background: #1DA1F2;
-  height: 40px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 900;
-  box-shadow: 6px 6px 6px #cbced1, -6px -6px 6px white;
-  transition: 0.5s;
-}
-
-button:hover {
-  box-shadow: none;
-}
-
-a {
-  position: absolute;
-  font-size: 8px;
-  bottom: 4px;
-  right: 4px;
-  text-decoration: none;
-  color: black;
-  background: yellow;
-  border-radius: 10px;
-  padding: 2px;
-}
-
-h1 {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-</style>
-<form method="post">
-  {% csrf_token %}
-<div class="container">
-  <div><img style="width:80px;height:80px" src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAltReq' %}"></div>
-  <div class="brand-title">{% trans 'reqPBHeading' %}</div>
-  <span style="color:red">
     {% if error %}
-      {{ error }}
+      <div class="alert" role="alert" aria-live="assertive">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>{{ error }}</span>
+      </div>
     {% else %}
-      {% trans 'reqPBHintText' %}
+      <p class="hint">{% trans 'reqPBHintText' %}</p>
     {% endif %}
-  </span>
-  <div class="inputs" style="margin-top:-5px">
-    <label>{% trans 'positionLabel' %}</label>
-    <input name="position" type="text" placeholder="{% trans 'positionPlaceholder' %}"/>
-    <label>{% trans 'companyLabel' %}</label>
-    <input name="company_name" type="text" placeholder="{% trans 'companyPlaceholder' %}"/>
-    <button type="submit">{% trans 'goHomeBtn' %}</button>
-  </div>
-</div>
-</form>
+
+    <form method="post" id="reqForm" novalidate>
+      {% csrf_token %}
+
+      <div class="field" id="fPosition">
+        <label for="position">{% trans 'positionLabel' %}</label>
+        <div class="control">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          {# value берём из request.POST: после ошибки введённое не пропадает (бэкенд не меняем) #}
+          <input id="position" name="position" type="text" maxlength="100" required autofocus
+                 autocomplete="organization-title" value="{{ request.POST.position }}"
+                 placeholder="{% trans 'positionPlaceholder' %}">
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="count"><span data-count="position">0</span>/100</div>
+      </div>
+
+      <div class="field" id="fCompany">
+        <label for="company_name">{% trans 'companyLabel' %}</label>
+        <div class="control">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>
+          <input id="company_name" name="company_name" type="text" maxlength="100" required
+                 autocomplete="organization" value="{{ request.POST.company_name }}"
+                 placeholder="{% trans 'companyPlaceholder' %}">
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="count"><span data-count="company_name">0</span>/100</div>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">
+        <span>{% trans 'next' %}</span>
+        <span class="spin" aria-hidden="true"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </form>
+  </section>
+
+  <!-- ═════ Живая ID-карточка ═════ -->
+  <aside class="id-wrap" aria-hidden="true">
+    <div class="id-card">
+      <span class="cb tl"></span><span class="cb tr"></span><span class="cb bl"></span><span class="cb br"></span>
+      <div class="id-top"><span>UNICON.UZ</span><span>ID // {{ request.user.id|default:"—" }}</span></div>
+      <div class="id-head">
+        <div class="avatar">{{ request.user.name|default:"?"|slice:":1" }}</div>
+        <div class="id-name">{{ request.user.full_name }}</div>
+      </div>
+      <div class="id-row">
+        <div class="id-label">{% trans 'positionLabel' %}</div>
+        <div class="id-value empty" id="pvPosition">—</div>
+      </div>
+      <div class="id-row">
+        <div class="id-label">{% trans 'companyLabel' %}</div>
+        <div class="id-value empty" id="pvCompany">—</div>
+      </div>
+      <div class="id-foot"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </aside>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var GLYPHS = '01ABCDEF#$%<>/|';
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function $(id) { return document.getElementById(id); }
+
+  // Эффект «расшифровки» при вводе — тот же приём, что в тесте; отключается при reduced-motion
+  function scramble(el, finalText) {
+    clearInterval(el._t);
+    if (reduce || !finalText) { el.textContent = finalText; return; }
+    var t0 = performance.now(), dur = 260;
+    el._t = setInterval(function () {
+      var p = Math.min(1, (performance.now() - t0) / dur);
+      var n = Math.floor(p * finalText.length), out = finalText.slice(0, n);
+      for (var i = n; i < finalText.length; i++)
+        out += finalText.charAt(i) === ' ' ? ' ' : GLYPHS.charAt(Math.random() * GLYPHS.length | 0);
+      el.textContent = out;
+      if (p >= 1) { clearInterval(el._t); el.textContent = finalText; }
+    }, 30);
+  }
+
+  function bind(inputId, fieldId, previewId) {
+    var input = $(inputId), field = $(fieldId), pv = $(previewId);
+    var counter = document.querySelector('[data-count="' + inputId + '"]');
+    function update(animate) {
+      var v = input.value.trim();
+      counter.textContent = input.value.length;
+      field.classList.toggle('valid', v.length >= 2);
+      pv.classList.toggle('empty', !v);
+      if (animate) scramble(pv, v || '—'); else pv.textContent = v || '—';
+      updateProgress();
+    }
+    input.addEventListener('input', function () { update(true); });
+    update(false); // значения после ошибки сервера сразу попадают в карточку
+  }
+
+  // Нижняя полоска карточки заполняется по мере ввода
+  function updateProgress() {
+    var len = $('position').value.trim().length + $('company_name').value.trim().length;
+    var bars = document.querySelectorAll('.id-foot i');
+    var on = Math.min(bars.length, Math.round(len / 4));
+    bars.forEach(function (b, i) { b.classList.toggle('on', i < on); });
+  }
+
+  bind('position', 'fPosition', 'pvPosition');
+  bind('company_name', 'fCompany', 'pvCompany');
+
+  // Клиентская проверка нужна только для UX; настоящая валидация остаётся за сервером
+  $('reqForm').addEventListener('submit', function (e) {
+    var bad = ['position', 'company_name'].filter(function (id) { return !$(id).value.trim(); });
+    if (bad.length) { e.preventDefault(); $(bad[0]).focus(); return; }
+    $('submitBtn').classList.add('loading');
+  });
+})();
+</script>
 </body>
 </html>
