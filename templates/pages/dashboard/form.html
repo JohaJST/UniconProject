@@ -79,74 +79,81 @@
                 </div>
 
                 <div>
-                    <label
-                        class="text-sm font-medium text-slate-300 mb-1.5 block"
-                        for="id_second_name"
-                    >
-                        Отчества 
-                    </label>
-                    <input
-                        id="id_second_name"
-                        type="text"
-                        name="second_name"
-                        maxlength="255"
-                        placeholder="Отчества..."
-                        value="{{ user_data.second_name }}"
-                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-                    />
-                </div>
+                                    <label
+                                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                                        for="id_second_name"
+                                    >
+                                        Отчество
+                                    </label>
+                                    <input
+                                        id="id_second_name"
+                                        type="text"
+                                        name="second_name"
+                                        maxlength="255"
+                                        placeholder="Отчество..."
+                                        value="{{ user_data.second_name }}"
+                                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                    />
+                                </div>
+                                
+                                <!-- Должность (position) -->
+                                <div>
+                                    <label
+                                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                                        for="id_position"
+                                    >
+                                        Должность
+                                    </label>
+                                    <input
+                                        id="id_position"
+                                        type="text"
+                                        name="position"
+                                        maxlength="255"
+                                        placeholder="Должность..."
+                                        value="{{ user_data.position }}"
+                                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                    />
+                                </div>
                 
-                <!-- Должность (position) -->
-                <div>
-                    <label
-                        class="text-sm font-medium text-slate-300 mb-1.5 block"
-                        for="id_position"
-                    >
-                        Должность
-                    </label>
-                    <input
-                        id="id_position"
-                        type="text"
-                        name="position"
-                        maxlength="255"
-                        placeholder="Должность..."
-                        value="{{ user_data.position }}"
-                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-                    />
-                </div>
-
-                <!-- Компания (company_name) -->
-                <div>
-                    <label
-                        class="text-sm font-medium text-slate-300 mb-1.5 block"
-                        for="id_company_name"
-                    >
-                        Компания
-                    </label>
-                    <input
-                        id="id_company_name"
-                        type="text"
-                        name="company_name"
-                        maxlength="255"
-                        placeholder="Компания..."
-                        value="{{ user_data.company_name }}"
-                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-                    />
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">Телефон (необязательно)</label>
-                    <input
-                        type="tel"
-                        class="form-control"
-                        id="phone"
-                        name="phone"
-                        placeholder="+998 90 123 45 67"
-                        value="{{ user_data.phone|default:'' }}"
-                    >
-                </div>
-                
-                <!-- Пароль (password) -->
+                                <!-- Компания (company_name) -->
+                                <div>
+                                    <label
+                                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                                        for="id_company_name"
+                                    >
+                                        Компания
+                                    </label>
+                                    <input
+                                        id="id_company_name"
+                                        type="text"
+                                        name="company_name"
+                                        maxlength="255"
+                                        placeholder="Компания..."
+                                        value="{{ user_data.company_name }}"
+                                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                    />
+                                </div>
+                                
+                                <!-- Телефон (phone) -->
+                                <div>
+                                    <label
+                                        class="text-sm font-medium text-slate-300 mb-1.5 block"
+                                        for="phone"
+                                    >
+                                        Телефон <span class="text-xs text-slate-400 font-normal">(необязательно)</span>
+                                    </label>
+                                    <input
+                                        id="phone"
+                                        type="tel"
+                                        name="phone"
+                                        maxlength="30"
+                                        placeholder="+998 90 123 45 67"
+                                        value="{{ user_data.phone|default:'' }}"
+                                        class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                    />
+                                </div>
+                                
+                                <!-- Пароль (password) -->
                 <div>
                     <label
                         class="text-sm font-medium text-slate-300 mb-1.5 block"
