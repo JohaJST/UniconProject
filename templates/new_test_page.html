@@ -225,7 +225,7 @@
 
                 </style>
                 </head>
-    <body class="bg-slate-50 text-slate-900 test-locked">
+    <body class="qv-body text-slate-100 test-locked">
 
 <script>
 /* Локализованные строки для JS (confirm/alert) — через {# trans #}|escapejs,
@@ -285,10 +285,18 @@
                 class="bg-slate-100 px-6 py-3 rounded-full font-bold hover:bg-slate-200 transition text-slate-700">
                                     {{ request.user.last_name }} {{ request.user.name }}
                                 </a>
-        <!--</div>-->
-        <a href="/" onclick="return confirm(exitConfirmMessage);"
-           class="text-red-600 font-bold text-xl px-2">✕</a>
-        </div>
+                                <a href="/" onclick="return confirm(exitConfirmMessage);"
+                                               class="test-exit-btn" title="Exit">
+                                                <svg class="test-exit-btn__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M13 4h3a2 2 0 0 1 2 2v3" />
+                                                    <path d="M18 15v3a2 2 0 0 1-2 2h-3" />
+                                                    <path d="M4 4.5v15a1 1 0 0 0 .76.97l6 1.5A1 1 0 0 0 12 21V3a1 1 0 0 0-1.24-.97l-6 1.5A1 1 0 0 0 4 4.5z" />
+                                                    <circle cx="9.5" cy="12" r="0.8" fill="currentColor" />
+                                                    <path class="test-exit-btn__arrow" d="M15 12h7m0 0l-2.5-2.5M22 12l-2.5 2.5" />
+                                                </svg>
+                                                <span>Exit</span>
+                                            </a>
+                                        </div>
 
         </div>
     </div>
@@ -296,26 +304,27 @@
 
 
 
-<div class="max-w-6xl mx-auto px-6 mt-10 pb-20 min-h-screen">
-    <div class="bg-white rounded-[2rem] p-8 md:p-16 shadow-sm border border-slate-200">
-        <div class="mb-8 pb-6 border-b border-slate-100">
-            <h1 class="text-2xl font-black text-slate-900 mb-2"> {{ test_name }}</h1>
-            <p class="text-slate-500">{{ test_desc }}</p>
-            <div class="flex gap-4 mt-4 text-sm">
-                <span class="px-3 py-1 bg-slate-100 rounded-lg text-slate-600 font-bold">{{ subject_name }}</span>
-                <!--<span class="px-3 py-1 bg-slate-100 rounded-lg text-slate-600 font-bold">Проходной: 75%</span>-->
+    <div class="relative z-10 max-w-6xl mx-auto px-6 mt-24 pb-20 min-h-screen">
+        <div class="qv-vault-card rounded-[2rem] p-8 md:p-14">
+            <div class="mb-8 pb-6 border-b border-blue-400/20">
+                <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">{{ test_name }}</h1>
+                <p class="text-slate-300/90 leading-relaxed">{{ test_desc }}</p>
+                <div class="flex flex-wrap items-center gap-3 mt-4 text-sm">
+                    <span class="px-3.5 py-1.5 bg-blue-500/15 border border-blue-400/30 rounded-xl text-cyan-300 font-bold tracking-wide">
+                        {{ subject_name }}
+                    </span>
+                </div>
             </div>
-        </div>
-        
-        <div id="questions-container" class="space-y-10">
-            {% for question in questions %}
-                <div class="question-card border-l-4 border-slate-200 pl-6 py-4 rounded-r-2xl">
-                    <div class="flex items-start gap-4 mb-4">
-                        <span class="bg-slate-900 text-white text-sm font-bold w-8 h-8 rounded-lg flex items-center justify-center mt-0.5 shrink-0">
-                            {{ forloop.counter }}
-                        </span>
-                        <h3 class="text-lg font-bold text-slate-900">{{ question.text }}</h3>
-                    </div>
+            
+            <div id="questions-container" class="space-y-8">
+                {% for question in questions %}
+                    <div class="question-card qv-question-card pl-6 pr-5 py-5 rounded-2xl">
+                        <div class="flex items-start gap-4 mb-4">
+                            <span class="qv-q-badge text-sm font-black w-9 h-9 rounded-xl flex items-center justify-center mt-0.5 shrink-0">
+                                {{ forloop.counter }}
+                            </span>
+                            <h3 class="text-lg font-bold text-slate-100 leading-snug">{{ question.text }}</h3>
+                        </div>
         
                     {% if question.img %}
                         <div class="ml-12 mb-4">
@@ -323,24 +332,24 @@
                         </div>
                     {% endif %}
         
-                    <div class="ml-12">
-                        <div class="grid gap-3">
-                            {% for answer in question.answers %}
-                                <label class="flex items-center p-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-blue-50 transition has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                                    <input type="radio" 
-                                           name="question_{{ question.id }}" 
-                                           value="{{ answer.id }}"
-                                           class="w-5 h-5 text-blue-600 accent-blue-600">
-                                    <span class="ml-4 font-semibold text-slate-800">{{ answer.text }}</span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            {% empty %}
-                <p class="text-slate-500 italic pl-12">{% trans 'noQuestionsInTest' %}</p>
-            {% endfor %}
-        </div>
+                    <div class="ml-0 md:ml-12">
+                                            <div class="grid gap-3">
+                                                {% for answer in question.answers %}
+                                                    <label class="qv-option flex items-center p-4 rounded-2xl cursor-pointer transition">
+                                                        <input type="radio" 
+                                                               name="question_{{ question.id }}" 
+                                                               value="{{ answer.id }}"
+                                                               class="w-5 h-5 text-cyan-400 accent-cyan-400 shrink-0">
+                                                        <span class="ml-4 font-semibold text-slate-100">{{ answer.text }}</span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-slate-400 italic pl-12">{% trans 'noQuestionsInTest' %}</p>
+                                {% endfor %}
+                            </div>
 
         <div class="mt-12 pt-8 border-t border-slate-100 flex flex-col items-center">
             <button onclick="submitExam()"
@@ -590,7 +599,14 @@
     </script>
 
     <script src="{% static 'rain.js' %}"></script>
-    <script>window.initDigitalRainBackground({ theme: 'light', edgeMin: 0.4 });</script>
+        <script>
+            window.initDigitalRainBackground({
+                theme: 'quantum',
+                edgeMin: 0.15,
+                zIndex: 0,
+                intensity: 1.15
+            });
+        </script>
 
     </body>
 </html>
