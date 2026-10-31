@@ -45,6 +45,12 @@ let tickIconTag = '<div class="icon tick"><i class="fas fa-check"></i></div>';
 let crossIconTag = '<div class="icon cross"><i class="fas fa-times"></i></div>';
 
 let currentCtgId = "";
+
+// Состояние для крипто-эффектов
+const CIPHER_GLYPHS = "0101ABCDEF#ΔΣ§⊕⊗0x7F9A";
+let scrambleRafId = null;
+let questionStates = [];
+
 // Открытие правил
 start_btn.onclick = () => {
     info_box.classList.add("activeInfo");
@@ -55,10 +61,7 @@ exit_btn.onclick = () => {
     info_box.classList.remove("activeInfo");
 };
 
-// ЕДИНСТВЕННЫЙ обработчик "Далее": ФИО подтверждён -> открываем выбор
-// категории (SelfCtg). НИКАКОГО showQuetions() здесь быть не должно —
-// вопросы ещё не загружены (questions === []), showQuetions(0) на пустом
-// массиве и даёт "Cannot read properties of undefined (reading 'question')".
+// Подтверждение ФИО -> открытие выбора категории (SelfCtg)
 start_quiz_btn.onclick = () => {
     if (fNameInput.value.trim() === "" || lNameInput.value.trim() === "") {
         alert(fioReq);
@@ -81,7 +84,7 @@ if (ctg_back_btn) {
     };
 }
 
-// Клик по категории -> подгружаем её вопросы и стартуем тест.
+// Клик по категории -> подгружаем её вопросы и стартуем тест
 if (ctg_list) {
     ctg_list.addEventListener("click", (e) => {
         const item = e.target.closest(".ctg-item");
@@ -122,6 +125,7 @@ function loadCategoryQuestions(ctgId) {
             que_numb = 1;
             userScore = 0;
 
+            buildCryptoChain(questions.length);
             showQuetions(que_count);
             queCounter(que_numb);
         })
@@ -133,6 +137,87 @@ function loadCategoryQuestions(ctgId) {
             ctg_list.style.opacity = "";
             ctg_list.style.pointerEvents = "";
         });
+}
+
+// ── 1. Эффект «Живой дешифровки» (Cipher Text Scramble) за 350ms ──
+function scrambleQuestionText(titleEl, originalHtml, duration = 350) {
+    if (!titleEl) return;
+    if (scrambleRafId) {
+        cancelAnimationFrame(scrambleRafId);
+        scrambleRafId = null;
+    }
+
+    titleEl.innerHTML = originalHtml;
+    const finalText = titleEl.textContent || "";
+    const len = finalText.length;
+    if (!len) return;
+
+    const startTime = performance.now();
+
+    function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const revealCount = Math.floor(progress * len);
+        let scrambled = "";
+
+        for (let i = 0; i < len; i++) {
+            const ch = finalText[i];
+            if (ch === " " || ch === "\n" || ch === "\t") {
+                scrambled += ch;
+            } else if (i < revealCount) {
+                scrambled += ch;
+            } else {
+                scrambled += CIPHER_GLYPHS[Math.floor(Math.random() * CIPHER_GLYPHS.length)];
+            }
+        }
+
+        titleEl.textContent = scrambled;
+
+        if (progress < 1) {
+            scrambleRafId = requestAnimationFrame(step);
+        } else {
+            titleEl.innerHTML = originalHtml;
+            scrambleRafId = null;
+        }
+    }
+
+    scrambleRafId = requestAnimationFrame(step);
+}
+
+// ── 2. Цепочка крипто-блоков (Blockchain Nodes Progress) ──
+function buildCryptoChain(total) {
+    const chainEl = document.getElementById("crypto_chain");
+    if (!chainEl) return;
+    chainEl.innerHTML = "";
+    questionStates = new Array(total).fill("pending");
+
+    for (let i = 0; i < total; i++) {
+        const node = document.createElement("span");
+        node.className = "crypto-node";
+        node.setAttribute("data-idx", i + 1);
+        node.title = "BLOCK #" + String(i + 1).padStart(2, "0");
+        chainEl.appendChild(node);
+    }
+    updateCryptoChain(0);
+}
+
+function updateCryptoChain(activeIndex) {
+    const chainEl = document.getElementById("crypto_chain");
+    if (!chainEl) return;
+    const nodes = chainEl.children;
+
+    for (let i = 0; i < nodes.length; i++) {
+        nodes[i].className = "crypto-node";
+        if (i < activeIndex) {
+            nodes[i].classList.add("is-passed");
+            if (questionStates[i] === "correct") nodes[i].classList.add("is-verified");
+            if (questionStates[i] === "incorrect") nodes[i].classList.add("is-breach");
+        } else if (i === activeIndex) {
+            nodes[i].classList.add("is-active");
+            if (questionStates[i] === "correct") nodes[i].classList.add("is-verified");
+            if (questionStates[i] === "incorrect") nodes[i].classList.add("is-breach");
+        }
+    }
 }
 
 // Кнопка "Следующий вопрос"
@@ -152,18 +237,28 @@ next_btn.onclick = () => {
 function showQuetions(index) {
     const que_text = document.querySelector(".que_text");
 
-    let que_tag = '<span class="que_title">' + questions[index].question + '</span>';
+    let que_tag = '<span class="que_title"></span>';
     if (questions[index].img && questions[index].img !== "null" && questions[index].img !== "None") {
         que_tag += '<div class="que_image_box"><img src="' + questions[index].img + '" class="que_img" alt="Question"></div>';
     }
     que_text.innerHTML = que_tag;
+
+    const titleEl = que_text.querySelector(".que_title");
+    scrambleQuestionText(titleEl, questions[index].question, 350);
+
+    updateCryptoChain(index);
 
     option_list.innerHTML = "";
     let option_tag = "";
 
     for (let i = 0; i < questions[index].options.length; i++) {
         let opt = questions[index].options[i];
-        let content = '<span class="opt_text">' + opt.text + '</span>';
+        let hexBadge = '[0x' + String(i + 1).padStart(2, '0') + ']';
+        let content =
+            '<div class="opt_head">' +
+                '<span class="opt_hex">' + hexBadge + '</span>' +
+                '<span class="opt_text">' + opt.text + '</span>' +
+            '</div>';
         if (opt.img && opt.img !== "null" && opt.img !== "None") {
             content += '<img src="' + opt.img + '" class="opt_img" alt="Option">';
         }
@@ -188,12 +283,24 @@ function optionSelected(answer) {
 
     if (userAns == correcAns) {
         userScore += 1;
+        questionStates[que_count] = "correct";
         answer.classList.add("correct");
         answer.insertAdjacentHTML("beforeend", tickIconTag);
+        answer.insertAdjacentHTML(
+            "beforeend",
+            '<span class="cyber-verdict cyber-verdict--ok">VERIFIED // ACCESS GRANTED</span>'
+        );
     } else {
+        questionStates[que_count] = "incorrect";
         answer.classList.add("incorrect");
         answer.insertAdjacentHTML("beforeend", crossIconTag);
+        answer.insertAdjacentHTML(
+            "beforeend",
+            '<span class="cyber-verdict cyber-verdict--err">ANOMALY DETECTED</span>'
+        );
     }
+
+    updateCryptoChain(que_count);
 
     for (let i = 0; i < allOptions; i++) {
         option_list.children[i].classList.add("disabled");
@@ -201,10 +308,7 @@ function optionSelected(answer) {
     next_btn.classList.add("show");
 }
 
-// Показ результатов.
-// Результат отправляется на бэкенд СРАЗУ здесь, как только пользователь
-// ответил на последний вопрос — не дожидаясь нажатия кнопок "Пройти
-// заново"/"Выйти". Кнопки ниже отвечают только за навигацию.
+// Показ результатов в стиле крипто-отчёта с круговой диаграммой и цифровым штампом
 function showResult() {
     info_box.classList.remove("activeInfo");
     quiz_box.classList.remove("activeQuiz");
@@ -215,21 +319,78 @@ function showResult() {
     const resultIcon = document.getElementById("result_icon");
 
     let percentage = (userScore / questions.length) * 100;
+    let roundedPct = Math.round(percentage);
+
+    let tierColor = "#10b981";
+    let tierSecondary = "#22d3ee";
+    let tierIconHtml = '<i class="fas fa-crown" style="color: #facc15;"></i>';
+    let stampLabel = "CLEARANCE GRANTED // AES-VERIFIED";
+    let stampClass = "cyber-stamp--high";
 
     if (percentage >= 75) {
         statusText.innerHTML = statusNice;
-        resultIcon.innerHTML = '<i class="fas fa-crown" style="color: gold;"></i>';
+        tierColor = "#10b981";
+        tierSecondary = "#facc15";
+        tierIconHtml = '<i class="fas fa-crown" style="color: #facc15;"></i>';
+        stampLabel = "CLEARANCE GRANTED // AES-VERIFIED";
+        stampClass = "cyber-stamp--high";
         fireConfetti();
     } else if (percentage >= 50) {
         statusText.innerHTML = statusNorm;
-        resultIcon.innerHTML = '<i class="fas fa-thumbs-up" style="color: #007bff;"></i>';
+        tierColor = "#3b82f6";
+        tierSecondary = "#22d3ee";
+        tierIconHtml = '<i class="fas fa-thumbs-up" style="color: #38bdf8;"></i>';
+        stampLabel = "STANDARD CLEARANCE // LEVEL 02";
+        stampClass = "cyber-stamp--mid";
     } else {
         statusText.innerHTML = statusBad;
-        // Штанга заменена на открытую книгу — тот же смысл ("нужно
-        // подтянуться"/поучиться), но нагляднее и понятнее для теста
-        // по кибербезопасности. Цвет оставлен прежним (#dc3545).
-        resultIcon.innerHTML = '<i class="fas fa-book-open" style="color: #dc3545;"></i>';
+        tierColor = "#ef4444";
+        tierSecondary = "#f59e0b";
+        tierIconHtml = '<i class="fas fa-book-open" style="color: #f87171;"></i>';
+        stampLabel = "SECURITY ALERT // RETRAINING REQ";
+        stampClass = "cyber-stamp--low";
     }
+
+    const circumference = 2 * Math.PI * 58; // r = 58 -> ~364.42
+    const dashOffset = circumference * (1 - Math.max(0, Math.min(100, percentage)) / 100);
+
+    resultIcon.innerHTML = `
+        <div class="cyber-report-visual">
+            <div class="cyber-gauge-wrap">
+                <svg class="cyber-gauge-svg" viewBox="0 0 140 140">
+                    <defs>
+                        <linearGradient id="selfResultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="${tierSecondary}" />
+                            <stop offset="100%" stop-color="${tierColor}" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="cyber-gauge-ring-spin" cx="70" cy="70" r="65" fill="none" stroke="${tierColor}" stroke-opacity="0.28" stroke-width="1.2" stroke-dasharray="8 6 2 6" />
+                    <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(148, 163, 184, 0.16)" stroke-width="6" />
+                    <circle class="cyber-gauge-arc" id="selfGaugeArc"
+                            cx="70" cy="70" r="58"
+                            fill="none"
+                            stroke="url(#selfResultGrad)"
+                            stroke-width="6"
+                            stroke-linecap="round"
+                            stroke-dasharray="${circumference.toFixed(2)}"
+                            stroke-dashoffset="${circumference.toFixed(2)}"
+                            transform="rotate(-90 70 70)" />
+                </svg>
+                <div class="cyber-gauge-center">
+                    <div class="cyber-gauge-ico">${tierIconHtml}</div>
+                    <div class="cyber-gauge-pct">${roundedPct}%</div>
+                </div>
+            </div>
+            <div class="cyber-stamp ${stampClass}">${stampLabel}</div>
+        </div>
+    `;
+
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            const arcEl = document.getElementById("selfGaugeArc");
+            if (arcEl) arcEl.style.strokeDashoffset = dashOffset.toFixed(2);
+        }, 60);
+    });
 
     let finalSubtitle = subtitleTemplate
         .replace('{last_name}', escapeHtml(lastName))
@@ -244,19 +405,16 @@ function showResult() {
 
 // Счетчик в футере
 function queCounter(index) {
-    let totalQueCounTag = '<span><p>' + index + '</p>' + quesOf + '<p>' + questions.length + '</p></span>';
+    let totalQueCounTag = '<span class="hud-counter-tag"><p>' + index + '</p>' + quesOf + '<p>' + questions.length + '</p></span>';
     bottom_ques_counter.innerHTML = totalQueCounTag;
 }
 
-// Кнопка рестарта — результат уже отправлен в showResult(), здесь только
-// настоящая перезагрузка страницы (аналог Ctrl+R), а не мягкий сброс
-// JS-состояния, как было раньше.
+// Кнопка рестарта
 retake_btn.onclick = () => {
     window.location.reload();
 };
 
-// Кнопка финального выхода — результат уже отправлен в showResult(),
-// здесь только редирект на главную (тот же смысл, что redirect("about")).
+// Кнопка финального выхода
 final_quit_btn.onclick = () => {
     window.location.href = homelink;
 };
@@ -281,8 +439,7 @@ function fireConfetti() {
 function sendResultToBackend() {
     const form = document.getElementById("results-id");
     const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
- 
-    
+
     let formData = new FormData();
     formData.append('first_name', firstName);
     formData.append('last_name', lastName);

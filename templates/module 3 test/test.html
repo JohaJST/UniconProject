@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 {% load static %}
 {% load i18n %}
@@ -14,11 +15,19 @@
 </head>
 <body>
     <!-- start Quiz button -->
-    <div class="start_btn"><button>{% trans 'startQuiz' %}</button></div>
+    <div class="start_btn">
+        <button>
+            <span class="start_btn__hud">MODULE 03 // TACTICAL SIMULATOR</span>
+            <span class="start_btn__main">{% trans 'startQuiz' %}</span>
+        </button>
+    </div>
     
-    <!-- Info Box (теперь с полями для ввода) -->
+    <!-- Info Box (по-прежнему с полями для ввода) -->
     <div class="info_box" id="info_box">
-        <div class="info-title"><span>{% trans 'infoTitle' %}</span></div>
+        <div class="info-title">
+            <span class="hud-dot"></span>
+            <span>{% trans 'infoTitle' %}</span>
+        </div>
         <div class="info-list">
             <div class="input-group">
                 <label for="first_name">{% trans 'firstName' %}</label>
@@ -35,15 +44,16 @@
         </div>
     </div>
 
-    <!-- Category Box (SelfCtg selection) — открывается после ввода ФИО.
-         Категории рендерятся сразу (это дёшево — просто названия и
-         счётчики), а сами вопросы подгружаются AJAX-ом только для
-         ВЫБРАННОЙ категории (см. loadCategoryQuestions в script.js). -->
+    <!-- Category Box (SelfCtg selection) -->
     <div class="info_box ctg_box" id="ctg_box">
-        <div class="info-title"><span>{% trans 'ctgSelectTitle' %}</span></div>
+        <div class="info-title">
+            <span class="hud-dot"></span>
+            <span>{% trans 'ctgSelectTitle' %}</span>
+        </div>
         <div class="ctg-list" id="ctg_list">
             {% for c in ctgs %}
             <div class="ctg-item" data-ctg-id="{{ c.id }}">
+                <span class="ctg-hex">[0x{{ forloop.counter|stringformat:"02d" }}]</span>
                 <span class="ctg-name">{{ c.name }}</span>
                 <span class="ctg-count">{{ c.question_count }} {% trans 'questionsCountSuffix' %}</span>
             </div>
@@ -59,7 +69,15 @@
     <!-- Quiz Box -->
     <div class="quiz_box">
         <header>
-            <div class="title">{{ APP_NAME }}</div>
+            <div class="hud-header-top">
+                <div class="title">{{ APP_NAME }}</div>
+                <div class="cyber-status-pill">
+                    <span class="cyber-status-dot"></span>
+                    <span class="cyber-status-txt">SECURE CHANNEL: AES-256 | MODULE 03 VERIFICATION</span>
+                </div>
+            </div>
+            <!-- Цепочка крипто-блоков (20 мини-узлов по числу вопросов) -->
+            <div class="crypto-chain" id="crypto_chain" aria-label="Blockchain Progress Nodes"></div>
         </header>
         <section>
             <div class="que_text"></div>
@@ -71,51 +89,53 @@
         </footer>
     </div>
     
-               <!-- Result Box -->
-               <div class="result_box">
-                       <div class="icon" id="result_icon">
-                           <i class="fas fa-crown"></i>
-                       </div>
-                       <!-- Title (Status) -->
-                       <div class="complete_text" id="status_text">{% trans 'completeText' %}</div>
-                       <!-- Subtitle -->
-                       <div class="score_text" id="subtitle_text">
-                           <!-- Сюда подставится текст через JS -->
-                       </div>
-                       <div class="buttons">
-                           <button class="restart" id="retake_btn">{% trans 'retake' %}</button>
-                           <button class="quit" id="final_quit_btn">{% trans 'quit' %}</button>
-                       </div>
-                       <!-- Скрытая форма, нужна только чтобы взять CSRF токен для JS запроса -->
-                       <form id="results-id" style="display: none;">
-                           {% csrf_token %}
-                       </form>
-                   </div>
-                   
+    <!-- Result Box -->
+    <div class="result_box">
+        <div class="icon" id="result_icon">
+            <i class="fas fa-crown"></i>
+        </div>
+        <!-- Title (Status) -->
+        <div class="complete_text" id="status_text">{% trans 'completeText' %}</div>
+        <!-- Subtitle -->
+        <div class="score_text" id="subtitle_text">
+            <!-- Сюда подставится текст через JS -->
+        </div>
+        <div class="buttons">
+            <button class="restart" id="retake_btn">{% trans 'retake' %}</button>
+            <button class="quit" id="final_quit_btn">{% trans 'quit' %}</button>
+        </div>
+        <!-- Скрытая форма, нужна только чтобы взять CSRF токен для JS запроса -->
+        <form id="results-id" style="display: none;">
+            {% csrf_token %}
+        </form>
+    </div>
+
+    <script src="{% static 'rain.js' %}"></script>
+    <script>
+        if (window.initDigitalRainBackground) {
+            window.initDigitalRainBackground({
+                theme: 'quantum',
+                edgeMin: 0.18,
+                zIndex: 0
+            });
+        }
+    </script>
+
     <!-- Inside this JavaScript file I've coded all Quiz Codes -->
     <script src="{% static 'module3test/script.js' %}"></script>
     <script>
-    const homelink = "{% url 'about'|escapejs %}";
-    const fioReq = "{% trans 'fioReq'|escapejs %}";
-    const statusNice = "{% trans 'statusNice'|escapejs %}";
-    {% trans "statusBad" as statusBad_t %}
-    const statusBad = "{{ statusBad_t|escapejs }}";
-    const statusNorm = "{% trans 'statusNorm'|escapejs %}";
-    const quesOf = "{% trans 'quesOf'|escapejs %}";
-    const subtitleTemplate = "{% trans 'resultText'|escapejs %}";
+        const homelink = "{% url 'about'|escapejs %}";
+        const fioReq = "{% trans 'fioReq'|escapejs %}";
+        const statusNice = "{% trans 'statusNice'|escapejs %}";
+        {% trans "statusBad" as statusBad_t %}
+        const statusBad = "{{ statusBad_t|escapejs }}";
+        const statusNorm = "{% trans 'statusNorm'|escapejs %}";
+        const quesOf = "{% trans 'quesOf'|escapejs %}";
+        const subtitleTemplate = "{% trans 'resultText'|escapejs %}";
     </script>
     <script>
-        // Вопросы больше НЕ рендерятся сервером на первой загрузке страницы —
-        // это была бы лишняя нагрузка (и на сервер, и на клиента) для того,
-        // что пользователь ещё даже не выбрал. Массив заполняется AJAX-ом
-        // после выбора категории (см. loadCategoryQuestions в script.js),
-        // сохраняя ровно тот же формат объектов, что и раньше.
         let questions = [];
-
-        // Тот же самый URL 'self_check' (core/urls.py трогать нельзя),
-        // просто с query-параметром ?ctg=<id> — view сам различает
-        // обычный GET (рендер страницы) и AJAX GET (JSON с вопросами).
         const CTG_QUESTIONS_URL_TEMPLATE = "{% url 'self_check' %}?ctg=999999";
     </script>
 </body>
-</html>
+</html> 

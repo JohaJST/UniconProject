@@ -1,564 +1,486 @@
-/* importing google fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
-*{
+/* =======================================================================
+   static/module3test/style.css — TACTICAL CYBER-SIMULATOR (Module 03)
+   «Kriptologiya maktabi» (UniconProject)
+   ======================================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap');
+
+:root {
+    --cyber-bg: #050914;
+    --cyber-panel: rgba(15, 23, 42, 0.86);
+    --cyber-surface: rgba(30, 41, 59, 0.65);
+    --cyber-border: rgba(56, 189, 248, 0.24);
+    --cyber-cyan: #22d3ee;
+    --cyber-blue: #3b82f6;
+    --cyber-gold: #facc15;
+    --cyber-emerald: #10b981;
+    --cyber-ruby: #ef4444;
+    --cyber-text: #f1f5f9;
+    --cyber-muted: #94a3b8;
+    --cyber-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-body{
-    background: #007bff;
+body {
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 38%, rgba(30, 58, 138, 0.35) 0%, rgba(15, 23, 42, 0.94) 55%, #050914 100%),
+        #050914;
+    color: var(--cyber-text);
 }
 
-::selection{
-    color: #fff;
-    background: #007bff;
+::selection {
+    color: #050914;
+    background: var(--cyber-cyan);
 }
 
+/* ── Позиционирование модальных окон симулятора ── */
 .start_btn,
 .info_box,
 .quiz_box,
 .result_box,
-.ctg_box{
+.ctg_box {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 
-                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.start_btn {
+    z-index: 3;
 }
 
 .info_box.activeInfo,
 .quiz_box.activeQuiz,
 .result_box.activeResult,
-.ctg_box.activeCtg{
+.ctg_box.activeCtg {
     opacity: 1;
-    z-index: 5;
+    z-index: 10;
     pointer-events: auto;
     transform: translate(-50%, -50%) scale(1);
 }
 
-.start_btn button{
-    font-size: 25px;
-    font-weight: 500;
-    color: #007bff;
-    padding: 15px 30px;
-    outline: none;
-    border: none;
-    border-radius: 5px;
-    background: #fff;
+/* ── Стартовая кнопка запуска симулятора ── */
+.start_btn button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 20px 42px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(34, 211, 238, 0.45);
+    border-radius: 16px;
+    color: #ffffff;
     cursor: pointer;
+    box-shadow:
+        0 20px 50px rgba(2, 6, 23, 0.75),
+        0 0 30px rgba(34, 211, 238, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: all 0.35s var(--cyber-ease);
 }
 
+.start_btn__hud {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--cyber-cyan);
+    text-transform: uppercase;
+}
+
+.start_btn__main {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #ffffff 0%, #bae6fd 60%, #facc15 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.start_btn button:hover {
+    transform: translateY(-3px) scale(1.03);
+    border-color: var(--cyber-gold);
+    box-shadow:
+        0 24px 60px rgba(2, 6, 23, 0.85),
+        0 0 40px rgba(34, 211, 238, 0.38);
+}
+
+/* ── Окно ввода ФИО (.info_box) и Выбора категории (.ctg_box) ── */
 .info_box {
-    width: 90%; /* На маленьких экранах займет 90% ширины */
-    max-width: 540px; /* На больших экранах не растянется больше 540px */
-    background: #fff;
-    border-radius: 15px;
-    transform: translate(-50%, -50%) scale(0.9);
+    width: 92%;
+    max-width: 560px;
+    background: var(--cyber-panel);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--cyber-border);
+    border-radius: 20px;
+    transform: translate(-50%, -50%) scale(0.92);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s ease;
+    transition: all 0.35s var(--cyber-ease);
+    box-shadow:
+        0 28px 70px rgba(2, 6, 23, 0.8),
+        0 0 36px rgba(37, 99, 235, 0.16);
+    overflow: hidden;
 }
 
-.info_box .info-title{
-    height: 60px;
+.info_box .info-title {
+    height: 64px;
     width: 100%;
-    border-bottom: 1px solid lightgrey;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
     display: flex;
     align-items: center;
-    padding: 0 30px;
-    border-radius: 5px 5px 0 0;
-    font-size: 20px;
-    font-weight: 600;
+    gap: 10px;
+    padding: 0 28px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(15, 23, 42, 0.6);
 }
 
-.info_box .info-list{
-    padding: 15px 30px;
+.hud-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--cyber-cyan);
+    box-shadow: 0 0 10px var(--cyber-cyan);
+    animation: diodeBlink 1.8s ease-in-out infinite;
+    flex-shrink: 0;
 }
 
-.info_box .info-list .info{
-    margin: 5px 0;
-    font-size: 17px;
+@keyframes diodeBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
 }
 
-.info_box .info-list .info span{
-    font-weight: 600;
-    color: #007bff;
+.info_box .info-list {
+    padding: 22px 28px;
 }
-.info_box .buttons{
-    height: 60px;
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.input-group label {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 7px;
+    color: #94a3b8;
+}
+
+.input-group input {
+    height: 48px;
+    border-radius: 10px;
+    border: 1px solid rgba(96, 165, 250, 0.28);
+    background: rgba(15, 23, 42, 0.75);
+    color: #ffffff;
+    padding: 0 16px;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.25s var(--cyber-ease);
+}
+
+.input-group input::placeholder {
+    color: #64748b;
+}
+
+.input-group input:focus {
+    border-color: var(--cyber-cyan);
+    background: rgba(15, 23, 42, 0.95);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18);
+}
+
+.info_box .buttons {
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 0 30px;
-    border-top: 1px solid lightgrey;
+    gap: 10px;
+    padding: 0 28px;
+    border-top: 1px solid rgba(148, 163, 184, 0.15);
+    background: rgba(9, 14, 28, 0.5);
 }
 
-.info_box .buttons button{
-    margin: 0 5px;
-    height: 40px;
-    width: 100px;
-    font-size: 16px;
-    font-weight: 500;
+.info_box .buttons button {
+    height: 42px;
+    min-width: 110px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
-    border: none;
     outline: none;
-    border-radius: 5px;
-    border: 1px solid #007bff;
-    transition: all 0.3s ease;
+    border-radius: 10px;
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    transition: all 0.25s var(--cyber-ease);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   CATEGORY BOX (SelfCtg selection) — та же "рамка" что и у .info_box
-   (мы вешаем на элемент оба класса: class="info_box ctg_box"), поэтому
-   позиционирование/скрытие по умолчанию наследуется бесплатно, а тут
-   переопределяем только то, что реально отличается: сетку категорий.
+   CATEGORY BOX (SelfCtg) — Тактические карточки с HUD-скобками и сканером
    ═══════════════════════════════════════════════════════════════════════ */
 .ctg_box {
-    max-height: 80vh;
+    max-width: 680px;
+    max-height: 82vh;
     display: flex;
     flex-direction: column;
 }
 
 .ctg_box .ctg-list {
-    padding: 15px 30px;
+    padding: 20px 28px;
     overflow-y: auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+    gap: 14px;
 }
 
 .ctg_box .ctg-item {
-    background: #f8faff;
-    border: 2px solid #dbeafe;
-    border-radius: 12px;
-    padding: 16px 14px;
+    position: relative;
+    overflow: hidden;
+    background: var(--cyber-surface);
+    border: 1px solid rgba(96, 165, 250, 0.22);
+    border-radius: 14px;
+    padding: 18px 16px;
     cursor: pointer;
-    text-align: center;
-    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    text-align: left;
+    transition: all 0.28s var(--cyber-ease);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+}
+
+/* Угловые скобки-прицелы HUD [ ] на карточках категорий */
+.ctg_box .ctg-item::after {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    pointer-events: none;
+    opacity: 0.45;
+    transition: opacity 0.25s ease, inset 0.25s ease;
+    background:
+        linear-gradient(to right, var(--cyber-cyan) 2px, transparent 2px) 0 0,
+        linear-gradient(to bottom, var(--cyber-cyan) 2px, transparent 2px) 0 0,
+        linear-gradient(to left, var(--cyber-cyan) 2px, transparent 2px) 100% 0,
+        linear-gradient(to bottom, var(--cyber-cyan) 2px, transparent 2px) 100% 0,
+        linear-gradient(to right, var(--cyber-cyan) 2px, transparent 2px) 0 100%,
+        linear-gradient(to top, var(--cyber-cyan) 2px, transparent 2px) 0 100%,
+        linear-gradient(to left, var(--cyber-cyan) 2px, transparent 2px) 100% 100%,
+        linear-gradient(to top, var(--cyber-cyan) 2px, transparent 2px) 100% 100%;
+    background-repeat: no-repeat;
+    background-size: 9px 9px;
+}
+
+/* Лазерный биометрический сканер при наведении */
+.ctg_box .ctg-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -100%;
+    height: 55%;
+    background: linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.16) 85%, rgba(34, 211, 238, 0.5) 100%);
+    pointer-events: none;
+    transition: none;
 }
 
 .ctg_box .ctg-item:hover {
-    background: #eef5ff;
-    border-color: #84c5fe;
+    background: rgba(30, 58, 138, 0.42);
+    border-color: rgba(34, 211, 238, 0.55);
     transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0, 123, 255, 0.1);
+    box-shadow: 0 12px 26px rgba(6, 182, 212, 0.18);
+}
+
+.ctg_box .ctg-item:hover::after {
+    opacity: 1;
+    inset: 4px;
+}
+
+.ctg_box .ctg-item:hover::before {
+    top: 120%;
+    transition: top 0.65s ease-in-out;
+}
+
+.ctg-hex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--cyber-cyan);
+    letter-spacing: 0.05em;
 }
 
 .ctg_box .ctg-name {
     font-size: 15px;
-    font-weight: 600;
-    color: #1a1a2e;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.35;
 }
 
 .ctg_box .ctg-count {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
-    color: #6b7280;
-    font-weight: 400;
+    color: #94a3b8;
 }
 
 .ctg_box .ctg-empty {
     grid-column: 1 / -1;
-    padding: 20px;
+    padding: 24px;
     text-align: center;
-    color: #6b7280;
+    color: #94a3b8;
     font-size: 15px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   QUIZ BOX — Тактический терминал тестирования
+   ═══════════════════════════════════════════════════════════════════════ */
 .quiz_box {
-    width: 95%; /* Чуть шире, чтобы сетке было место */
-    max-width: 800px; 
-    max-height: 90vh; /* Высота не более 90% от высоты окна браузера */
+    width: 95%;
+    max-width: 860px;
+    max-height: 92vh;
     display: flex;
-    flex-direction: column; /* Готовим структуру для правильного скролла */
-    background: #fff;
-    border-radius: 15px;
-    transform: translate(-50%, -50%) scale(0.9);
+    flex-direction: column;
+    background: var(--cyber-panel);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--cyber-border);
+    border-radius: 22px;
+    transform: translate(-50%, -50%) scale(0.92);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.35s var(--cyber-ease);
+    box-shadow:
+        0 30px 80px rgba(2, 6, 23, 0.82),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 0 42px rgba(6, 182, 212, 0.15);
+    overflow: hidden;
 }
 
-.quiz_box header{
+/* ── 2. Верхняя панель статуса безопасности (Cyber HUD Header) ── */
+.quiz_box header {
     position: relative;
     z-index: 2;
-    height: 70px;
-    padding: 0 30px;
-    background: #fff;
-    border-radius: 5px 5px 0 0;
+    padding: 16px 28px 14px;
+    background: rgba(9, 14, 28, 0.78);
+    border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hud-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0px 3px 5px 1px rgba(0,0,0,0.1);
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.quiz_box header .title{
-    font-size: 20px;
-    font-weight: 600;
+.quiz_box header .title {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #ffffff 0%, #60a5fa 60%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.quiz_box header .timer{
-    color: #004085;
-    background: #cce5ff;
-    border: 1px solid #b8daff;
-    height: 45px;
-    padding: 0 8px;
-    border-radius: 5px;
-    display: flex;
+/* Мигающий бирюзовый диод и статус канала */
+.cyber-status-pill {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    width: 145px;
+    gap: 8px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.32);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #a5f3fc;
+    letter-spacing: 0.05em;
 }
 
-.quiz_box header .timer .time_left_txt{
-    font-weight: 400;
-    font-size: 17px;
-    user-select: none;
-}
-
-.quiz_box header .timer .timer_sec{
-    font-size: 18px;
-    font-weight: 500;
-    height: 30px;
-    width: 45px;
-    color: #fff;
-    border-radius: 5px;
-    line-height: 30px;
-    text-align: center;
-    background: #343a40;
-    border: 1px solid #343a40;
-    user-select: none;
-}
-
-.quiz_box header .time_line{
-    position: absolute;
-    bottom: 0px;
-    left: 0px;
-    height: 3px;
-    background: #007bff;
-}
-
-section{
-    padding: 25px 30px 20px 30px;
-    background: #fff;
-}
-
-section .que_text {
-    font-size: 24px;
-    font-weight: 600;
-    text-align: center; /* Центрируем вопрос */
-    margin-bottom: 20px;
-}
-
-section .option_list {
-    padding: 20px 0px;
-    display: grid;
-    /* Уменьшили minmax до 200px. Теперь на узких экранах карточки перестроятся в колонку, а на широких - в ряд */
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-    gap: 15px; 
-}
-
-section .option_list .option {
-    background: #f8faff;
-    border: 2px solid #dbeafe; /* Толстая, но нежная рамка */
-    border-radius: 12px;
-    padding: 20px 15px;
-    font-size: 17px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    
-    /* Выравнивание внутри карточки */
-    display: flex;
-    flex-direction: column; 
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-}
-
-section .option_list .option:last-child{
-    margin-bottom: 0px;
-}
-
-section .option_list .option:hover {
-    color: #004085;
-    background: #eef5ff;
-    border: 2px solid #84c5fe;
-    transform: translateY(-4px); /* Поднимаем вверх */
-    box-shadow: 0 10px 20px rgba(0, 123, 255, 0.1); /* Добавляем тень при наведении */
-}
-
-section .option_list .option.select {
-    transform: none; /* Убираем эффект парения после клика */
-}
-
-section .option_list .option.correct {
-    color: #155724;
-    background: #d4edda;
-    border: 2px solid #28a745;
-}
-
-section .option_list .option.incorrect {
-    color: #721c24;
-    background: #f8d7da;
-    border: 2px solid #dc3545;
-}
-
-section .option_list .option.disabled{
-    pointer-events: none;
-}
-
-section .option_list .option .icon {
-    position: absolute;
-    top: -10px; /* Выносим иконку на границу карточки */
-    right: -10px;
-    height: 30px;
-    width: 30px;
-    border: 3px solid #fff; /* Белая обводка вокруг иконки */
+.cyber-status-dot {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    text-align: center;
-    font-size: 14px;
-    pointer-events: none;
-    line-height: 24px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-.option_list .option .icon.tick{
-    color: #23903c;
-    border-color: #23903c;
-    background: #d4edda;
+    background: var(--cyber-cyan);
+    box-shadow: 0 0 10px var(--cyber-cyan);
+    animation: diodeBlink 1.6s ease-in-out infinite;
+    flex-shrink: 0;
 }
 
-.option_list .option .icon.cross{
-    color: #a42834;
-    background: #f8d7da;
-    border-color: #a42834;
-}
-
-footer{
-    height: 60px;
-    padding: 0 30px;
-    display: flex;
+/* ── Цепочка крипто-блоков (20 мини-узлов прогресса) ── */
+.crypto-chain {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18px, 1fr));
+    gap: 6px;
+    width: 100%;
     align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid lightgrey;
 }
 
-footer .total_que span{
-    display: flex;
-    user-select: none;
+.crypto-node {
+    position: relative;
+    height: 8px;
+    border-radius: 3px;
+    background: rgba(51, 65, 85, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    transition: all 0.3s var(--cyber-ease);
 }
 
-footer .total_que span p{
-    font-weight: 500;
-    padding: 0 5px;
+/* Пройденные узлы (Сине-золотое свечение) */
+.crypto-node.is-passed {
+    background: linear-gradient(90deg, #3b82f6, #facc15);
+    border-color: rgba(250, 204, 21, 0.65);
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.35);
 }
 
-footer .total_que span p:first-child{
-    padding-left: 0px;
+.crypto-node.is-passed.is-verified,
+.crypto-node.is-active.is-verified {
+    background: linear-gradient(90deg, #10b981, #22d3ee);
+    border-color: #34d399;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
 }
 
-footer button{
-    height: 40px;
-    padding: 0 13px;
-    font-size: 18px;
-    font-weight: 400;
-    cursor: pointer;
-    border: none;
-    outline: none;
-    color: #fff;
-    border-radius: 5px;
-    background: #007bff;
-    border: 1px solid #007bff;
-    line-height: 10px;
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(0.95);
-    transition: all 0.3s ease;
+.crypto-node.is-passed.is-breach,
+.crypto-node.is-active.is-breach {
+    background: linear-gradient(90deg, #ef4444, #f59e0b);
+    border-color: #f87171;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
 }
 
-footer button:hover{
-    background: #0263ca;
+/* Текущий активный узел (Пульсирующий голубой неон #22d3ee) */
+.crypto-node.is-active {
+    background: var(--cyber-cyan);
+    border-color: #ffffff;
+    box-shadow: 0 0 14px var(--cyber-cyan), 0 0 4px #ffffff;
+    transform: scaleY(1.35);
+    animation: nodeNeonPulse 1.5s ease-in-out infinite;
 }
 
-footer button.show{
-    opacity: 1;
-    pointer-events: auto;
-    transform: scale(1);
+@keyframes nodeNeonPulse {
+    0%, 100% { box-shadow: 0 0 10px #22d3ee, 0 0 2px #ffffff; }
+    50% { box-shadow: 0 0 20px #22d3ee, 0 0 8px #ffffff; }
 }
 
-.result_box {
-    width: 90%;
-    max-width: 450px;
-    background: #fff;
-    border-radius: 15px;
-    display: flex;
-    padding: 25px 30px;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-    transform: translate(-50%, -50%) scale(0.9);
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s ease;
-}
-
-.result_box .icon{
-    font-size: 100px;
-    color: #007bff;
-    margin-bottom: 10px;
-}
-
-.result_box .complete_text{
-    font-size: 20px;
-    font-weight: 500;
-}
-
-.result_box .buttons{
-    display: flex;
-    margin: 20px 0;
-}
-
-.result_box .buttons button{
-    margin: 0 10px;
-    height: 45px;
-    padding: 0 20px;
-    font-size: 18px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    outline: none;
-    border-radius: 5px;
-    border: 1px solid #007bff;
-    transition: all 0.3s ease;
-}
-
-.buttons button.restart{
-    color: #fff;
-    background: #007bff;
-}
-
-.buttons button.restart:hover{
-    background: #0263ca;
-}
-
-.buttons button.quit{
-    color: #007bff;
-    background: #fff;
-}
-
-.buttons button.quit:hover{
-    color: #fff;
-    background: #007bff;
-}
-.wait-text{
-    background-color: green;
-    margin: 0 auto;
-    text-align: center;
-}
-
-/* Стили для полей Имя и Фамилия */
-.input-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-}
-.input-group label {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 5px;
-    color: #333;
-}
-.input-group input {
-    height: 45px;
-    border-radius: 5px;
-    border: 1px solid #b8daff;
-    padding: 0 15px;
-    font-size: 16px;
-    font-family: 'Poppins', sans-serif;
-    outline: none;
-    transition: all 0.3s ease;
-}
-.input-group input:focus {
-    border-color: #007bff;
-    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.3);
-}
-
-/* Красивая анимация появления результатов */
-.result_box.activeResult {
-    animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes bounceIn {
-    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-    50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-}
-
-/* Адаптация текста в результате */
-.result_box .complete_text {
-    font-size: 24px;
-    font-weight: 600;
-    margin-top: 10px;
-    color: #333;
-}
-.result_box .score_text span {
-    display: block; /* Меняем flex на block */
-    text-align: center; /* Выравниваем весь текст по центру */
-    margin: 10px 0;
-    font-size: 18px;
-    font-weight: 500;
-    line-height: 1.5; /* Добавляем межстрочный интервал, чтобы при переносе строки не слипались */
-}
-
-.result_box .score_text span p {
-    display: inline; /* Делаем <p> строчным элементом, чтобы он не ломал строку */
-    padding: 0 4px;
-    font-weight: 600;
-}
-
-.result_box .score_text span b {
-    color: #007bff;
-    word-break: break-word; /* Позволяет длинному имени перенестись, если оно вообще не влезает */
-}
-/* Изображение в самом вопросе */
-.que_image_box {
-    margin-top: 20px;
-    text-align: center;
-}
-
-.que_img {
-    max-width: 100%;
-    max-height: 180px; /* Немного уменьшили максимальную высоту картинки вопроса */
-    border-radius: 10px;
-    object-fit: contain; /* Заменил cover на contain, чтобы картинки не обрезались */
-    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
-}
-
-.opt_img {
-    margin-top: 15px;
-    max-width: 100%;
-    height: 110px; /* Строго фиксируем высоту, чтобы все карточки были ровными */
-    object-fit: contain; /* Картинка впишется без искажений */
-    border-radius: 8px;
-    transition: transform 0.3s ease;
-}
-
-section .option_list .option:hover .opt_img {
-    transform: scale(1.05); /* Легкий зум картинки при наведении */
-}
-
+/* ── Секция вопроса и ответов ── */
 .quiz_box section {
-    padding: 25px 30px 20px 30px;
-    background: #fff;
-    flex-grow: 1; 
-    overflow-y: auto; /* Если контент (картинки + сетка) не влезает по высоте, появится красивый скролл */
+    padding: 26px 28px 22px;
+    background: transparent;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .quiz_box section::-webkit-scrollbar {
@@ -566,139 +488,639 @@ section .option_list .option:hover .opt_img {
 }
 
 .quiz_box section::-webkit-scrollbar-thumb {
-    background: #b8daff;
+    background: rgba(56, 189, 248, 0.35);
     border-radius: 10px;
 }
 
-/* =======================================================
-   АДАПТАЦИЯ ДЛЯ ПЛАНШЕТОВ И МОБИЛЬНЫХ ТЕЛЕФОНОВ (MEDIA QUERIES)
-   ======================================================= */
+section .que_text {
+    font-size: 21px;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 22px;
+    line-height: 1.45;
+    min-height: 34px;
+}
 
-/* --- ДЛЯ ПЛАНШЕТОВ (экраны меньше 768px) --- */
+.que_title {
+    display: inline-block;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* ── 3. Тактические карточки вариантов ответа (.option) ── */
+section .option_list {
+    padding: 10px 0 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+}
+
+section .option_list .option {
+    position: relative;
+    overflow: hidden;
+    background: rgba(30, 41, 59, 0.62);
+    border: 1.5px solid rgba(96, 165, 250, 0.25);
+    border-radius: 14px;
+    padding: 20px 18px 22px;
+    font-size: 16px;
+    color: var(--cyber-text);
+    cursor: pointer;
+    transition: all 0.28s var(--cyber-ease);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.35);
+}
+
+/* Декоративные угловые скобки-прицелы HUD [ ] через ::after */
+section .option_list .option::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    pointer-events: none;
+    opacity: 0.5;
+    transition: opacity 0.25s ease, inset 0.25s ease;
+    background:
+        linear-gradient(to right, var(--cyber-cyan) 2px, transparent 2px) 0 0,
+        linear-gradient(to bottom, var(--cyber-cyan) 2px, transparent 2px) 0 0,
+        linear-gradient(to left, var(--cyber-cyan) 2px, transparent 2px) 100% 0,
+        linear-gradient(to bottom, var(--cyber-cyan) 2px, transparent 2px) 100% 0,
+        linear-gradient(to right, var(--cyber-cyan) 2px, transparent 2px) 0 100%,
+        linear-gradient(to top, var(--cyber-cyan) 2px, transparent 2px) 0 100%,
+        linear-gradient(to left, var(--cyber-cyan) 2px, transparent 2px) 100% 100%,
+        linear-gradient(to top, var(--cyber-cyan) 2px, transparent 2px) 100% 100%;
+    background-repeat: no-repeat;
+    background-size: 10px 10px;
+}
+
+/* Лазерный блик биометрического сканирования сверху вниз через ::before */
+section .option_list .option::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -110%;
+    height: 65%;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(34, 211, 238, 0.14) 80%,
+        rgba(34, 211, 238, 0.55) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+section .option_list .option:hover {
+    color: #ffffff;
+    background: rgba(30, 58, 138, 0.45);
+    border-color: var(--cyber-cyan);
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(6, 182, 212, 0.22);
+}
+
+section .option_list .option:hover::after {
+    opacity: 1;
+    inset: 4px;
+}
+
+section .option_list .option:hover::before {
+    top: 120%;
+    transition: top 0.65s ease-in-out;
+}
+
+/* Контейнер шестнадцатеричного индекса [0x01] и текста ответа */
+.opt_head {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.opt_hex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--cyber-cyan);
+    background: rgba(6, 182, 212, 0.14);
+    border: 1px solid rgba(34, 211, 238, 0.32);
+    padding: 3px 7px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    letter-spacing: 0.03em;
+}
+
+.opt_text {
+    font-weight: 600;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* ── 4. Кибер-эффект при выборе верного / неверного ответа ── */
+section .option_list .option.select {
+    transform: none;
+}
+
+/* Верный ответ: бирюзово-изумрудный импульс + VERIFIED / ACCESS GRANTED */
+section .option_list .option.correct {
+    color: #ecfdf5;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(6, 182, 212, 0.22));
+    border: 1.5px solid #10b981;
+    box-shadow:
+        0 0 0 1px rgba(52, 211, 153, 0.4),
+        0 0 26px rgba(16, 185, 129, 0.35);
+    animation: emeraldPulse 0.45s var(--cyber-ease);
+}
+
+@keyframes emeraldPulse {
+    0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    60% { transform: scale(1.02); box-shadow: 0 0 32px 6px rgba(34, 211, 238, 0.45); }
+    100% { transform: scale(1); }
+}
+
+/* Неверный ответ: тактический микро-глитч (shake 3px за 0.25s) + ANOMALY DETECTED */
+section .option_list .option.incorrect {
+    color: #fef2f2;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(185, 28, 28, 0.2));
+    border: 1.5px solid #ef4444;
+    box-shadow:
+        0 0 0 1px rgba(248, 113, 113, 0.35),
+        0 0 24px rgba(239, 68, 68, 0.35);
+    animation: tacticalGlitchShake 0.25s linear;
+}
+
+@keyframes tacticalGlitchShake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-3px, 1px); }
+    40% { transform: translate(3px, -1px); }
+    60% { transform: translate(-3px, -1px); }
+    80% { transform: translate(3px, 1px); }
+}
+
+/* Микро-бейдж вердикта (VERIFIED / ANOMALY DETECTED) */
+.cyber-verdict {
+    position: relative;
+    z-index: 2;
+    margin-top: 10px;
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cyber-verdict--ok {
+    background: rgba(16, 185, 129, 0.22);
+    border: 1px solid rgba(52, 211, 153, 0.55);
+    color: #6ee7b7;
+}
+
+.cyber-verdict--err {
+    background: rgba(239, 68, 68, 0.24);
+    border: 1px solid rgba(248, 113, 113, 0.55);
+    color: #fca5a5;
+}
+
+section .option_list .option.disabled {
+    pointer-events: none;
+}
+
+section .option_list .option .icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 3;
+    height: 26px;
+    width: 26px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 12px;
+    pointer-events: none;
+    line-height: 22px;
+    border: 2px solid transparent;
+}
+
+.option_list .option .icon.tick {
+    color: #6ee7b7;
+    border-color: #10b981;
+    background: rgba(6, 78, 59, 0.9);
+}
+
+.option_list .option .icon.cross {
+    color: #fca5a5;
+    border-color: #ef4444;
+    background: rgba(127, 29, 29, 0.9);
+}
+
+/* ── Футер теста ── */
+footer {
+    height: 64px;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(96, 165, 250, 0.18);
+    background: rgba(9, 14, 28, 0.72);
+}
+
+footer .total_que span {
+    display: flex;
+    align-items: center;
+    user-select: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+footer .total_que span p {
+    font-weight: 800;
+    color: var(--cyber-cyan);
+    padding: 0 6px;
+}
+
+footer .total_que span p:first-child {
+    padding-left: 0;
+}
+
+footer button {
+    height: 42px;
+    padding: 0 22px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    color: #ffffff;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #2563eb, #0891b2);
+    border: 1px solid rgba(34, 211, 238, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+    transition: all 0.3s var(--cyber-ease);
+    box-shadow: 0 6px 18px rgba(6, 182, 212, 0.28);
+}
+
+footer button:hover {
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border-color: var(--cyber-gold);
+    transform: translateY(-1px);
+}
+
+footer button.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RESULT BOX — Финальный крипто-отчёт с круговой диаграммой и штампом
+   ═══════════════════════════════════════════════════════════════════════ */
+.result_box {
+    width: 92%;
+    max-width: 500px;
+    background: var(--cyber-panel);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--cyber-border);
+    border-radius: 24px;
+    display: flex;
+    padding: 32px 30px 28px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.35s var(--cyber-ease);
+    box-shadow:
+        0 30px 80px rgba(2, 6, 23, 0.85),
+        0 0 42px rgba(37, 99, 235, 0.2);
+}
+
+.result_box.activeResult {
+    animation: bounceIn 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bounceIn {
+    0% { transform: translate(-50%, -50%) scale(0.75); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.result_box .icon {
+    font-size: 42px;
+    color: var(--cyber-cyan);
+    margin-bottom: 12px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.cyber-report-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.cyber-gauge-wrap {
+    position: relative;
+    width: 146px;
+    height: 146px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cyber-gauge-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.cyber-gauge-ring-spin {
+    transform-origin: 70px 70px;
+    animation: spinRing 20s linear infinite;
+}
+
+@keyframes spinRing {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.cyber-gauge-arc {
+    transition: stroke-dashoffset 1.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cyber-gauge-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.cyber-gauge-ico {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.cyber-gauge-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+/* Анимация печати цифрового штампа */
+.cyber-stamp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    border: 1.5px dashed var(--cyber-cyan);
+    transform: rotate(-2deg);
+    animation: stampSlam 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.25s backwards;
+}
+
+.cyber-stamp--high {
+    color: #6ee7b7;
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.14);
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
+}
+
+.cyber-stamp--mid {
+    color: #bae6fd;
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.14);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.25);
+}
+
+.cyber-stamp--low {
+    color: #fca5a5;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.14);
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.25);
+}
+
+@keyframes stampSlam {
+    0% { opacity: 0; transform: scale(2.1) rotate(-8deg); }
+    70% { opacity: 1; transform: scale(0.94) rotate(-1deg); }
+    100% { opacity: 1; transform: scale(1) rotate(-2deg); }
+}
+
+.result_box .complete_text {
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: 6px;
+    color: #ffffff;
+    text-align: center;
+}
+
+.result_box .score_text span {
+    display: block;
+    text-align: center;
+    margin: 12px 0 6px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #cbd5e1;
+    line-height: 1.55;
+}
+
+.result_box .score_text span p {
+    display: inline;
+    padding: 0 4px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.result_box .score_text span b {
+    color: var(--cyber-cyan);
+    word-break: break-word;
+}
+
+.result_box .buttons {
+    display: flex;
+    gap: 12px;
+    margin: 22px 0 4px;
+}
+
+.result_box .buttons button {
+    height: 44px;
+    padding: 0 22px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    border-radius: 10px;
+    transition: all 0.25s var(--cyber-ease);
+}
+
+.buttons button.restart {
+    color: #ffffff;
+    background: linear-gradient(135deg, #2563eb, #0891b2);
+    border: 1px solid rgba(34, 211, 238, 0.45);
+    box-shadow: 0 6px 18px rgba(6, 182, 212, 0.25);
+}
+
+.buttons button.restart:hover {
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border-color: var(--cyber-gold);
+    transform: translateY(-2px);
+}
+
+.buttons button.quit {
+    color: #cbd5e1;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.buttons button.quit:hover {
+    color: #ffffff;
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(248, 113, 113, 0.65);
+}
+
+/* ── Картинки в вопросах и ответах ── */
+.que_image_box {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.que_img {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 12px;
+    object-fit: contain;
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.5);
+}
+
+.opt_img {
+    position: relative;
+    z-index: 2;
+    margin-top: 14px;
+    max-width: 100%;
+    height: 110px;
+    object-fit: contain;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+section .option_list .option:hover .opt_img {
+    transform: scale(1.05);
+}
+
+/* =======================================================
+   АДАПТАЦИЯ ДЛЯ ПЛАНШЕТОВ И МОБИЛЬНЫХ ТЕЛЕФОНОВ
+   ======================================================= */
 @media (max-width: 768px) {
     .quiz_box header {
-        padding: 0 20px;
+        padding: 14px 20px 12px;
     }
     .quiz_box section {
-        padding: 20px 20px 15px 20px;
+        padding: 20px 20px 15px;
     }
     footer {
         padding: 0 20px;
     }
-    
     .que_img {
-        max-height: 200px; /* Картинка вопроса чуть меньше */
+        max-height: 180px;
     }
-    
     section .option_list {
-        /* Делаем колонки чуть уже, чтобы на планшете точно влезало 2 в ряд */
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     }
-
     .ctg_box .ctg-list {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
     }
 }
 
-/* --- ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ (экраны меньше 480px) --- */
 @media (max-width: 480px) {
-    /* Контейнеры занимают почти весь экран */
     .info_box, .quiz_box, .result_box, .ctg_box {
-        width: 98%; 
-        max-height: 95vh;
-        border-radius: 10px; /* Скругления чуть меньше */
+        width: 96%;
+        max-height: 94vh;
+        border-radius: 16px;
     }
-
-    /* Шапка (Header) */
     .quiz_box header {
-        height: 60px;
-        padding: 0 15px;
+        padding: 12px 15px 10px;
     }
     .quiz_box header .title {
-        font-size: 16px; /* Уменьшаем логотип/название */
+        font-size: 16px;
     }
-    .quiz_box header .timer {
-        width: 120px;
-        height: 35px;
+    .cyber-status-pill {
+        font-size: 9.5px;
+        padding: 4px 9px;
     }
-    .quiz_box header .timer .time_left_txt {
-        font-size: 13px;
+    .crypto-chain {
+        gap: 4px;
     }
-    .quiz_box header .timer .timer_sec {
-        font-size: 14px;
-        width: 35px;
-        height: 25px;
-        line-height: 25px;
-    }
-
-    /* Тело вопроса (Section) */
     .quiz_box section {
-        padding: 15px 15px 10px 15px; /* Экономим отступы по краям */
+        padding: 16px 15px 12px;
     }
     section .que_text {
-        font-size: 18px; /* Уменьшаем шрифт вопроса */
+        font-size: 17px;
         margin-bottom: 15px;
     }
     .que_img {
-        max-height: 150px; /* Картинка вопроса еще меньше */
+        max-height: 145px;
     }
-
-    /* Карточки ответов */
     section .option_list {
-        grid-template-columns: 1fr; /* СТРОГО 1 колонка на смартфонах */
+        grid-template-columns: 1fr;
         gap: 10px;
     }
     section .option_list .option {
-        padding: 12px 10px;
+        padding: 14px 12px;
         font-size: 15px;
     }
+    .opt_head {
+        justify-content: flex-start;
+        text-align: left;
+    }
     .opt_img {
-        height: 90px; /* Картинка в ответе компактнее */
+        height: 90px;
         margin-top: 10px;
     }
-    
-    /* Иконки ответов (крестик/галочка) на телефоне */
-    section .option_list .option .icon {
-        height: 24px;
-        width: 24px;
-        font-size: 11px;
-        line-height: 18px;
-        top: -8px;
-        right: -8px;
-    }
-
-    /* Подвал (Footer) */
     footer {
-        height: 50px;
+        height: 54px;
         padding: 0 15px;
     }
     footer .total_que span {
-        font-size: 14px;
+        font-size: 13px;
     }
     footer button {
-        height: 35px;
-        padding: 0 10px;
-        font-size: 14px; /* Уменьшаем кнопку "Следующий вопрос" */
+        height: 38px;
+        padding: 0 14px;
+        font-size: 14px;
     }
-
-    /* Окно результатов (Result Box) */
-    .result_box .icon {
-        font-size: 70px; /* Уменьшаем корону/иконку */
+    .result_box {
+        padding: 24px 18px 22px;
     }
     .result_box .complete_text {
-        font-size: 20px;
+        font-size: 19px;
     }
     .result_box .score_text span {
-        font-size: 15px;
+        font-size: 14px;
     }
     .result_box .buttons button {
         height: 40px;
-        font-size: 15px;
-        padding: 0 15px;
-        margin: 0 5px; /* Чтобы две кнопки поместились рядом */
+        font-size: 14px;
+        padding: 0 16px;
     }
-
     .ctg_box .ctg-list {
         grid-template-columns: 1fr;
+        padding: 16px 18px;
     }
 }
