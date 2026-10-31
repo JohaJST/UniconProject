@@ -2,93 +2,756 @@
 {% load static %}
 {% load i18n %}
 {% block title %}{{ result.test }} {% trans 'resultsPageTitleSuffix' %}{% endblock %}
+
 {% block header %}
 <style>
+    /* ============================================================
+       CYBER-HUD ANALYTICS & DIGITAL VERIFICATION CERTIFICATE
+       Страница результатов основного теста (Main Test Result)
+       ============================================================ */
+    :root {
+        /* Цветовая тема по умолчанию (Высокий уровень >= 75%: Золото + Изумруд/Циан) */
+        --seal-primary: #facc15;
+        --seal-secondary: #10b981;
+        --seal-accent: #22d3ee;
+        --seal-glow: rgba(250, 204, 21, 0.32);
+        --seal-badge-bg: rgba(16, 185, 129, 0.14);
+        --seal-badge-border: rgba(52, 211, 153, 0.4);
+        --seal-badge-text: #6ee7b7;
+        --hud-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Тема для высокого результата (>= 75%): Золото + Изумрудно-бирюзовый */
+    .hud-certificate[data-tier="high"] {
+        --seal-primary: #facc15;
+        --seal-secondary: #10b981;
+        --seal-accent: #22d3ee;
+        --seal-glow: rgba(16, 185, 129, 0.32);
+        --seal-badge-bg: rgba(16, 185, 129, 0.15);
+        --seal-badge-border: rgba(34, 211, 238, 0.45);
+        --seal-badge-text: #a7f3d0;
+    }
+
+    /* Тема для среднего результата (50% – 74%): Королевский синий + Голубой */
+    .hud-certificate[data-tier="mid"] {
+        --seal-primary: #60a5fa;
+        --seal-secondary: #3b82f6;
+        --seal-accent: #38bdf8;
+        --seal-glow: rgba(59, 130, 246, 0.34);
+        --seal-badge-bg: rgba(59, 130, 246, 0.16);
+        --seal-badge-border: rgba(96, 165, 250, 0.45);
+        --seal-badge-text: #bae6fd;
+    }
+
+    /* Тема для низкого результата (< 50%): Рубиново-красный + Янтарный */
+    .hud-certificate[data-tier="low"] {
+        --seal-primary: #ef4444;
+        --seal-secondary: #f59e0b;
+        --seal-accent: #f87171;
+        --seal-glow: rgba(239, 68, 68, 0.34);
+        --seal-badge-bg: rgba(239, 68, 68, 0.16);
+        --seal-badge-border: rgba(248, 113, 113, 0.45);
+        --seal-badge-text: #fecaca;
+    }
+
+    body {
+        background:
+            radial-gradient(circle at 50% 25%, rgba(30, 58, 138, 0.35) 0%, rgba(15, 23, 42, 0.94) 55%, #050914 100%),
+            #050914 !important;
+        color: #f1f5f9 !important;
+        min-height: 100vh;
+    }
+
     .result-page {
-        max-width: 700px;
-        margin: 40px auto;
-        padding: 0 16px;
-        font-family: sans-serif;
+        position: relative;
+        z-index: 2;
+        max-width: 920px;
+        margin: 2.5rem auto 4rem;
+        padding: 0 1.25rem;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    .result-header {
-        background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 2px 16px rgba(0,0,0,.08);
-        padding: 32px;
+
+    /* ── Главная карточка сертификата (Dark Frosted Glass HUD) ── */
+    .result-header.hud-certificate {
+        position: relative;
+        background: rgba(15, 23, 42, 0.78);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(96, 165, 250, 0.24);
+        border-radius: 28px;
+        padding: 2.25rem 2.5rem 2.5rem;
         text-align: center;
-        margin-bottom: 28px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        box-shadow:
+            0 28px 70px rgba(2, 6, 23, 0.72),
+            0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+            0 0 48px var(--seal-glow);
+        transition: box-shadow 0.6s var(--hud-ease), border-color 0.6s var(--hud-ease);
     }
-    .result-header .trophy {
-        font-size: 48px; margin-bottom: 12px;
+
+    /* Декоративное верхнее сияние */
+    .result-header.hud-certificate::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 12%;
+        right: 12%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--seal-primary), var(--seal-secondary), transparent);
+        opacity: 0.9;
     }
-    .result-header h1 { margin: 0 0 6px; font-size: 22px; color: #1a1a2e; }
-    .result-header .subject { color: #888; font-size: 14px; margin-bottom: 20px; }
-    .stats {
+
+    /* ── Верхняя тех-строка (Статус + Хэш) ── */
+    .hud-certificate__topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .hud-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        background: var(--seal-badge-bg);
+        border: 1px solid var(--seal-badge-border);
+        color: var(--seal-badge-text);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .hud-status-chip__dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--seal-primary);
+        box-shadow: 0 0 10px var(--seal-primary);
+        animation: hudPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes hudPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.25); opacity: 0.55; }
+    }
+
+    .hud-hash-id {
+        font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+        font-size: 0.75rem;
+        color: #64748b;
+        letter-spacing: 0.06em;
+    }
+
+    /* ── 1 & 2. Центральная эмблема «Cyber-Shield Seal» + Radial Gauge ── */
+    .cyber-seal-stage {
         display: flex;
         justify-content: center;
-        gap: 24px;
-        flex-wrap: wrap;
+        align-items: center;
+        margin: 0.5rem 0 1.4rem;
     }
-    .stat-box {
-        background: #f4f6f9;
-        border-radius: 10px;
-        padding: 14px 24px;
-        min-width: 110px;
-        text-align: center;
-    }
-    .stat-box .val { font-size: 28px; font-weight: 700; color: #3b2fd8; }
-    .stat-box .lbl { font-size: 12px; color: #777; margin-top: 2px; }
 
-    .questions-list { margin-top: 8px; }
+    .cyber-seal-wrap {
+        position: relative;
+        width: 240px;
+        height: 240px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cyber-seal-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 28px;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--seal-glow) 0%, transparent 72%);
+        filter: blur(18px);
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .cyber-seal-svg {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        z-index: 1;
+        overflow: visible;
+    }
+
+    .seal-outer-ring {
+        transform-origin: 130px 130px;
+        animation: spin 24s linear infinite;
+    }
+
+    .seal-counter-ring {
+        transform-origin: 130px 130px;
+        animation: spinReverse 32s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes spinReverse {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+    }
+
+    .gauge-progress {
+        transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .seal-hex-outer {
+        filter: drop-shadow(0 0 14px var(--seal-glow));
+    }
+
+    .seal-core-symbol {
+        animation: coreFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes coreFloat {
+        0%, 100% { transform: translate(130px, 106px); }
+        50% { transform: translate(130px, 102px); }
+    }
+
+    .cyber-seal-score {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 2px;
+        font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+        line-height: 1;
+    }
+
+    .cyber-seal-score__val {
+        font-size: 2.1rem;
+        font-weight: 900;
+        color: #ffffff;
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+    }
+
+    .cyber-seal-score__sym {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--seal-primary);
+    }
+
+    /* ── Заголовки сертификата ── */
+    .result-header h1 {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+    }
+
+    .result-header .subject {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #cbd5e1;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 1.75rem;
+        padding: 0.35rem 1.1rem;
+        border-radius: 999px;
+        background: rgba(30, 41, 59, 0.65);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    /* ── 3.1. Сегментированная шкала точности (20 крипто-ячеек) ── */
+    .crypto-segments-wrap {
+        max-width: 680px;
+        margin: 0 auto 2rem;
+        padding: 1.1rem 1.35rem;
+        border-radius: 18px;
+        background: rgba(9, 14, 28, 0.62);
+        border: 1px solid rgba(96, 165, 250, 0.16);
+    }
+
+    .crypto-segments-hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        margin-bottom: 0.65rem;
+    }
+
+    .crypto-segments-hdr strong {
+        color: var(--seal-primary);
+        font-family: "JetBrains Mono", Consolas, monospace;
+    }
+
+    .crypto-segments-bar {
+        display: grid;
+        grid-template-columns: repeat(20, 1fr);
+        gap: 5px;
+    }
+
+    .crypto-cell {
+        height: 12px;
+        border-radius: 4px;
+        background: rgba(51, 65, 85, 0.45);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        transition:
+            background 0.35s var(--hud-ease),
+            box-shadow 0.35s var(--hud-ease),
+            border-color 0.35s var(--hud-ease),
+            transform 0.35s var(--hud-ease);
+    }
+
+    .crypto-cell.is-active {
+        background: linear-gradient(180deg, var(--seal-primary), var(--seal-secondary));
+        border-color: var(--seal-primary);
+        box-shadow: 0 0 10px var(--seal-glow);
+        transform: scaleY(1.12);
+    }
+
+    /* ── 3.2. Bento Telemetry Grid (4 стеклянных виджета) ── */
+    .stats.bento-telemetry {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        text-align: left;
+    }
+
+    .stat-box.bento-card {
+        position: relative;
+        background: rgba(15, 23, 42, 0.68);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(96, 165, 250, 0.18);
+        border-radius: 18px;
+        padding: 1.15rem 1.2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 0.6rem;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(18px);
+        animation: bentoFadeUp 0.6s var(--hud-ease) forwards;
+        transition:
+            transform 0.3s var(--hud-ease),
+            border-color 0.3s var(--hud-ease),
+            box-shadow 0.3s var(--hud-ease);
+    }
+
+    .stat-box.bento-card:nth-child(1) { animation-delay: 0.12s; }
+    .stat-box.bento-card:nth-child(2) { animation-delay: 0.22s; }
+    .stat-box.bento-card:nth-child(3) { animation-delay: 0.32s; }
+    .stat-box.bento-card:nth-child(4) { animation-delay: 0.42s; }
+
+    @keyframes bentoFadeUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-box.bento-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(56, 189, 248, 0.45);
+        box-shadow: 0 14px 32px rgba(2, 6, 23, 0.55), 0 0 20px rgba(34, 211, 238, 0.12);
+    }
+
+    .bento-card__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .bento-card__ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(37, 99, 235, 0.16);
+        border: 1px solid rgba(96, 165, 250, 0.28);
+        color: #60a5fa;
+        flex-shrink: 0;
+    }
+
+    .bento-card__ico--gold {
+        background: rgba(234, 179, 8, 0.15);
+        border-color: rgba(250, 204, 21, 0.32);
+        color: #facc15;
+    }
+
+    .bento-card__ico--emerald {
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(52, 211, 153, 0.32);
+        color: #34d399;
+    }
+
+    .bento-card__ico--cyan {
+        background: rgba(6, 182, 212, 0.15);
+        border-color: rgba(34, 211, 238, 0.32);
+        color: #22d3ee;
+    }
+
+    .bento-card__tag {
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .stat-box.bento-card .val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #ffffff;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+    }
+
+    .stat-box.bento-card .val--meta {
+        font-family: inherit;
+        font-size: 0.98rem;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #e2e8f0;
+        word-break: break-word;
+    }
+
+    .stat-box.bento-card .lbl {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .bento-card__sub {
+        font-size: 0.72rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    /* ── Список вопросов (сохранён для совместимости) ── */
+    .questions-list { margin-top: 1.5rem; }
     .q-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        border-radius: 16px;
         padding: 20px 24px;
         margin-bottom: 16px;
     }
-    .q-card .q-text { font-weight: 600; margin-bottom: 12px; color: #222; }
+    .q-card .q-text { font-weight: 600; margin-bottom: 12px; color: #f1f5f9; }
     .q-card .variant {
         padding: 8px 14px;
-        border-radius: 8px;
+        border-radius: 10px;
         margin-bottom: 6px;
         font-size: 14px;
     }
-    .variant.correct  { background: #e8f5e9; color: #2e7d32; font-weight: 600; }
-    .variant.incorrect { background: #fce4ec; color: #c62828; }
-    .variant.neutral  { background: #f5f5f5; color: #555; }
+    .variant.correct   { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); font-weight: 600; }
+    .variant.incorrect { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .variant.neutral   { background: rgba(30, 41, 59, 0.6); color: #94a3b8; }
 
-    .back-row { text-align: center; margin-top: 32px; margin-bottom: 40px; }
-    .btn-back {
-        display: inline-block;
-        padding: 12px 32px;
-        background: #3b2fd8; color: #fff;
-        border-radius: 10px; font-size: 15px; font-weight: 600;
+    /* ── Кнопка возврата / завершения сессии ── */
+    .back-row {
+        text-align: center;
+        margin-top: 2.2rem;
+        margin-bottom: 3rem;
     }
-    .btn-back:hover { background: #2f25b0; color: #fff; }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        padding: 0.95rem 2.4rem;
+        background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
+        color: #ffffff;
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        border-radius: 14px;
+        font-size: 0.98rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        box-shadow: 0 12px 30px rgba(6, 182, 212, 0.28);
+        transition: all 0.3s var(--hud-ease);
+    }
+
+    .btn-back:hover {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        border-color: rgba(250, 204, 21, 0.65);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 16px 38px rgba(34, 211, 238, 0.4);
+    }
+
+    .btn-back svg {
+        transition: transform 0.3s var(--hud-ease);
+    }
+
+    .btn-back:hover svg {
+        transform: translateX(3px);
+    }
+
+    /* ── Адаптивность ── */
+    @media (max-width: 860px) {
+        .stats.bento-telemetry {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 540px) {
+        .result-header.hud-certificate {
+            padding: 1.5rem 1.15rem 1.75rem;
+            border-radius: 22px;
+        }
+        .hud-certificate__topbar {
+            justify-content: center;
+            text-align: center;
+        }
+        .cyber-seal-wrap {
+            width: 205px;
+            height: 205px;
+        }
+        .crypto-segments-bar {
+            grid-template-columns: repeat(10, 1fr);
+            gap: 6px;
+        }
+        .stats.bento-telemetry {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 {% endblock %}
+
 {% block body %}
 <div class="result-page">
 
-    <div class="result-header">
-        <div class="trophy">🏆</div>
+    <div class="result-header hud-certificate"
+         id="hudCertificate"
+         data-tier="high"
+         data-foyiz="{{ result.foyiz|default:0 }}"
+         data-correct="{{ result.result|default:0 }}"
+         data-total="{{ result.totalQuestions|default:0 }}"
+         data-seconds="{{ result.time|default:0 }}">
+
+        <!-- Верхняя тех-панель сертификата -->
+        <div class="hud-certificate__topbar">
+            <div class="hud-status-chip" id="hudStatusChip">
+                <span class="hud-status-chip__dot"></span>
+                <span id="hudStatusText">CRYPTO CLEARANCE VERIFIED</span>
+            </div>
+            <div class="hud-hash-id">
+                CERT // #{{ result.id|default:"01" }}-{{ result.user.id|default:"U" }}
+            </div>
+        </div>
+
+        <!-- 1 & 2. Новая центральная SVG-эмблема «Cyber-Shield Seal» + Radial Gauge -->
+        <div class="cyber-seal-stage">
+            <div class="cyber-seal-wrap">
+                <svg class="cyber-seal-svg" viewBox="0 0 260 260" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--seal-primary)" />
+                            <stop offset="100%" stop-color="var(--seal-secondary)" />
+                        </linearGradient>
+                        <linearGradient id="shieldCoreGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="var(--seal-primary)" stop-opacity="0.28" />
+                            <stop offset="100%" stop-color="var(--seal-secondary)" stop-opacity="0.06" />
+                        </linearGradient>
+                        <filter id="cyberGlow" x="-25%" y="-25%" width="150%" height="150%">
+                            <feGaussianBlur stdDeviation="4.5" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+
+                    <!-- Внешнее тонкое технологичное кольцо с пунктирными крипто-секторами (24s) -->
+                    <g class="seal-outer-ring">
+                        <circle cx="130" cy="130" r="118" fill="none" stroke="var(--seal-primary)" stroke-opacity="0.32" stroke-width="1.6" stroke-dasharray="16 8 4 8" />
+                        <circle cx="130" cy="130" r="110" fill="none" stroke="var(--seal-secondary)" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="3 9" />
+                        <path d="M130 6 V16 M130 244 V254 M6 130 H16 M244 130 H254" stroke="var(--seal-primary)" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.6" />
+                    </g>
+
+                    <!-- Встречное пунктирное кольцо -->
+                    <g class="seal-counter-ring">
+                        <circle cx="130" cy="130" r="82" fill="none" stroke="var(--seal-primary)" stroke-opacity="0.22" stroke-width="1.2" stroke-dasharray="5 9" />
+                    </g>
+
+                    <!-- Фоновая дорожка круговой шкалы (Radial Gauge) -->
+                    <circle class="gauge-track" cx="130" cy="130" r="96" fill="none" stroke="rgba(148, 163, 184, 0.14)" stroke-width="7" />
+
+                    <!-- Анимированная дуга результата (Radial Gauge Progress) -->
+                    <circle class="gauge-progress"
+                            id="gaugeProgressArc"
+                            cx="130" cy="130" r="96"
+                            fill="none"
+                            stroke="url(#shieldGrad)"
+                            stroke-width="7"
+                            stroke-linecap="round"
+                            stroke-dasharray="603.19"
+                            stroke-dashoffset="603.19"
+                            transform="rotate(-90 130 130)"
+                            filter="url(#cyberGlow)" />
+
+                    <!-- Средний гексагональный (шестигранный) щит -->
+                    <polygon class="seal-hex-outer"
+                             points="130,54 195,92 195,168 130,206 65,168 65,92"
+                             fill="url(#shieldCoreGrad)"
+                             stroke="url(#shieldGrad)"
+                             stroke-width="2.5"
+                             stroke-linejoin="round" />
+
+                    <polygon class="seal-hex-inner"
+                             points="130,66 185,98 185,162 130,194 75,162 75,98"
+                             fill="rgba(15, 23, 42, 0.76)"
+                             stroke="var(--seal-primary)"
+                             stroke-opacity="0.32"
+                             stroke-width="1" />
+
+                    <!-- Внутренний символ: Ключ безопасности и верифицированное ядро -->
+                    <g class="seal-core-symbol" transform="translate(130, 106)">
+                        <path d="M0 -24 L20 -15 V0 C20 14 11 25 0 30 C-11 25 -20 14 -20 0 V-15 Z"
+                              fill="url(#shieldCoreGrad)"
+                              stroke="url(#shieldGrad)"
+                              stroke-width="2" />
+                        <circle cx="0" cy="-4" r="5.5" fill="none" stroke="var(--seal-primary)" stroke-width="2.2" />
+                        <path d="M0 1.5 V13 M0 8 H4.5 M0 12 H3.5" stroke="var(--seal-primary)" stroke-width="2.2" stroke-linecap="round" />
+                    </g>
+                </svg>
+
+                <!-- Центральный бегущий процент внутри эмблемы -->
+                <div class="cyber-seal-score">
+                    <span class="cyber-seal-score__val" id="sealCountUp">{{ result.foyiz }}</span><span class="cyber-seal-score__sym">%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Заголовок предмета и имя пользователя (все оригинальные переменные сохранены) -->
         <h1>{% trans 'resultHeadingPrefix' %} {{ result.test.subject.name }} {% trans 'resultHeadingSuffix' %}</h1>
-        <div style="font-size: 25px;" class="subject">{{ result.user.username }}
-            <!--&nbsp;·&nbsp; -->
-            {# result.created|date:"d.m.Y" #}</div>
-        <div class="stats"> 
-            <div class="stat-box">
-                <div class="val">{{ result.foyiz }}%</div>
-                <div class="lbl">{% trans 'percentLabel' %}</div>
+        <div class="subject">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>
+                {% if result.user.last_name or result.user.name %}
+                    {{ result.user.last_name }} {{ result.user.name }}
+                {% else %}
+                    {{ result.user.username }}
+                {% endif %}
+            </span>
+            {# result.created|date:"d.m.Y" #}
+        </div>
+
+        <!-- 3.1. Горизонтальная сегментированная шкала точности (20 крипто-ячеек) -->
+        <div class="crypto-segments-wrap" aria-hidden="true">
+            <div class="crypto-segments-hdr">
+                <span>ACCURACY MATRIX // 20 CRYPTO BLOCKS</span>
+                <strong id="matrixActiveLabel">0 / 20 BLOCKS</strong>
             </div>
-            <div class="stat-box">
-                <div class="val">{{ result.result }}</div>
-                <div class="lbl">{% trans 'correctLabel' %}</div>
+            <div class="crypto-segments-bar" id="cryptoSegmentsBar">
+                <span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span>
+                <span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span>
+                <span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span>
+                <span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span><span class="crypto-cell"></span>
             </div>
-            <div class="stat-box">
-                <div class="val">{{ result.totalQuestions }}</div>
-                <div class="lbl">{% trans 'totalLabel' %}</div>
+        </div>
+
+        <!-- 3.2. Bento Telemetry Grid (4 стеклянных виджета метрик) -->
+        <div class="stats bento-telemetry">
+            <!-- Виджет 1: Процент точности -->
+            <div class="stat-box bento-card">
+                <div class="bento-card__top">
+                    <span class="bento-card__ico bento-card__ico--gold">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                    </span>
+                    <span class="bento-card__tag">PRECISION</span>
+                </div>
+                <div>
+                    <div class="val"><span id="bentoPercentVal">{{ result.foyiz }}</span>%</div>
+                    <div class="lbl">{% trans 'percentLabel' %}</div>
+                </div>
+            </div>
+
+            <!-- Виджет 2: Верные ответы / Балл -->
+            <div class="stat-box bento-card">
+                <div class="bento-card__top">
+                    <span class="bento-card__ico bento-card__ico--emerald">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="6"/>
+                            <circle cx="12" cy="12" r="2"/>
+                        </svg>
+                    </span>
+                    <span class="bento-card__tag">SCORE</span>
+                </div>
+                <div>
+                    <div class="val">{{ result.result }} <span style="font-size: 1rem; color: #64748b; font-weight: 600;">/ {{ result.totalQuestions }}</span></div>
+                    <div class="lbl">{% trans 'correctLabel' %}</div>
+                </div>
+            </div>
+
+            <!-- Виджет 3: Всего вопросов и Затраченное время -->
+            <div class="stat-box bento-card">
+                <div class="bento-card__top">
+                    <span class="bento-card__ico bento-card__ico--cyan">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </span>
+                    <span class="bento-card__tag" id="telemetryTimeTag">CHRONO</span>
+                </div>
+                <div>
+                    <div class="val" id="telemetryTimeVal">{{ result.totalQuestions }}</div>
+                    <div class="lbl">{% trans 'totalLabel' %} <span class="bento-card__sub" id="telemetryTotalSub"></span></div>
+                </div>
+            </div>
+
+            <!-- Виджет 4: Данные участника и Потока -->
+            <div class="stat-box bento-card">
+                <div class="bento-card__top">
+                    <span class="bento-card__ico">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="16" rx="2"/>
+                            <circle cx="9" cy="10" r="2"/>
+                            <path d="M15 8h2M15 12h2M7 16h10"/>
+                        </svg>
+                    </span>
+                    <span class="bento-card__tag">OPERATOR</span>
+                </div>
+                <div>
+                    <div class="val val--meta">
+                        {% if result.user.potok %}
+                            {{ result.user.potok }}
+                        {% else %}
+                            {{ result.test.subject.name }}
+                        {% endif %}
+                    </div>
+                    <div class="lbl">
+                        {% if result.created %}{{ result.created|date:"d.m.Y" }}{% else %}UNICON.UZ{% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -109,8 +772,122 @@
     </div>-->
 
     <div class="back-row">
-        <a href="{% url 'logout' %}" class="btn-back" style="text-decoration: none;">{% trans 'backToHomeBtn' %}</a>
+        <a href="{% url 'logout' %}" class="btn-back" style="text-decoration: none;">
+            <span>{% trans 'backToHomeBtn' %}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </a>
     </div>
 
 </div>
+
+<script src="{% static 'rain.js' %}"></script>
+<script>
+(function () {
+    "use strict";
+
+    // Запускаем фоновый кибер-дождь в режиме Quantum Vault
+    if (window.initDigitalRainBackground) {
+        window.initDigitalRainBackground({
+            theme: "quantum",
+            edgeMin: 0.16,
+            zIndex: 0
+        });
+    }
+
+    var cert = document.getElementById("hudCertificate");
+    if (!cert) return;
+
+    var rawFoyiz = String(cert.getAttribute("data-foyiz") || "0").replace(",", ".");
+    var targetPercent = Math.max(0, Math.min(100, parseFloat(rawFoyiz) || 0));
+    var hasDecimals = (targetPercent % 1 !== 0);
+
+    var rawSeconds = parseInt(cert.getAttribute("data-seconds") || "0", 10) || 0;
+    var rawTotal = cert.getAttribute("data-total") || "0";
+
+    // 1. Установка цветовой темы щита и текста статуса в зависимости от foyiz
+    var statusTextEl = document.getElementById("hudStatusText");
+    if (targetPercent >= 75) {
+        cert.setAttribute("data-tier", "high");
+        if (statusTextEl) statusTextEl.textContent = "LEVEL 01 // КРИПТО-ДОПУСК ПОДТВЕРЖДЁН";
+    } else if (targetPercent >= 50) {
+        cert.setAttribute("data-tier", "mid");
+        if (statusTextEl) statusTextEl.textContent = "LEVEL 02 // БАЗОВЫЙ УРОВЕНЬ ЗАЩИТЫ";
+    } else {
+        cert.setAttribute("data-tier", "low");
+        if (statusTextEl) statusTextEl.textContent = "ALERT // ТРЕБУЕТСЯ УКРЕПЛЕНИЕ ЗАЩИТЫ";
+    }
+
+    // 2. Форматирование времени прохождения (если result.time передан), с сохранением totalQuestions
+    var timeValEl = document.getElementById("telemetryTimeVal");
+    var totalSubEl = document.getElementById("telemetryTotalSub");
+    if (rawSeconds > 0 && timeValEl && totalSubEl) {
+        var h = Math.floor(rawSeconds / 3600);
+        var m = Math.floor((rawSeconds % 3600) / 60);
+        var s = rawSeconds % 60;
+        var pad = function (n) { return n < 10 ? "0" + n : String(n); };
+        var formattedTime = h > 0 ? (h + ":" + pad(m) + ":" + pad(s)) : (pad(m) + ":" + pad(s));
+        totalSubEl.textContent = "• ⏱ " + formattedTime;
+    }
+
+    // 3. Анимация дуги Radial Gauge (1.4s) + Count-Up процентов + 20 крипто-ячеек
+    var arc = document.getElementById("gaugeProgressArc");
+    var sealCountEl = document.getElementById("sealCountUp");
+    var bentoPercentEl = document.getElementById("bentoPercentVal");
+    var cells = document.querySelectorAll("#cryptoSegmentsBar .crypto-cell");
+    var matrixLabel = document.getElementById("matrixActiveLabel");
+
+    var circumference = 2 * Math.PI * 96; // r = 96 -> ~603.19
+    var activeCellsCount = Math.round((targetPercent / 100) * cells.length);
+
+    if (matrixLabel) {
+        matrixLabel.textContent = activeCellsCount + " / " + cells.length + " BLOCKS";
+    }
+
+    // Запускаем заполнение дуги
+    requestAnimationFrame(function () {
+        setTimeout(function () {
+            if (arc) {
+                var offset = circumference * (1 - targetPercent / 100);
+                arc.style.strokeDashoffset = offset.toFixed(2);
+            }
+        }, 60);
+    });
+
+    // Поочерёдное зажигание 20 крипто-ячеек
+    for (var i = 0; i < activeCellsCount; i++) {
+        (function (idx) {
+            setTimeout(function () {
+                if (cells[idx]) cells[idx].classList.add("is-active");
+            }, 90 + idx * 55);
+        })(i);
+    }
+
+    // Плавный Count-Up цифр от 0 до foyiz за 1400ms
+    var duration = 1400;
+    var startTime = performance.now();
+
+    function stepCount(now) {
+        var elapsed = now - startTime;
+        var progress = Math.min(1, elapsed / duration);
+        var eased = 1 - Math.pow(1 - progress, 3); // cubic ease-out
+        var current = targetPercent * eased;
+        var formatted = hasDecimals ? current.toFixed(1) : String(Math.round(current));
+
+        if (sealCountEl) sealCountEl.textContent = formatted;
+        if (bentoPercentEl) bentoPercentEl.textContent = formatted;
+
+        if (progress < 1) {
+            requestAnimationFrame(stepCount);
+        } else {
+            var finalStr = hasDecimals ? targetPercent.toFixed(1) : String(Math.round(targetPercent));
+            if (sealCountEl) sealCountEl.textContent = finalStr;
+            if (bentoPercentEl) bentoPercentEl.textContent = finalStr;
+        }
+    }
+
+    requestAnimationFrame(stepCount);
+})();
+</script>
 {% endblock %}
