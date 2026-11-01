@@ -414,3 +414,9 @@ msgstr "Avval fanni tanlang"
 
 msgid "Предмет"
 msgstr "Fan"
+
+msgid "task4Title"
+msgstr "Zamonaviy kriptografik texnologiyalar"
+
+msgid "task4Text"
+msgstr "Kriptologiyaning yangi yo'nalishlarini rivojlantirish "

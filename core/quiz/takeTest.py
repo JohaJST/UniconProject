@@ -144,7 +144,7 @@ def v2_test(request):
     if _needs_required_profile_data(user):
         return redirect("required")
 
-    return render(request, "pages/quiz/v2_test.html")
+    return render(request, "new_test_page.html")
 
 
 @login_required(login_url="login")

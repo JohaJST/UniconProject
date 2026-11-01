@@ -415,3 +415,9 @@ msgstr "First select a subject"
 
 msgid "Предмет"
 msgstr "Subject"
+
+msgid "task4Title"
+msgstr "Modern Cryptographic Technologies"
+
+msgid "task4Text"
+msgstr "Development of New Areas of Cryptology"
