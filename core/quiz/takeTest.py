@@ -138,13 +138,12 @@ def test(request, test_id):
     return render(request, "new_test_page.html", ctx)
 
 
-@login_required(login_url="login")
-def v2_test(request):
-    user = request.user
-    if _needs_required_profile_data(user):
-        return redirect("required")
-
-    return render(request, "new_test_page.html")
+def v2_test(req):
+    user = User.objects.filter(id=req.user.id).first()
+    test = Test.objects.filter(subject=user.subject, potok=user.potok).first()
+    if not test:
+        return redirect("about")
+    return redirect("test", test_id=test.id)
 
 
 @login_required(login_url="login")
