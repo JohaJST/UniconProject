@@ -7,8 +7,7 @@ test_name, test_desc, question_N, variant_N_M -> uz/ru/en.
 from __future__ import annotations
 
 import json
-# import logging
-from math import e
+
 import os
 import re
 

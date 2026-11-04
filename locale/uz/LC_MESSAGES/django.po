@@ -419,4 +419,44 @@ msgid "task4Title"
 msgstr "Zamonaviy kriptografik texnologiyalar"
 
 msgid "task4Text"
-msgstr "Kriptologiyaning yangi yo'nalishlarini rivojlantirish "
+msgstr "Kriptologiyaning yangi yo'nalishlarini rivojlantirish"
+
+msgid "phoneLabel"
+msgstr "Telefon raqami"
+
+msgid "Bizga ishonishadi"
+msgstr "Bizga ishonishadi"
+
+#, python-format
+msgid "%(n)s ta hamkor tashkilot"
+msgstr "%(n)s ta hamkor tashkilot"
+
+msgid "AI Prezintatsiya"
+msgstr "AI Taqdimot"
+
+msgid "AI Гид"
+msgstr "AI Gid"
+
+msgid "Подготовка голосовой презентации..."
+msgstr "Ovozli taqdimot tayyorlanmoqda..."
+
+msgid "Предыдущий шаг"
+msgstr "Oldingi qadam"
+
+msgid "Пауза / Пуск"
+msgstr "Pauza / Boshlash"
+
+msgid "Следующий шаг"
+msgstr "Keyingi qadam"
+
+msgid "Вернуть фокус"
+msgstr "Fokusni qaytarish"
+
+msgid "Закрыть"
+msgstr "Yopish"
+
+msgid "Поиск"
+msgstr "Qidiruv"
+
+msgid "Ничего не найдено"
+msgstr "Hech narsa topilmadi"

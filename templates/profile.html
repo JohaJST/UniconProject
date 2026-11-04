@@ -42,7 +42,7 @@
             <span class="stat-label">{% trans 'testsCompletedLabel' %}</span>
         </div>
         <div class="stat-card accent">
-            <span class="stat-value">{{ average }} %</span>
+            <span class="stat-value">{% if average is not None %}{{ average }} %{% else %}—{% endif %}</span>
             <span class="stat-label">{% trans 'avgPercentLabel' %}</span>
         </div>
     </div>

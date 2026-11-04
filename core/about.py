@@ -100,17 +100,34 @@ def self(request):
 
 def self_check(request):
     if request.method == "POST":
-        print(1)
         data = request.POST
-        print(data)
-        user, flag = SelfUser.objects.get_or_create(first_name=data['first_name'], last_name=data['last_name'])
-        result = SelfResult.objects.create(
-            user=user, ctg_id=int(data['ctg']),
-            score=int(data['score']), foiz=data['percentage'],
-            totalQuestions=int(data['total']),
+        first_name = (data.get("first_name") or "").strip()[:255]
+        last_name = (data.get("last_name") or "").strip()[:255]
+
+        raw_ctg = str(data.get("ctg") or "").strip()
+        ctg = (
+            SelfCtg.objects.filter(id=int(raw_ctg)).first()
+            if raw_ctg.isdigit() and len(raw_ctg) < 10 else None
         )
 
-        print(result)
+        try:
+            score = int(data.get("score", ""))
+            total = int(data.get("total", ""))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "invalid_data"}, status=400)
+
+        if not first_name or not last_name or ctg is None or not (0 < total <= 100) or not (0 <= score <= total):
+            return JsonResponse({"ok": False, "error": "invalid_data"}, status=400)
+
+        user = (
+            SelfUser.objects.filter(first_name=first_name, last_name=last_name).first()
+            or SelfUser.objects.create(first_name=first_name, last_name=last_name)
+        )
+        SelfResult.objects.create(
+            user=user, ctg=ctg,
+            score=score, foiz=score / total * 100,   # процент считает сервер, а не клиент
+            totalQuestions=total,
+        )
         return JsonResponse({'message': 'success'})
 
     ctg_id = request.GET.get('ctg')

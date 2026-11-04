@@ -148,8 +148,8 @@ def edit_quiz(request, pk):
     # ═══════════════════════════════════════════════════════════════════════
     # 1. ВАЛИДАЦИЯ ФОРМЫ
     # ═══════════════════════════════════════════════════════════════════════
-    subject_id = post_data.get("subject")
-    if not subject_id or not Subject.objects.filter(id=subject_id).exists():
+    subject_id = (post_data.get("subject") or "").strip()
+    if not subject_id.isdigit() or len(subject_id) > 9 or not Subject.objects.filter(id=int(subject_id)).exists():
         errors.append("Выберите корректный предмет")
 
     question_indexes = sorted({
@@ -170,6 +170,11 @@ def edit_quiz(request, pk):
         errors.append("Нужен как минимум один вопрос")
 
     for qidx in question_indexes:
+        raw_q = (post_data.get(f"question_{qidx}") or "").strip()
+        uz_q = (post_data.get(f"question_{qidx}_uz") or "").strip()
+        if not raw_q and not uz_q:
+            errors.append(f"Вопрос #{qidx}: текст обязателен")
+
         v_indexes = sorted(variants_by_question.get(qidx, set()))
         if len(v_indexes) < 2:
             errors.append(f"Вопрос #{qidx}: нужно как минимум 2 варианта ответа")
@@ -210,7 +215,7 @@ def edit_quiz(request, pk):
             # ── Метаданные теста: subject + potok ──────────────────────────
             test.subject_id = int(subject_id)
             potok_id = post_data.get("potok")
-            test.potok_id = int(potok_id) if potok_id else None
+            test.potok_id = int(potok_id) if potok_id and potok_id.isdigit() else None
             test.save()
 
             # ── Вопросы (id-based diff, test=this_test) ─────────────────────

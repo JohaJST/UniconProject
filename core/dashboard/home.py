@@ -35,7 +35,9 @@ def home(request, status="subject", subject_id=None, potok_id=None, user_id=None
     except (ValueError, TypeError):
         period = 7
 
-    cutoff = datetime.date.today() - datetime.timedelta(days=period)
+    # "Сегодня" (period=1) = только сегодняшняя дата, а не сегодня + вчера.
+    days_back = 0 if period == 1 else period
+    cutoff = datetime.date.today() - datetime.timedelta(days=days_back)
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
     period_qs = Result.objects.filter(created__gte=cutoff)

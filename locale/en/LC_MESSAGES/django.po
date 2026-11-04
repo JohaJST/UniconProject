@@ -169,7 +169,7 @@ msgid "footerDesignedByText"
 msgstr "Designed by"
 
 msgid "about"
-msgstr "Criptology school"
+msgstr "Cryptology School"
 
 msgid "Тесты"
 msgstr "Tests"
@@ -421,3 +421,43 @@ msgstr "Modern Cryptographic Technologies"
 
 msgid "task4Text"
 msgstr "Development of New Areas of Cryptology"
+
+msgid "phoneLabel"
+msgstr "Phone"
+
+msgid "Bizga ishonishadi"
+msgstr "Trusted by"
+
+#, python-format
+msgid "%(n)s ta hamkor tashkilot"
+msgstr "%(n)s partner organizations"
+
+msgid "AI Prezintatsiya"
+msgstr "AI Presentation"
+
+msgid "AI Гид"
+msgstr "AI Guide"
+
+msgid "Подготовка голосовой презентации..."
+msgstr "Preparing the voice presentation..."
+
+msgid "Предыдущий шаг"
+msgstr "Previous step"
+
+msgid "Пауза / Пуск"
+msgstr "Pause / Play"
+
+msgid "Следующий шаг"
+msgstr "Next step"
+
+msgid "Вернуть фокус"
+msgstr "Restore focus"
+
+msgid "Закрыть"
+msgstr "Close"
+
+msgid "Поиск"
+msgstr "Search"
+
+msgid "Ничего не найдено"
+msgstr "Nothing found"

@@ -183,7 +183,8 @@ class User(AbstractBaseUser):
     # ── Строковые методы ─────────────────────────────────
 
     def full_name(self) -> str:
-        return f"{self.last_name} {self.name} {self.second_name}"
+        parts = (self.last_name, self.name, self.second_name)
+        return " ".join(p.strip() for p in parts if p and p.strip())
 
     def personal(self) -> dict:
         return {
@@ -201,5 +202,6 @@ class User(AbstractBaseUser):
 
     def save(self, *args, **kwargs):
         if not self.username:
-            self.username = self.full_name()
+            # Формат username сохранён прежним (совпадает с проверкой тёзок в form()).
+            self.username = f"{self.last_name} {self.name} {self.second_name}"
         return super().save(*args, **kwargs)

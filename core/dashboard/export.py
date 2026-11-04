@@ -212,6 +212,9 @@ def _write_excel_sheet(ws, headers, rows, title, summary_lines=None):
         for row_data in rows:
             for col, value in enumerate(row_data, start=1):
                 cell = ws.cell(row=cursor, column=col, value=value)
+                # Строка, начинающаяся с "=", иначе будет записана как формула.
+                if isinstance(value, str) and value.startswith("="):
+                    cell.data_type = "s"
                 cell.border = border
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
             cursor += 1

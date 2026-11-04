@@ -416,30 +416,39 @@ def action(request, status, path, pk=None):
             return redirect("dlist", tip=fallback_tip)
 
         if path == "subject":
-            Subject.objects.get(id=pk).delete()
+            get_object_or_404(Subject, id=pk).delete()
             return redirect("dlist", tip=path)
         elif path == "potok":
-            Potok.objects.get(id=pk).delete()
+            get_object_or_404(Potok, id=pk).delete()
             return redirect("dlist", tip=path)
         elif path == "quiz":
-            Test.objects.get(id=pk).delete()
+            get_object_or_404(Test, id=pk).delete()
             return redirect("dlist", tip=path)
         elif path == "question":
-            Question.objects.get(id=pk).delete()
+            get_object_or_404(Question, id=pk).delete()
             return redirect("dlist", tip=path)
         elif path == "variant":
-            Variant.objects.get(id=pk).delete()
+            get_object_or_404(Variant, id=pk).delete()
             return redirect("dlist", tip=path)
         elif path == "result":
-            result = Result.objects.get(id=pk)
-            User.objects.filter(id=result.user.id).update(is_result=False)
+            result = get_object_or_404(Result, id=pk)
+            if result.user_id:
+                User.objects.filter(id=result.user_id).update(is_result=False)
             result.delete()
             return redirect("dlist", tip=path)
         elif path == "user":
-            User.objects.filter(id=pk).delete()
+            target = get_object_or_404(User, id=pk)
+            # Нельзя удалить себя; суперадмина удаляет только суперадмин.
+            if target.id == request.user.id or (
+                target.role == Role.SUPERADMIN and request.user.role != Role.SUPERADMIN
+            ):
+                return redirect("dlist", tip=path)
+            target.delete()
             return redirect("dlist", tip=path)
         elif path == "selfquestion":
-            q = SelfQuestion.objects.prefetch_related("selfanswer_set").get(id=pk)
+            q = get_object_or_404(
+                SelfQuestion.objects.prefetch_related("selfanswer_set"), id=pk
+            )
 
             # Собираем пути ко всем файлам ДО удаления записей из БД —
             # после q.delete() доступ к q.img / answer.img через ORM уже
@@ -463,7 +472,7 @@ def action(request, status, path, pk=None):
             # После удаления одной попытки возвращаем не на плоский список
             # (его больше нет), а обратно на карточку участника, которому
             # принадлежала эта попытка.
-            result = SelfResult.objects.select_related("user").get(id=pk)
+            result = get_object_or_404(SelfResult.objects.select_related("user"), id=pk)
             redirect_user_id = result.user_id
             result.delete()
             if redirect_user_id:
@@ -472,10 +481,10 @@ def action(request, status, path, pk=None):
         elif path == "selfctg":
             # Вопросы категории не удаляются: FK SET_NULL — они остаются
             # без категории, а не пропадают вместе с ней.
-            SelfCtg.objects.get(id=pk).delete()
+            get_object_or_404(SelfCtg, id=pk).delete()
             return redirect("dlist", tip=path)
         elif path == "selfuser":
-                    target = SelfUser.objects.get(id=pk)
+                    target = get_object_or_404(SelfUser, id=pk)
                     SelfResult.objects.filter(user=target).delete()
                     target.delete()
                     return redirect("dlist", tip="selfresult")

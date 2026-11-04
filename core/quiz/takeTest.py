@@ -38,10 +38,14 @@ def test(request, test_id):
 
         try:
             data = json.loads(request.body)
+            if not isinstance(data, dict):
+                raise TypeError("body must be a JSON object")
             user_answers = data.get('answers', [])
+            if not isinstance(user_answers, list):
+                raise TypeError("answers must be a list")
             raw_time = data.get('time')
         except (json.JSONDecodeError, TypeError):
-            return redirect("about")
+            return JsonResponse({"success": False, "error": "bad_request"}, status=400)
 
         # Время прохождения (сек): клиент пока не шлёт, но поле в модели
         # есть (Result.time, PositiveSmallIntegerField). Принимаем только
@@ -58,8 +62,13 @@ def test(request, test_id):
         # Вопросы теперь привязаны напрямую к Test (без TestVarianta).
         total_questions = Question.objects.filter(test_id=test.id).count()
         if total_questions == 0:
-            return redirect("about")
+            return JsonResponse({"success": False, "error": "no_questions"}, status=400)
 
+        # variant_id -> question_id ТОЛЬКО для вариантов этого теста:
+        # чужие/несуществующие id сюда не попадут и не засчитаются.
+        variant_to_question = dict(
+            Variant.objects.filter(question__test_id=test.id).values_list('id', 'question_id')
+        )
         correct_variants_ids = set(
             Variant.objects.filter(
                 question__test_id=test.id,
@@ -68,8 +77,18 @@ def test(request, test_id):
         )
 
         result = 0
+        answered_questions = set()
         for answer_item in user_answers:
+            if not isinstance(answer_item, dict):
+                continue
             ans_id = answer_item.get('answer_id')
+            if not isinstance(ans_id, int):
+                continue
+            question_id = variant_to_question.get(ans_id)
+            # Вариант не из этого теста, либо на этот вопрос уже отвечали.
+            if question_id is None or question_id in answered_questions:
+                continue
+            answered_questions.add(question_id)
             if ans_id in correct_variants_ids:
                 result += 1
 
@@ -148,7 +167,15 @@ def v2_test(req):
 
 @login_required(login_url="login")
 def test_result(request, test_id):
-    result = Result.objects.filter(test_id=test_id, user=request.user).order_by("-created").first()
+    result = (
+        Result.objects
+        .select_related("test__subject", "user__potok")
+        .filter(test_id=test_id, user=request.user)
+        .order_by("-created")
+        .first()
+    )
+    if result is None:
+        return redirect("about")
     return render(request, "test_result.html", {"result": result})
 
 def _is_missing_field(value) -> bool:

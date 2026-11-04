@@ -248,7 +248,7 @@ class DashboardSecurityMiddleware:
     бесконечный редирект lock -> lock -> ...
     """
 
-    _PROTECTED_PREFIXES = ("/dashboard/", "/action/", "/form/")
+    _PROTECTED_PREFIXES = ("/dashboard/", "/action/", "/form/", "/test/create/")
 
     def __init__(self, get_response):
         self.get_response = get_response

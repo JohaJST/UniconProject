@@ -48,8 +48,7 @@ JWT_ALGORITHM = "HS256"
 
 def _utcnow() -> datetime.datetime:
     """Единая точка получения текущего времени — упрощает тестирование/мокинг."""
-    return datetime.datetime.utcnow()
-
+    return datetime.datetime.now(datetime.timezone.utc)
 
 def generate_tokens(user_id: int, device_id: str, family_id: str) -> dict:
     """

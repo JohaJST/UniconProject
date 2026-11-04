@@ -30,7 +30,7 @@ msgid "heroHeadingMain"
 msgstr "Школа"
 
 msgid "heroHeadingGlow"
-msgstr "криптология"
+msgstr "криптологии"
 
 msgid "heroDescText"
 msgstr "Современный научно-образовательный центр, готовящий криптографов будущего. В сфере информационной безопасности начинается новая эра."
@@ -423,3 +423,43 @@ msgstr "Современные криптографические техноло
 
 msgid "task4Text"
 msgstr "Развитие новых направлений криптологии"
+
+msgid "phoneLabel"
+msgstr "Телефон"
+
+msgid "Bizga ishonishadi"
+msgstr "Нам доверяют"
+
+#, python-format
+msgid "%(n)s ta hamkor tashkilot"
+msgstr "Организаций-партнёров: %(n)s"
+
+msgid "AI Prezintatsiya"
+msgstr "AI-презентация"
+
+msgid "AI Гид"
+msgstr "AI-гид"
+
+msgid "Подготовка голосовой презентации..."
+msgstr "Подготовка голосовой презентации..."
+
+msgid "Предыдущий шаг"
+msgstr "Предыдущий шаг"
+
+msgid "Пауза / Пуск"
+msgstr "Пауза / Пуск"
+
+msgid "Следующий шаг"
+msgstr "Следующий шаг"
+
+msgid "Вернуть фокус"
+msgstr "Вернуть фокус"
+
+msgid "Закрыть"
+msgstr "Закрыть"
+
+msgid "Поиск"
+msgstr "Поиск"
+
+msgid "Ничего не найдено"
+msgstr "Ничего не найдено"

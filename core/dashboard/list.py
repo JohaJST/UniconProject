@@ -214,7 +214,7 @@ def dlist(request, tip=None):
     # работает через отдельный offset-queryset (_selfuser_queryset), это
     # отдельная задача на будущее (SEARCH_FIELDS["selfuser"] тут не поможет,
     # т.к. этот путь вообще не проходит через paginate_list/facade.py).
-    if tip == "selfresult":
+    if tip in ("selfresult", "selfuser"):
         return list_selfuser(request)
 
     from core.dashboard.pagination.facade import paginate_list

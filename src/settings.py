@@ -29,20 +29,19 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 # ИСПРАВЛЕНО: раньше фолбэк был "0" — ключ длиной 1 байт (PyJWT прямо
 # предупреждает об этом). Теперь в проде без SECRET_KEY сервер не стартует,
 # а в dev используется явный локальный фолбэк с пометкой insecure.
+# SECURITY WARNING: don't run with debug turned on in production!
+# По умолчанию DEBUG выключен: для локальной разработки добавьте DEBUG=True в .env.
+DEBUG = os.getenv("DEBUG", "False").strip().lower() in ("1", "true", "yes")
+
 _SECRET_KEY = os.getenv("SECRET_KEY")
 if _SECRET_KEY:
     SECRET_KEY = _SECRET_KEY
-elif os.getenv("DEBUG", "True").strip().lower() in ("1", "true", "yes"):
+elif DEBUG:
     SECRET_KEY = "dev-insecure-secret-key-change-me-0123456789"
 else:
     raise ImproperlyConfigured(
         "SECRET_KEY не задан: добавьте SECRET_KEY в .env (не менее 50 символов)"
     )
-
-# SECURITY WARNING: don't run with debug turned on in production!
-# ИСПРАВЛЕНО: os.getenv() возвращает строку, поэтому DEBUG=False из .env
-# раньше был truthy и DEBUG всегда оставался True. Теперь парсим явно.
-DEBUG = os.getenv("DEBUG", "True").strip().lower() in ("1", "true", "yes")
 
 ALLOWED_HOSTS = [
     h.strip() for h in os.getenv("ALLOWED_HOST", "*").split(",") if h.strip()
