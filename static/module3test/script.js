@@ -253,7 +253,7 @@ function showQuetions(index) {
 
     for (let i = 0; i < questions[index].options.length; i++) {
         let opt = questions[index].options[i];
-        let hexBadge = '[0x' + String(i + 1).padStart(2, '0') + ']';
+        let hexBadge = String(i + 1).padStart(2, '0');
         let content =
             '<div class="opt_head">' +
                 '<span class="opt_hex">' + hexBadge + '</span>' +
@@ -286,18 +286,18 @@ function optionSelected(answer) {
         questionStates[que_count] = "correct";
         answer.classList.add("correct");
         answer.insertAdjacentHTML("beforeend", tickIconTag);
-        answer.insertAdjacentHTML(
-            "beforeend",
-            '<span class="cyber-verdict cyber-verdict--ok">VERIFIED // ACCESS GRANTED</span>'
-        );
+        // answer.insertAdjacentHTML(
+        //     "beforeend",
+        //     '<span class="cyber-verdict cyber-verdict--ok">VERIFIED // ACCESS GRANTED</span>'
+        // );
     } else {
         questionStates[que_count] = "incorrect";
         answer.classList.add("incorrect");
         answer.insertAdjacentHTML("beforeend", crossIconTag);
-        answer.insertAdjacentHTML(
-            "beforeend",
-            '<span class="cyber-verdict cyber-verdict--err">ANOMALY DETECTED</span>'
-        );
+        // answer.insertAdjacentHTML(
+        //     "beforeend",
+        //     '<span class="cyber-verdict cyber-verdict--err">ANOMALY DETECTED</span>'
+        // );
     }
 
     updateCryptoChain(que_count);
@@ -314,7 +314,7 @@ function showResult() {
     quiz_box.classList.remove("activeQuiz");
     result_box.classList.add("activeResult");
 
-    const statusText = document.getElementById("status_text");
+    // const statusText = document.getElementById("status_text");
     const subtitleText = document.getElementById("subtitle_text");
     const resultIcon = document.getElementById("result_icon");
 
@@ -328,26 +328,26 @@ function showResult() {
     let stampClass = "cyber-stamp--high";
 
     if (percentage >= 75) {
-        statusText.innerHTML = statusNice;
+        // statusText.innerHTML = statusNice;
         tierColor = "#10b981";
         tierSecondary = "#facc15";
         tierIconHtml = '<i class="fas fa-crown" style="color: #facc15;"></i>';
-        stampLabel = "CLEARANCE GRANTED // AES-VERIFIED";
+        stampLabel = statusNice;
         stampClass = "cyber-stamp--high";
         fireConfetti();
     } else if (percentage >= 50) {
-        statusText.innerHTML = statusNorm;
+        // statusText.innerHTML = statusNorm;
         tierColor = "#3b82f6";
         tierSecondary = "#22d3ee";
         tierIconHtml = '<i class="fas fa-thumbs-up" style="color: #38bdf8;"></i>';
-        stampLabel = "STANDARD CLEARANCE // LEVEL 02";
+        stampLabel = statusNorm;
         stampClass = "cyber-stamp--mid";
     } else {
-        statusText.innerHTML = statusBad;
+        // statusText.innerHTML = statusBad;
         tierColor = "#ef4444";
         tierSecondary = "#f59e0b";
         tierIconHtml = '<i class="fas fa-book-open" style="color: #f87171;"></i>';
-        stampLabel = "SECURITY ALERT // RETRAINING REQ";
+        stampLabel = statusBad;
         stampClass = "cyber-stamp--low";
     }
 
@@ -405,7 +405,7 @@ function showResult() {
 
 // Счетчик в футере
 function queCounter(index) {
-    let totalQueCounTag = '<span class="hud-counter-tag"><p>' + index + '</p>' + quesOf + '<p>' + questions.length + '</p></span>';
+    let totalQueCounTag = '<span class="hud-counter-tag"><p>' + index + '</p>' + '/' + '<p>' + questions.length + '</p></span>';
     bottom_ques_counter.innerHTML = totalQueCounTag;
 }
 

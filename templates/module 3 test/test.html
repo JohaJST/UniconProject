@@ -17,7 +17,7 @@
     <!-- start Quiz button -->
     <div class="start_btn">
         <button>
-            <span class="start_btn__hud">MODULE 03 // TACTICAL SIMULATOR</span>
+            <!--<span class="start_btn__hud">MODULE 03 // TACTICAL SIMULATOR</span>-->
             <span class="start_btn__main">{% trans 'startQuiz' %}</span>
         </button>
     </div>
@@ -25,7 +25,7 @@
     <!-- Info Box (по-прежнему с полями для ввода) -->
     <div class="info_box" id="info_box">
         <div class="info-title">
-            <span class="hud-dot"></span>
+            <!--<span class="hud-dot"></span>-->
             <span>{% trans 'infoTitle' %}</span>
         </div>
         <div class="info-list">
@@ -47,13 +47,13 @@
     <!-- Category Box (SelfCtg selection) -->
     <div class="info_box ctg_box" id="ctg_box">
         <div class="info-title">
-            <span class="hud-dot"></span>
+            <!--<span class="hud-dot"></span>-->
             <span>{% trans 'ctgSelectTitle' %}</span>
         </div>
         <div class="ctg-list" id="ctg_list">
             {% for c in ctgs %}
             <div class="ctg-item" data-ctg-id="{{ c.id }}">
-                <span class="ctg-hex">[0x{{ forloop.counter|stringformat:"02d" }}]</span>
+                <!--<span class="ctg-hex">{# forloop.counter #}</span>-->
                 <span class="ctg-name">{{ c.name }}</span>
                 <span class="ctg-count">{{ c.question_count }} {% trans 'questionsCountSuffix' %}</span>
             </div>
@@ -71,10 +71,10 @@
         <header>
             <div class="hud-header-top">
                 <div class="title">{{ APP_NAME }}</div>
-                <div class="cyber-status-pill">
-                    <span class="cyber-status-dot"></span>
-                    <span class="cyber-status-txt">SECURE CHANNEL: AES-256 | MODULE 03 VERIFICATION</span>
-                </div>
+                <!--<div class="cyber-status-pill">-->
+                    <!--<span class="cyber-status-dot"></span>-->
+                    <!--<span class="cyber-status-txt">SECURE CHANNEL: AES-256 | MODULE 03 VERIFICATION</span>-->
+                <!--</div>-->
             </div>
             <!-- Цепочка крипто-блоков (20 мини-узлов по числу вопросов) -->
             <div class="crypto-chain" id="crypto_chain" aria-label="Blockchain Progress Nodes"></div>
@@ -95,7 +95,7 @@
             <i class="fas fa-crown"></i>
         </div>
         <!-- Title (Status) -->
-        <div class="complete_text" id="status_text">{% trans 'completeText' %}</div>
+        <!--<div class="complete_text" id="status_text">{# trans 'completeText' #}</div>-->
         <!-- Subtitle -->
         <div class="score_text" id="subtitle_text">
             <!-- Сюда подставится текст через JS -->
@@ -124,7 +124,7 @@
     <!-- Inside this JavaScript file I've coded all Quiz Codes -->
     <script src="{% static 'module3test/script.js' %}"></script>
     <script>
-        const homelink = "{% url 'about'|escapejs %}";
+        const homelink = "{% url 'self'|escapejs %}";
         const fioReq = "{% trans 'fioReq'|escapejs %}";
         const statusNice = "{% trans 'statusNice'|escapejs %}";
         {% trans "statusBad" as statusBad_t %}
