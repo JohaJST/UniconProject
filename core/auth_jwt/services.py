@@ -51,6 +51,9 @@ class AuthRedisService:
         Вызывается при успешном логине: перезаписывает предыдущую запись
         целиком, тем самым технически "выкидывая" сессию с другого устройства
         (последующая проверка validate_session для старого device_id вернёт False).
+
+        Новая сессия логина ВСЕГДА начинается без доступа к дашборду:
+        ключ dashboard_auth удаляется, пароль дашборда нужно вводить заново.
         """
         payload = {
             "device_id": device_id,
@@ -65,6 +68,7 @@ class AuthRedisService:
             json.dumps(payload),
             timeout=604800,
         )
+        cache.delete(AuthRedisService._dashboard_auth_key(user_id))
 
     @staticmethod
     def touch_active_session(user_id: int, timeout: int = 604800) -> None:
@@ -119,8 +123,10 @@ class AuthRedisService:
         Вызывается при logout: после удаления ключа validate_session для
         любого device_id вернёт False, что фактически разлогинивает
         и любые другие ещё не истёкшие по exp токены этого пользователя.
+        Вместе с сессией сбрасывается и доступ к дашборду.
         """
         cache.delete(AuthRedisService._active_device_key(user_id))
+        cache.delete(AuthRedisService._dashboard_auth_key(user_id))
 
     # ── Token revocation ─────────────────────────────────────────────────
     # Ключ: token:revoked:{jti} -> "1"
@@ -157,21 +163,36 @@ class AuthRedisService:
         return f"user:{user_id}:dashboard_auth"
 
     @staticmethod
-    def authorize_dashboard(user_id: int) -> None:
+    def authorize_dashboard(user_id: int, device_id: str | None = None) -> None:
         """
-        Открывает доступ к дашборду на 600 секунд (после ввода пароля дашборда).
+        Открывает доступ к дашборду на 900 секунд (после ввода пароля дашборда).
 
-        Sliding window: DashboardSecurityMiddleware (уровень 3) должен вызывать
+        Значение ключа = device_id сессии, прошедшей /lock/: доступ привязан
+        к конкретной JWT-сессии, а не просто к user_id.
+
+        Sliding window: DashboardSecurityMiddleware должен вызывать
         этот метод повторно на каждый успешный запрос к дашборду, тем самым
-        продлевая TTL, пока пользователь активен — здесь же фиксируется только
-        факт установки ключа с TTL 600s.
+        продлевая TTL, пока пользователь активен.
         """
-        cache.set(AuthRedisService._dashboard_auth_key(user_id), "1", timeout=900)  # было 600
-        
+        cache.set(
+            AuthRedisService._dashboard_auth_key(user_id),
+            device_id or "1",
+            timeout=900,
+        )
+
     @staticmethod
-    def is_dashboard_authorized(user_id: int) -> bool:
-        """True, если ключ dashboard_auth ещё не истёк (пользователь в дашборде)."""
-        return cache.get(AuthRedisService._dashboard_auth_key(user_id)) is not None
+    def is_dashboard_authorized(user_id: int, device_id: str | None = None) -> bool:
+        """
+        True, только если ключ dashboard_auth жив И выдан именно этой
+        сессии (device_id совпадает). Если device_id не передан —
+        проверяется лишь наличие ключа.
+        """
+        raw = cache.get(AuthRedisService._dashboard_auth_key(user_id))
+        if raw is None:
+            return False
+        if device_id is None:
+            return True
+        return raw == device_id
 
     # ── Refresh token families (ротация + reuse-detection) ──────────────
     # Ключ: rt_family:{family_id} -> JSON {"current_token_hash", "compromised"}

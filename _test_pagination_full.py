@@ -101,10 +101,18 @@ def _make_temp_users():
 
 
 def _admin_client(admin):
+    import jwt
+    from django.conf import settings
+
     c = Client(raise_request_exception=False)
     r = c.post("/login/", {"user": str(admin.id)})
     assert r.status_code == 302, f"login admin failed: {r.status_code}"
-    AuthRedisService.authorize_dashboard(admin.id)  # обходим форму пароля дашборда
+
+    # device_id берём из выданного access-токена: доступ к дашборду
+    # теперь привязан к конкретной JWT-сессии.
+    access = c.cookies[settings.JWT_ACCESS_COOKIE_NAME].value
+    device_id = jwt.decode(access, options={"verify_signature": False})["device_id"]
+    AuthRedisService.authorize_dashboard(admin.id, device_id)  # обходим форму пароля дашборда
     return c
 
 

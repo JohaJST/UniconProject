@@ -112,6 +112,7 @@ class JWTAuthenticationMiddleware:
                     request.user = User.objects.get(id=int(p["sub"]))
                 except User.DoesNotExist:
                     return self._clear_cookies_and_redirect_login()
+                request.jwt_device_id = p["device_id"]
                 translation.activate(request.user.lang or "uz")
                 response = self.get_response(request)
                 _sync_language_cookie(request, response, request.user)
@@ -135,6 +136,7 @@ class JWTAuthenticationMiddleware:
         except User.DoesNotExist:
             return self._clear_cookies_and_redirect_login()
 
+        request.jwt_device_id = payload["device_id"]
         translation.activate(request.user.lang or "uz")
         
         response = self.get_response(request)
@@ -263,12 +265,14 @@ class DashboardSecurityMiddleware:
         if user.role == Role.STUDENT:
             return redirect("about")
 
-        # ── Sliding-window проверка ───────────────────────────────────────
-        if not AuthRedisService.is_dashboard_authorized(user.id):
+        # ── Sliding-window проверка (привязана к текущей JWT-сессии) ──────
+        device_id = getattr(request, "jwt_device_id", None)
+
+        if device_id is None or not AuthRedisService.is_dashboard_authorized(user.id, device_id):
             return redirect("lock")
 
-        # Пользователь активен — продлеваем окно ещё на 600s.
-        AuthRedisService.authorize_dashboard(user.id)
+        # Пользователь активен — продлеваем окно ещё на 900s.
+        AuthRedisService.authorize_dashboard(user.id, device_id)
 
         return self.get_response(request)
 

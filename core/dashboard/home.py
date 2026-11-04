@@ -169,7 +169,10 @@ def lock(request):
 
         if request.user.check_password(request.POST.get("pass", "")):
             AuthRedisService.clear_login_attempts(request.user.id)
-            AuthRedisService.authorize_dashboard(request.user.id)
+            AuthRedisService.authorize_dashboard(
+                request.user.id,
+                getattr(request, "jwt_device_id", None),
+            )
             return redirect("dashboard")
 
         return render(request, "pages/dashboard/pass.html", {
