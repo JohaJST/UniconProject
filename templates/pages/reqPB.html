@@ -80,10 +80,25 @@
     @keyframes topScan { to { left: 100%; } }
 
     /* ── Шапка ── */
-    .brand { display: flex; align-items: center; gap: .9rem; margin-bottom: 1.25rem; }
+    .brand { display: flex; flex-direction: column; align-items: flex-start;
+        gap: .75rem; margin-bottom: 1.25rem; 
+    }
     .brand img {
-      width: 56px; height: 56px; object-fit: contain; border-radius: 14px;
-      filter: drop-shadow(0 6px 16px rgba(78,117,173,.5));
+        display: block;
+        width: 100%;
+        /*max-width: 380px;*/
+        height: auto;
+        object-fit: contain;
+        border-radius: 0;
+        filter: none;
+        -webkit-mask-image:
+            linear-gradient(to right,  transparent 0, #000 14%, #000 86%, transparent 100%),
+            linear-gradient(to bottom, transparent 0, #000 20%, #000 80%, transparent 100%);
+        -webkit-mask-composite: source-in;
+        mask-image:
+            linear-gradient(to right,  transparent 0, #000 14%, #000 86%, transparent 100%),
+            linear-gradient(to bottom, transparent 0, #000 20%, #000 80%, transparent 100%);
+        mask-composite: intersect;
     }
     .chip {
       display: inline-flex; align-items: center; gap: .45rem;
@@ -235,14 +250,8 @@
   <section class="panel">
     <div class="brand">
       <img src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAltReq' %}">
-      <span class="chip"><i></i>ENCRYPTED SESSION · 2/2</span>
     </div>
 
-    <div class="steps" aria-hidden="true">
-      <span class="step done">✓</span><span class="step-line done"></span>
-      <span class="step now">2</span><span class="step-line"></span>
-      <span class="step">3</span>
-    </div>
 
     <h1>{% trans 'reqPBHeading' %}</h1>
     {# user.full_name — метод модели User; тот же вызов уже используется в base.html #}

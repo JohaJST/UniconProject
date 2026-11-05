@@ -56,7 +56,7 @@
                 flex-wrap: wrap; gap: 1rem; text-align: left; margin-bottom: 2rem;
             }
             .brand { min-width: 0; }
-            .auth-logo { width: 72px; height: 72px; margin: 0 0 .85rem; }
+            /*.auth-logo { width: 72px; height: 72px; margin: 0 0 .85rem; }*/
             .sec-chip {
                 display: inline-flex; align-items: center; gap: .45rem; margin-bottom: .6rem;
                 font-family: var(--mono); font-size: .65rem; letter-spacing: .12em; color: var(--cyan);
@@ -234,9 +234,10 @@
 
         <main class="auth-wrapper" id="wrap">
             <div class="auth-card">
+                <img src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAlt' %}" class="auth-logo" />
                 <header class="auth-header">
                     <div class="brand">
-                        <img src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAlt' %}" class="auth-logo" />
+                        <!--<img src="{% static 'auth/logo.png' %}" alt="{% trans 'logoAlt' %}" class="auth-logo" />-->
                         <!--<div><span class="sec-chip"><i></i>ENCRYPTED SESSION</span></div>-->
                         <h1 class="auth-title">{{ APP_NAME }}</h1>
                         <p class="auth-subtitle" style="margin:0">{% trans "Войдите в свою учётную запись" %}</p>
