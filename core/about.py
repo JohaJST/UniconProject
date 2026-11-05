@@ -182,8 +182,9 @@ def _self_check_questions_json(ctg_id):
 
 def news_page(request, pk=None):
     """
-    Публичная страница новостей: выбранная новость (галерея + единое описание)
-    и Bento-подборка «Другие новости». Без pk показывается самая свежая.
+    Публичная страница новостей: слева список всех новостей, справа выбранная
+    новость (3D-галерея + описание) и переходы «новее / старше».
+    Без pk показывается самая свежая.
     """
     base_qs = News.objects.prefetch_related("images")
 
@@ -192,22 +193,36 @@ def news_page(request, pk=None):
     else:
         current = get_object_or_404(base_qs, pk=pk)
 
+    # Список для левой колонки (свежие сверху), ограничен, чтобы страница не тяжелела.
+    all_news = list(
+        News.objects
+        .annotate(gallery_count=Count("images"))
+        .order_by("-date", "-id")[:40]
+    )
+
     if current is None:
-        return render(request, "news.html", {"news_item": None, "slides": [], "others": []})
+        return render(request, "news.html", {
+            "news_item": None, "slides": [], "all_news": all_news,
+            "newer_item": None, "older_item": None,
+        })
 
     slides = []
     if current.photo:
         slides.append({"url": current.photo.url})
     slides.extend({"url": img.image.url} for img in current.images.all() if img.image)
 
-    others = list(
-        News.objects.exclude(pk=current.pk)
-        .annotate(gallery_count=Count("images"))
-        .order_by("-date", "-id")[:3]
-    )
+    # Соседние новости для навигации «новее / старше».
+    newer_item = older_item = None
+    for i, item in enumerate(all_news):
+        if item.pk == current.pk:
+            newer_item = all_news[i - 1] if i > 0 else None
+            older_item = all_news[i + 1] if i + 1 < len(all_news) else None
+            break
 
     return render(request, "news.html", {
         "news_item": current,
         "slides": slides,
-        "others": others,
+        "all_news": all_news,
+        "newer_item": newer_item,
+        "older_item": older_item,
     })

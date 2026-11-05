@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{% static 'about.css' %}" />
     <link rel="stylesheet" href="{% static 'news.css' %}" />
     <style>
-        /* Тот же шрифт/фон, что и на about.html — удалите блок, если нужен нейтральный шрифт */
         body { background: #fdfcf8 !important; color: #0f172a !important; }
         body, button, input, textarea, select {
             font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive, sans-serif !important;
@@ -35,83 +34,129 @@
             </nav>
 
             {% if news_item %}
-            <div class="news-main">
+            <div class="news-layout">
 
-                <header class="news-head">
-                    <span class="sec-chip">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:.3rem"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{{ news_item.date|date:"d M, Y" }}
-                    </span>
-                    <h1 class="news-title">{{ news_item.title }}</h1>
-                </header>
+                <!-- ═════ Левая колонка: список новостей ═════ -->
+                <aside class="news-side glass-card" id="newsSide" aria-label="{% trans 'Yangiliklar' %}">
+                    <div class="side-head">
+                        <h2 class="side-ttl">{% trans "Yangiliklar" %}</h2>
+                        <span class="side-count">{{ all_news|length }}</span>
+                    </div>
 
-                {% if slides %}
-                <!-- ═════ Interactive Cinema Stage ═════ -->
-                <section class="cinema" aria-label="Gallery">
-                    <div class="stage" id="stage" tabindex="0">
-                        {% for s in slides %}
-                        <img class="stage__slide{% if forloop.first %} is-active{% endif %}"
-                             src="{{ s.url }}" alt="{{ news_item.title }}"
-                             {% if not forloop.first %}loading="lazy"{% endif %} draggable="false">
+                    <label class="side-search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="search" id="sideSearch" placeholder="{% trans 'Поиск' %}…" autocomplete="off">
+                    </label>
+
+                    <ul class="side-list" id="sideList">
+                        {% for item in all_news %}
+                        <li style="--i:{{ forloop.counter0 }}">
+                            <a class="side-item{% if item.pk == news_item.pk %} is-current{% endif %}"
+                               href="{% url 'news_detail' pk=item.pk %}"
+                               data-q="{{ item.title|lower }}"
+                               {% if item.pk == news_item.pk %}aria-current="page"{% endif %}>
+                                <span class="side-item__img">
+                                    {% if item.photo %}<img src="{{ item.photo.url }}" alt="" loading="lazy" draggable="false">{% endif %}
+                                    <em class="side-item__cnt">📷 {{ item.gallery_count|add:1 }}</em>
+                                </span>
+                                <span class="side-item__body">
+                                    <time class="side-item__date">{{ item.date|date:"d.m.Y" }}</time>
+                                    <strong class="side-item__ttl">{{ item.title }}</strong>
+                                    <span class="side-item__txt">{{ item.desc|truncatewords:10 }}</span>
+                                </span>
+                            </a>
+                        </li>
                         {% endfor %}
-                        <div class="stage__shade"></div>
+                    </ul>
+                    <p class="side-empty" id="sideEmpty" hidden>{% trans "Ничего не найдено" %}</p>
+                </aside>
 
-                        <span class="stage__zoom" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                <!-- ═════ Правая колонка: новость ═════ -->
+                <div class="news-main">
+
+                    <header class="news-head">
+                        <span class="sec-chip">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:.3rem"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{{ news_item.date|date:"d M, Y" }}
                         </span>
+                        <h1 class="news-title">{{ news_item.title }}</h1>
+                    </header>
+
+                    {% if slides %}
+                    <!-- ═════ 3D Coverflow ═════ -->
+                    <section class="cinema" aria-label="Gallery">
+                        <div class="stage" id="stage" tabindex="0" aria-roledescription="carousel">
+                            {% for s in slides %}
+                            <div class="s3d" data-index="{{ forloop.counter0 }}" role="group" aria-label="{{ forloop.counter }} / {{ slides|length }}">
+                                <div class="s3d__in">
+                                    <img src="{{ s.url }}" alt="{{ news_item.title }}" draggable="false"
+                                         {% if forloop.counter0 > 2 %}loading="lazy"{% endif %}>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <span class="stage__zoom" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                            </span>
+
+                            {% if slides|length > 1 %}
+                            <button type="button" class="stage__btn stage__btn--prev" id="stagePrev" aria-label="{% trans 'Oldingi' %}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                            <button type="button" class="stage__btn stage__btn--next" id="stageNext" aria-label="{% trans 'Keyingi' %}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                            <button type="button" class="stage__play" id="stagePlay" aria-label="Autoplay" aria-pressed="true">
+                                <svg class="ico-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+                                <svg class="ico-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20 7 4"/></svg>
+                            </button>
+                            <span class="stage__counter" id="stageCounter">01 / {{ slides|length|stringformat:"02d" }}</span>
+                            <span class="stage__progress" aria-hidden="true"><i id="stageProgress"></i></span>
+                            {% endif %}
+                        </div>
 
                         {% if slides|length > 1 %}
-                        <button type="button" class="stage__btn stage__btn--prev" id="stagePrev" aria-label="{% trans 'Oldingi' %}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-                        </button>
-                        <button type="button" class="stage__btn stage__btn--next" id="stageNext" aria-label="{% trans 'Keyingi' %}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                        </button>
-                        <span class="stage__counter" id="stageCounter">01 / {{ slides|length|stringformat:"02d" }}</span>
-                        {% endif %}
-                    </div>
-
-                    {% if slides|length > 1 %}
-                    <div class="thumbs" id="thumbs">
-                        {% for s in slides %}
-                        <button type="button" class="thumb{% if forloop.first %} is-active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}">
-                            <img src="{{ s.url }}" alt="" loading="lazy" draggable="false">
-                        </button>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </section>
-                {% endif %}
-
-                <!-- ═════ Единое описание ═════ -->
-                <article class="story glass-card">
-                    <div class="story__text">{{ news_item.desc|linebreaks }}</div>
-                </article>
-            </div>
-
-            <!-- ═════ Другие новости: Bento ═════ -->
-            {% if others %}
-            <section class="more">
-                <header class="sec-hdr" style="text-align:left;margin-bottom:1.8rem">
-                    <span class="sec-chip">{% trans "Yangiliklar" %}</span>
-                    <h2 class="sec-ttl">{% trans "So'nggi yangiliklar" %}</h2>
-                </header>
-
-                <div class="bento bento--{{ others|length }}">
-                    {% for item in others %}
-                    <a class="bento-card{% if forloop.first %} bento-card--lead{% endif %}" href="{% url 'news_detail' pk=item.pk %}">
-                        {% if item.photo %}<img src="{{ item.photo.url }}" alt="" loading="lazy">{% endif %}
-                        <div class="bento-card__veil"></div>
-                        <span class="bento-card__count">📷 {{ item.gallery_count|add:1 }}</span>
-                        <div class="bento-card__body">
-                            <span class="bento-card__date">{{ item.date|date:"d M, Y" }}</span>
-                            <h3>{{ item.title }}</h3>
-                            {% if forloop.first %}<p>{{ item.desc|truncatewords:26 }}</p>{% endif %}
+                        <div class="dots" id="dots" role="tablist">
+                            {% for s in slides %}
+                            <button type="button" class="dot{% if forloop.first %} is-active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}"></button>
+                            {% endfor %}
                         </div>
-                    </a>
-                    {% endfor %}
+
+                        <div class="thumbs" id="thumbs">
+                            {% for s in slides %}
+                            <button type="button" class="thumb{% if forloop.first %} is-active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}">
+                                <img src="{{ s.url }}" alt="" loading="lazy" draggable="false">
+                            </button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </section>
+                    {% endif %}
+
+                    <!-- ═════ Описание ═════ -->
+                    <article class="story glass-card">
+                        <div class="story__text">{{ news_item.desc|linebreaks }}</div>
+                        <time class="story__date" datetime="{{ news_item.date|date:'Y-m-d' }}">{{ news_item.date|date:"d.m.Y" }}</time>
+                    </article>
+
+                    <!-- ═════ Новее / Старше ═════ -->
+                    {% if newer_item or older_item %}
+                    <nav class="pager" aria-label="pager">
+                        {% if newer_item %}
+                        <a class="pager__a pager__a--prev glass-card" href="{% url 'news_detail' pk=newer_item.pk %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                            <span><small>{% trans "Oldingi" %}</small><b>{{ newer_item.title|truncatechars:60 }}</b></span>
+                        </a>
+                        {% else %}<span></span>{% endif %}
+                        {% if older_item %}
+                        <a class="pager__a pager__a--next glass-card" href="{% url 'news_detail' pk=older_item.pk %}">
+                            <span><small>{% trans "Keyingi" %}</small><b>{{ older_item.title|truncatechars:60 }}</b></span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                        {% endif %}
+                    </nav>
+                    {% endif %}
                 </div>
-            </section>
-            {% endif %}
+            </div>
 
             {% else %}
             <div class="news-empty glass-card">
@@ -141,6 +186,19 @@
     </div>
 
     {{ slides|json_script:"news-slides" }}
-    <script src="{% static 'news.js' %}"></script>
     {% endif %}
+
+    <!-- Дождь из цифр (как на about) -->
+    <script src="{% static 'rain.js' %}"></script>
+    <script>
+        if (window.initDigitalRainBackground) {
+            window.initDigitalRainBackground({
+                theme: 'light',
+                edgeMin: 0.3,   /* под контентом приглушён, по бокам на полную */
+                zIndex: 1,
+                pointer: false
+            });
+        }
+    </script>
+    <script src="{% static 'news.js' %}"></script>
 {% endblock %}
