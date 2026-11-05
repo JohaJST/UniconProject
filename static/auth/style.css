@@ -323,7 +323,10 @@ body {
     box-shadow: 0 2px 8px rgba(78, 117, 173, 0.3);
 }
 
-
+.ilogo {
+    display: block;
+    margin: -2.5rem -2.5rem 1.25rem;
+}
 /* ───────────────────────────────
    Responsive
 ─────────────────────────────── */
