@@ -51,7 +51,9 @@
             <div class="hero-btns">
                 <a href="#courses" class="btn btn--fill">
                     {% trans 'heroBtnViewCourses' %}
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
                 </a>
                 <a href="#goals" class="btn btn--outline">
                     {% trans 'heroBtnMoreInfo' %}
@@ -83,7 +85,12 @@
                 <!-- Maqsad: About.desc -->
                 <article class="goal-panel glass-card" data-aos="fade-right" data-aos-delay="100">
                     <div class="goal-panel__ico goal-panel__ico--blue">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                        <!--<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">-->
+                            <!--<circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="6"/>
+                            <circle cx="12" cy="12" r="2"/>-->
+                            <img viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" src="{% static 'icon2.png' %}" alt="icon">
+                        <!--</svg>-->
                     </div>
                     <h3 class="goal-panel__ttl">{% trans 'goalMainTitle' %}</h3>
                     <p class="goal-panel__txt">
@@ -99,7 +106,8 @@
                 <!-- Vazifalar: About.goals_info (единым полем — без нумерованных task-row) -->
                 <article class="goal-panel glass-card" data-aos="fade-left" data-aos-delay="200">
                     <div class="goal-panel__ico goal-panel__ico--red">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+                        <!--<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>-->
+                        <img src="{% static 'icon1.png' %}" alt="icon">
                     </div>
                     <h3 class="goal-panel__ttl">{% trans 'tasksTitle' %}</h3>
                     <div class="task-stack">
@@ -362,7 +370,7 @@
                     aria-label="{% trans 'AI Prezintatsiya' %}"
                     aria-expanded="false"
                     aria-controls="aiPresenterDock">
-                <span class="ai-fab__pulse" aria-hidden="true"></span>
+                <!--<span class="ai-fab__pulse" aria-hidden="true"></span>-->
     
                 <span class="ai-fab__ico" aria-hidden="true">
                     <!-- Иконка нейро-звуковой волны -->
